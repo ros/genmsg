@@ -32,6 +32,8 @@
 #
 # Revision $Id: __init__.py 8788 2010-03-22 22:30:04Z kwc $
 
+from . base import EXT_MSG, EXT_SRV
+
 verbose = False
 
 if verbose:

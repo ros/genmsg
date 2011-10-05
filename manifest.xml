@@ -1,0 +1,19 @@
+<package>
+  <description brief="genmsg">
+
+     Standalone Python library for generating ROS message and service data structures in
+     Python, C++, LISP, and other languages.
+
+  </description>
+  <author>Ken Conley/kwc@willowgarage.com, Troy Straszheim/straszheim@willowgarage.com</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/genmsg</url>
+
+  <export>
+    <rosdoc config="rosdoc.yaml"/>    
+  </export>
+
+</package>
+
+

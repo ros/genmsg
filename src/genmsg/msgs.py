@@ -52,31 +52,7 @@ import sys
 import re
 import string
 
-import roslib.exceptions
-import roslib.manifest
-import roslib.packages
-import roslib.names
-import roslib.resources
-import roslib.rospack
-
-VERBOSE = False
-
-## @return: True if msg-related scripts should print verbose output
-def is_verbose():
-    return VERBOSE
-
-## set whether msg-related scripts should print verbose output
-def set_verbose(v):
-    global VERBOSE
-    VERBOSE = v
-
-EXT = roslib.names.MSG_EXT #alias
-SEP = roslib.names.PRN_SEPARATOR #e.g. std_msgs/String
-## character that designates a constant assignment rather than a field
-CONSTCHAR   = '='
-COMMENTCHAR = '#'
-
-class MsgSpecException(roslib.exceptions.ROSLibException): pass
+from . base import MessageNotFound, MsgSpecException, CONSTCHAR, COMMENT, EXT_MSG, MSG_DIR
 
 #TODOXXX: unit test
 def base_msg_type(type_):
@@ -111,8 +87,8 @@ def resolve_type(type_, package_context):
     bt = base_msg_type(type_)
     if bt in BUILTIN_TYPES:
         return type_
-    elif bt == 'Header':
-        return 'std_msgs/Header'
+    elif bt == HEADER:
+        return HEADER_FULL_NAME
     elif SEP in type_:
         return type_
     else:
@@ -123,19 +99,17 @@ def resolve_type(type_, package_context):
 def parse_type(type_):
     """
     Parse ROS message field type
-    @param type_: ROS field type
-    @type  type_: str
-    @return: base_type, is_array, array_length
-    @rtype: str, bool, int
-    @raise MsgSpecException: if type_ cannot be parsed
+    :param type_: ROS field type, ``str``
+    :returns: base_type, is_array, array_length, ``(str, bool, int)``
+    :raises: :exc:`ValueError` If *type_* cannot be parsed
     """
     if not type_:
-        raise MsgSpecException("Invalid empty type")
+        raise ValueError("Invalid empty type")
     if '[' in type_:
         var_length = type_.endswith('[]')
         splits = type_.split('[')
         if len(splits) > 2:
-            raise MsgSpecException("Currently only support 1-dimensional array types: %s"%type_)
+            raise ValueError("Currently only support 1-dimensional array types: %s"%type_)
         if var_length:
             return type_[:-2], True, None
         else:
@@ -143,7 +117,7 @@ def parse_type(type_):
                 length = int(splits[1][:-1])
                 return splits[0], True, length
             except ValueError:
-                raise MsgSpecException("Invalid array dimension: [%s]"%splits[1][:-1])
+                raise ValueError("Invalid array dimension: [%s]"%splits[1][:-1])
     else:
         return type_, False, None
    
@@ -158,7 +132,7 @@ def is_valid_msg_type(x):
     if not x or len(x) != len(x.strip()):
         return False
     base = base_msg_type(x)
-    if not roslib.names.is_legal_resource_name(base):
+    if not names.is_legal_resource_name(base):
         return False
     #parse array indicies
     x = x[len(base):]
@@ -181,17 +155,15 @@ def is_valid_msg_type(x):
 
 def is_valid_constant_type(x):
     """
-    @return: True if the name is a legal constant type. Only simple types are allowed.
-    @rtype: bool
+    :returns: ``True`` if the name is a legal constant type. Only simple types are allowed, ``bool``
     """
     return x in PRIMITIVE_TYPES
 
 def is_valid_msg_field_name(x):
     """
-    @return: True if the name is a syntatically legal message field name
-    @rtype: bool
+    :returns: ``True`` if the name is a syntatically legal message field name, ``bool``
     """
-    return roslib.names.is_legal_resource_base_name(x)
+    return names.is_legal_resource_base_name(x)
 
 # msg spec representation ##########################################
 
@@ -233,12 +205,9 @@ class Constant(object):
 def _strify_spec(spec, buff=None, indent=''):
     """
     Convert spec into a string representation. Helper routine for MsgSpec.
-    @param indent: internal use only
-    @type  indent: str
-    @param buff: internal use only
-    @type  buff: StringIO
-    @return: string representation of spec
-    @rtype: str
+    :param indent: internal use only, ``str``
+    :param buff: internal use only, ``StringIO``
+    :returns: string representation of spec, ``str``
     """
     if buff is None:
         buff = StringIO()
@@ -285,15 +254,11 @@ class MsgSpec(object):
 
     def __init__(self, types, names, constants, text, full_name = '', short_name = '', package = ''):
         """
-        @param types: list of field types, in order of declaration
-        @type  types: [str]
-        @param names: list of field names, in order of declaration    
-        @type  names: [str]
-        @param constants: Constant declarations
-        @type  constants: [L{Constant}]
-        @param text: text of declaration
-        @type  text: str
-        @raise MsgSpecException: if spec is invalid (e.g. fields with the same name)
+        :param types: list of field types, in order of declaration, ``[str]]``
+        :param names: list of field names, in order of declaration, ``[str]]``
+        :param constants: List of :class:`Constant` declarations, ``[Constant]``
+        :param text: text of declaration, ``str`
+        :raises: :exc:`MsgSpecException` If spec is invalid (e.g. fields with the same name)
         """
         self.types = types
         if len(set(names)) != len(names):
@@ -303,34 +268,34 @@ class MsgSpec(object):
         assert len(self.types) == len(self.names), "len(%s) != len(%s)"%(self.types, self.names)
         #Header.msg support
         if (len(self.types)):
-            self.header_present = self.types[0] == HEADER and self.names[0] == 'header'
+            self.header_present = self.types[0] == HEADER_FULL_NAME and self.names[0] == 'header'
         else:
             self.header_present = False
         self.text = text
         self.full_name = full_name
         self.short_name = short_name
         self.package = package
-        self._parsed_fields = [Field(name, type) for (name, type) in zip(self.names, self.types)]
+        try:
+            self._parsed_fields = [Field(name, type) for (name, type) in zip(self.names, self.types)]
+        except ValueError as e:
+            raise MsgSpecException("invalid field: %s"%(e))
         
     def fields(self):
         """
-        @return: zip list of types and names (e.g. [('int32', 'x'), ('int32', 'y')]
-        @rtype: [(str,str),]
+        :returns: zip list of types and names (e.g. [('int32', 'x'), ('int32', 'y')], ``[(str,str),]``
         """
         return list(zip(self.types, self.names)) #py3k
     
     def parsed_fields(self):
         """
-        @return: list of Field classes
-        @rtype: [Field,]
+        :returns: list of :class:`Field` classes, ``[Field,]``
         """
         return self._parsed_fields
 
     def has_header(self):
         """
-        @return: True if msg decription contains a 'Header header'
-        declaration at the beginning
-        @rtype: bool
+        :returns: ``True`` if msg decription contains a 'Header header'
+          declaration at the beginning, ``bool``
         """
         return self.header_present
     def __eq__(self, other):
@@ -366,171 +331,32 @@ def reinit():
     REGISTERED_TYPES.clear()
     _init()
     
-_initialized = False
-def _init():
-    #lazy-init
-    global _initialized
-    if _initialized:
-        return
-
-    fname = '%s%s'%(HEADER, EXT)
-    std_msgs_dir = roslib.packages.get_pkg_dir('std_msgs')
-    if std_msgs_dir is None:
-        raise MsgSpecException("Unable to locate roslib: %s files cannot be loaded"%EXT)
-    
-    header = os.path.join(std_msgs_dir, roslib.packages.MSG_DIR, fname)
-    if not os.path.isfile(header):
-        sys.stderr.write("ERROR: cannot locate %s. Expected to find it at '%s'\n"%(fname, header))
-        return False
-
-    # register Header under both contexted and de-contexted name
-    _, spec = load_from_file(header, '')
-    register(HEADER, spec)
-    register('std_msgs/'+HEADER, spec)    
-    # backwards compat, REP 100
-    register('roslib/'+HEADER, spec)    
-    for k, spec in EXTENDED_BUILTINS.items():
-        register(k, spec)
-        
-    _initialized = True
-
 # .msg file routines ##############################################################       
 
-def _msg_filter(f):
+def msg_file(package, type_, searchpath):
     """
-    Predicate for filtering directory list. matches message files
-    @param f: filename
-    @type  f: str
-    """
-    return os.path.isfile(f) and f.endswith(EXT)
+    Determine the file system path for the specified .msg on path.
 
-# also used by doxymaker
-def list_msg_types(package, include_depends):
+    :param package: name of package .msg file is in, ``str``
+    :param type_: type name of message, e.g. 'Point2DFloat32', ``str``
+    :returns: file path of .msg file in specified package or ``None`` if not found, ``str``
     """
-    List all messages in the specified package
-    @param package str: name of package to search
-    @param include_depends bool: if True, will also list messages in package dependencies
-    @return [str]: message type names
-    """
-    types = roslib.resources.list_package_resources(package, include_depends, roslib.packages.MSG_DIR, _msg_filter)
-    return [x[:-len(EXT)] for x in types]
-
-def msg_file(package, type_):
-    """
-    Determine the file system path for the specified .msg
-    resource. .msg resource does not have to exist.
-    
-    @param package: name of package .msg file is in
-    @type  package: str
-    @param type_: type name of message, e.g. 'Point2DFloat32'
-    @type  type_: str
-    @return: file path of .msg file in specified package
-    @rtype: str
-    """
-    return roslib.packages.resource_file(package, roslib.packages.MSG_DIR, type_+EXT)
-
-def get_pkg_msg_specs(package):
-    """
-    List all messages that a package contains.
-    
-    @param package: package to load messages from
-    @type  package: str
-    @return: list of message type names and specs for package, as well as a list
-        of message names that could not be processed. 
-    @rtype: [(str, L{MsgSpec}), [str]]
-    """
-    _init()
-    types = list_msg_types(package, False)
-    specs = [] #no fancy list comprehension as we want to show errors
-    failures = []
-    for t in types:
-        try: 
-            typespec = load_from_file(msg_file(package, t), package)
-            specs.append(typespec)
-        except Exception as e:
-            failures.append(t)
-            print("ERROR: unable to load %s"%t)
-    return specs, failures
-
-def load_package_dependencies(package, load_recursive=False):
-    """
-    Register all messages that the specified package depends on.
-    
-    @param load_recursive: (optional) if True, load all dependencies,
-        not just direct dependencies. By default, this is false to
-        prevent packages from incorrectly inheriting dependencies.
-    @type  load_recursive: bool
-    """
-    global _loaded_packages
-    _init()    
-    if VERBOSE:
-        print("Load dependencies for package", package)
-        
-    if not load_recursive:
-        manifest_file = roslib.manifest.manifest_file(package, True)
-        m = roslib.manifest.parse_file(manifest_file)
-        depends = [d.package for d in m.depends] # #391
-    else:
-        depends = roslib.rospack.rospack_depends(package)
-
-    msgs = []
-    failures = []
-    for d in depends:
-        if VERBOSE:
-            print("Load dependency", d)
-        #check if already loaded
-        # - we are dependent on manifest.getAll returning first-order dependencies first
-        if d in _loaded_packages or d == package:
-            continue
-        _loaded_packages.append(d)
-        specs, failed = get_pkg_msg_specs(d)
-        msgs.extend(specs)
-        failures.extend(failed)
-    for key, spec in msgs:
-        register(key, spec)
-
-def load_package(package):
-    """
-    Load package into the local registered namespace. All messages found
-    in the package will be registered if they are successfully
-    loaded. This should only be done with one package (i.e. the 'main'
-    package) per Python instance.
-
-    @param package: package name
-    @type  package: str
-    """
-    global _loaded_packages
-    _init()    
-    if VERBOSE:
-        print("Load package", package)
-        
-    #check if already loaded
-    # - we are dependent on manifest.getAll returning first-order dependencies first
-    if package in _loaded_packages:
-        if VERBOSE:
-            print("Package %s is already loaded"%package)
-        return
-
-    _loaded_packages.append(package)
-    specs, failed = get_pkg_msg_specs(package)
-    if VERBOSE:
-        print("Package contains the following messages: %s"%specs)
-    for key, spec in specs:
-        #register spec under both local and fully-qualified key
-        register(key, spec)
-        register(package + roslib.names.PRN_SEPARATOR + key, spec)        
+    log("msg_file(%s, %s, %s)" % (package, type_, str(searchpath)))
+    assert isinstance(searchpath, list)
+    for p in searchpath:
+        j = os.path.join(p, "msg", type_ + ".msg")
+        if os.path.isfile(j):
+            return j
 
 def _convert_val(type_, val):
     """
     Convert constant value declaration to python value. Does not do
     type-checking, so ValueError or other exceptions may be raised.
     
-    @param type_: ROS field type
-    @type  type_: str
-    @param val: string representation of constant
-    @type  val: str:
-    @raise ValueError: if unable to convert to python representation
-    @raise MsgSpecException: if value exceeds specified integer width
+    :param type_: ROS field type, ``str``
+    :param val: string representation of constant, ``str``
+    :raises: :exc:`ValueError` If unable to convert to python representation
+    :raises: :exc:`MsgSpecException` If value exceeds specified integer width
     """
     if type_ in ['float32','float64']:
         return float(val)
@@ -558,35 +384,36 @@ def _convert_val(type_, val):
         return True if eval(val) else False
     raise MsgSpecException("invalid constant type: [%s]"%type_)
         
-def load_by_type(msgtype, package_context=''):
+def load_by_type(msgtype, includepath, package_context=''):
     """
     Load message specification for specified type
-    
-    @param package_context: package name to use for the type name or
-        '' to use the local (relative) naming convention.
-    @type  package_context: str
-    @return: Message type name and message specification
-    @rtype: (str, L{MsgSpec})
+
+    :param package_context: package name to use for the type name or
+      '' to use the local (relative) naming convention, ``str``
+    :returns: Message type name and message specification, ``(str, MsgSpec)``
+    :raises: :exc:`MessageNotFound`
     """
-    pkg, basetype = roslib.names.package_resource_name(msgtype)
+    assert isinstance(includepath, list)
+
+    log("load_by_type(%s, %s, %s)" % (msgtype, str(includepath), package_context))
+    pkg, basetype = rosidl.names.package_resource_name(msgtype)
     pkg = pkg or package_context # convert '' -> local package
-    try:
-        m_f = msg_file(pkg, basetype)
-    except roslib.packages.InvalidROSPkgException:
-        raise MsgSpecException("Cannot locate message type [%s], package [%s] does not exist"%(msgtype, pkg)) 
+    
+    log("pkg", pkg)
+    m_f = msg_file(pkg, basetype, includepath)
+    log("m_f", m_f)
+    if m_f is None:
+        raise MessageNotFound(msgtype)
     return load_from_file(m_f, pkg)
 
 def load_from_string(text, package_context='', full_name='', short_name=''):
     """
     Load message specification from a string.
-    @param text: .msg text 
-    @type  text: str
-    @param package_context: package name to use for the type name or
-        '' to use the local (relative) naming convention.
-    @type  package_context: str
-    @return: Message specification
-    @rtype: L{MsgSpec}
-    @raise MsgSpecException: if syntax errors or other problems are detected in file
+    :param text: .msg text , ``str``
+    :param package_context: package name to use for the type name or
+        '' to use the local (relative) naming convention., ``str``
+    :returns: :class:`MsgSpec` specification
+    :raises: :exc:`MsgSpecException` If syntax errors or other problems are detected in file
     """
     types = []
     names = []
@@ -625,7 +452,9 @@ def load_from_string(text, package_context='', full_name='', short_name=''):
             if not is_valid_msg_field_name(name):
                 raise MsgSpecException("%s is not a legal message field name"%name)
             if package_context and not SEP in type_:
-                if not base_msg_type(type_) in RESERVED_TYPES:
+                if type_ == HEADER:
+                    type_ == HEADER_FULL_NAME
+                elif not base_msg_type(type_) in BUILTIN_TYPES:
                     #print "rewrite", type_, "to", "%s/%s"%(package_context, type_)
                     type_ = "%s/%s"%(package_context, type_)
             types.append(type_)
@@ -634,32 +463,28 @@ def load_from_string(text, package_context='', full_name='', short_name=''):
 
 def load_from_file(file_path, package_context=''):
     """
-    Convert the .msg representation in the file to a MsgSpec instance.
+    Convert the .msg representation in the file to a :class:`MsgSpec` instance.
     This does *not* register the object.
-    @param file_path: path of file to load from
-    @type  file_path: str:
-    @param package_context: package name to prepend to type name or
-        '' to use local (relative) naming convention.
-    @type  package_context: str
-    @return: Message type name and message specification
-    @rtype:  (str, L{MsgSpec})
-    @raise MsgSpecException: if syntax errors or other problems are detected in file
+    :param file_path: path of file to load from, ``str``
+    :param package_context: package name to prepend to type name or
+        '' to use local (relative) naming convention, ``str``
+    :returns: Message type name and message specification, ``(str, MsgSpec)``
+    :raises: :exc:`MsgSpecException`: if syntax errors or other problems are detected in file
     """
-    if VERBOSE:
-        if package_context:
-            print("Load spec from", file_path, "into package [%s]"%package_context)
-        else:
-            print("Load spec from", file_path)
+    if package_context:
+        log("Load spec from", file_path, "into package [%s]"%package_context)
+    else:
+        log("Load spec from", file_path)
 
     file_name = os.path.basename(file_path)
-    type_ = file_name[:-len(EXT)]
+    type_ = file_name[:-len(EXT_MSG)]
     base_type_ = type_
     # determine the type name
     if package_context:
         while package_context.endswith(SEP):
             package_context = package_context[:-1] #strip message separators
         type_ = "%s%s%s"%(package_context, SEP, type_)
-    if not roslib.names.is_legal_resource_name(type_):
+    if not names.is_legal_resource_name(type_):
         raise MsgSpecException("%s: [%s] is not a legal type name"%(file_path, type_))
     
     f = open(file_path, 'r')
@@ -678,16 +503,15 @@ def load_from_file(file_path, package_context=''):
 HEADER   = 'Header'
 TIME     = 'time'
 DURATION = 'duration'
+HEADER_FULL_NAME = 'std_msgs/Header'
 
-def is_header_type(type_):
+def is_header_type(msg_type):
     """
-    @param type_: message type name
-    @type  type_: str
-    @return: True if \a type_ refers to the ROS Header type
-    @rtype:  bool
+    :param msg_type: message type name, ``str``
+    :returns: ``True`` if *msg_type* refers to the ROS Header type, ``bool``
     """
     # for backwards compatibility, include roslib/Header. REP 100
-    return type_ in [HEADER, 'std_msgs/Header', 'roslib/Header']
+    return msg_type in [HEADER, HEADER_FULL_NAME, 'roslib/Header']
        
 # time and duration types are represented as aggregate data structures
 # for the purposes of serialization from the perspective of
@@ -719,47 +543,41 @@ def is_builtin(msg_type_name):
 ## extended builtins are builtin types that can be represented as MsgSpec instances
 EXTENDED_BUILTINS = { TIME : load_from_string(TIME_MSG), DURATION: load_from_string(DURATION_MSG) }
 
-RESERVED_TYPES  = BUILTIN_TYPES + [HEADER]
-
 REGISTERED_TYPES = { } 
 _loaded_packages = [] #keep track of packages so that we only load once (note: bug #59)
 
 def is_registered(msg_type_name):
     """
-    @param msg_type_name: name of message type
-    @type  msg_type_name: str
-    @return: True if msg spec for specified msg type name is
-    registered. NOTE: builtin types are not registered.
-    @rtype: bool
+    :param msg_type_name: name of message type, ``str``
+    :returns: ``True`` if msg spec for specified msg type name is
+      registered. NOTE: builtin types are not registered, ``bool``
     """
     return msg_type_name in REGISTERED_TYPES
 
 def get_registered(msg_type_name, default_package=None):
     """
-    @param msg_type_name: name of message type
-    @type  msg_type_name: str
-    @return: msg spec for msg type name
-    @rtype: L{MsgSpec}
+    :param msg_type_name: name of message type, ``str``
+    :returns: :class:`MsgSpec` for msg type name
     """
+    # support for HEADER type
+    if is_header_type(msg_type_name):
+        msg_type_name = HEADER_FULL_NAME
     if msg_type_name in REGISTERED_TYPES:
         return REGISTERED_TYPES[msg_type_name]
     elif default_package:
         # if msg_type_name has no package specifier, try with default package resolution
-        p, n = roslib.names.package_resource_name(msg_type_name)
+        p, n = names.package_resource_name(msg_type_name)
         if not p:
-            return REGISTERED_TYPES[roslib.names.resource_name(default_package, msg_type_name)]
+            return REGISTERED_TYPES[names.resource_name(default_package, msg_type_name)]
     raise KeyError(msg_type_name)
 
 def register(msg_type_name, msg_spec):
     """
     Load MsgSpec into the type dictionary
     
-    @param msg_type_name: name of message type
-    @type  msg_type_name: str
-    @param msg_spec: spec to load
-    @type  msg_spec: L{MsgSpec}
+    :param msg_type_name: name of message type, ``str``
+    :param msg_spec: :class:`MsgSpec` instance to load
     """
-    if VERBOSE:
-        print("Register msg %s"%msg_type_name)
+    log("Register msg %s"%msg_type_name)
     REGISTERED_TYPES[msg_type_name] = msg_spec
 

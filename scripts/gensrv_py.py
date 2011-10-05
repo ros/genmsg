@@ -62,7 +62,7 @@ def srv_generator(package, name, spec, includepath):
     gendeps_dict = genmsg.gentools.get_dependencies(spec, package, includepath)
     md5 = genmsg.gentools.compute_md5(gendeps_dict, includepath)
 
-    yield "class %s(roslib.message.ServiceDefinition):"%name
+    yield "class %s(object):"%name
     yield "  _type          = '%s'"%fulltype
     yield "  _md5sum = '%s'"%md5
     yield "  _request_class  = %s"%req
@@ -71,7 +71,7 @@ def srv_generator(package, name, spec, includepath):
 class SrvGenerator(genutil.Generator):
     def __init__(self):
         super(SrvGenerator, self) \
-            .__init__('gensrv_py', 'services', genmsg.srvs.EXT, 
+            .__init__('gensrv_py', 'services', genmsg.EXT_SRV, 
                       'srv', SrvGenerationException)
 
     def generate(self, package, f, outdir, incpath):
@@ -88,7 +88,7 @@ class SrvGenerator(genutil.Generator):
         prefix = infile_name[:-len(genmsg.srvs.EXT)]
         # generate message files for request/response        
         name, spec = genmsg.srvs.load_from_file(f, package)
-        base_name = rosidl.names.resource_name_base(name)
+        base_name = genmsg.names.resource_name_base(name)
         
         outfile = self.outfile_name(outdir, f)
         f = open(outfile, 'w')
@@ -106,7 +106,6 @@ class SrvGenerator(genutil.Generator):
     
 if __name__ == "__main__":
     import trace
-    genmsg.srvs.set_verbose(True)
     tracer = trace.Trace(
         ignoredirs=[sys.prefix, sys.exec_prefix],
         trace=0)

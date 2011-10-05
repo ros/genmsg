@@ -29,12 +29,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Revision $Id: srvs.py 14234 2011-07-12 00:19:01Z kwc $
-# $Author: kwc $
+
 """
 ROS Service Description Language Spec
-Implements U{http://ros.org/wiki/srv}
+Implements http://ros.org/wiki/srv
 """
 
 import os
@@ -46,36 +44,11 @@ try:
 except ImportError:
     from io import StringIO # Python 3.x
 
-import roslib.exceptions
-import roslib.msgs
-import roslib.names
-import roslib.packages
-import roslib.resources
+from . import log
+from . import msgs
+from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, MsgSpecException
 
-# don't directly use code from this, though we do depend on the
-# manifest.Depend data type
-import roslib.manifest
-
-## file extension
-EXT = roslib.names.SRV_EXT #alias
-SEP = roslib.names.PRN_SEPARATOR #e.g. std_msgs/String
-## input/output deliminator
-IODELIM   = '---'
-COMMENTCHAR = roslib.msgs.COMMENTCHAR
-
-VERBOSE = False
-## @return: True if msg-related scripts should print verbose output
-def is_verbose():
-    return VERBOSE
-
-## set whether msg-related scripts should print verbose output
-def set_verbose(v):
-    global VERBOSE
-    VERBOSE = v
-
-class SrvSpecException(roslib.exceptions.ROSLibException): pass
-
-# msg spec representation ##########################################
+# model ##########################################
 
 class SrvSpec(object):
     
@@ -107,69 +80,13 @@ class SrvSpec(object):
     
 # srv spec loading utilities ##########################################
 
-## @internal
-## predicate for filtering directory list. matches message files
-def _srv_filter(f):
-    return os.path.isfile(f) and f.endswith(EXT)
-
-# also used by doxymaker
-def list_srv_types(package, include_depends):
-    """
-    list all services in the specified package
-    @param package: name of package to search
-    @type  package: str
-    @param include_depends: if True, will also list services in package dependencies
-    @type  include_depends: bool
-    @return: service type names
-    @rtype: [str]
-    """
-    types = roslib.resources.list_package_resources(package, include_depends, roslib.packages.SRV_DIR, _srv_filter)
-    return [x[:-len(EXT)] for x in types]
-
-def srv_file(package, type_):
-    """
-    @param package: name of package .srv file is in
-    @type  package: str
-    @param type_: type name of service
-    @type  type_: str
-    @return: file path of .srv file in specified package
-    @rtype: str
-    """
-    return roslib.packages.resource_file(package, roslib.packages.SRV_DIR, type_+EXT)
-
-def get_pkg_srv_specs(package):
-    """
-    List all messages that a package contains
-    @param depend: roslib.manifest.Depend object representing package
-    to load messages from
-    @type  depend: Depend
-    @return: list of message type names and specs for package, as well as a list
-    of message names that could not be processed. 
-    @rtype: [(str,roslib.MsgSpec), [str]]
-    """
-    #almost identical to roslib.msgs.get_pkg_msg_specs
-    types = list_srv_types(package, False)
-    specs = [] #no fancy list comprehension as we want to show errors
-    failures = []
-    for t in types:
-        try: 
-            spec = load_from_file(srv_file(package, t), package)
-            specs.append(spec)
-        except Exception as e:
-            failures.append(t)
-            sys.stderr.write("ERROR: unable to load %s\n"%(t))
-    return specs, failures
-
 def load_from_string(text, package_context='', full_name='', short_name=''):
     """
-    @param text: .msg text 
-    @type  text: str
-    @param package_context: context to use for msgTypeName, i.e. the package name,
-    or '' to use local naming convention.
-    @type  package_context: str
-    @return: Message type name and message specification
-    @rtype: roslib.MsgSpec
-    @raise roslib.MsgSpecException: if syntax errors or other problems are detected in file
+    :param text: .msg text , ``str``
+    :param package_context: context to use for msg type name, i.e. the package name,
+      or '' to use local naming convention. ``str``
+    :returns: Message type name and :class:`MsgSpec` message specification
+    :raises :exc:`MsgSpecException` If syntax errors or other problems are detected in file
     """
     text_in  = StringIO()
     text_out = StringIO()
@@ -180,39 +97,36 @@ def load_from_string(text, package_context='', full_name='', short_name=''):
             accum = text_out
         else:
             accum.write(l+'\n')
-    # create separate roslib.msgs objects for each half of file
-    
-    msg_in = roslib.msgs.load_from_string(text_in.getvalue(), package_context, '%sRequest'%(full_name), '%sRequest'%(short_name))
-    msg_out = roslib.msgs.load_from_string(text_out.getvalue(), package_context, '%sResponse'%(full_name), '%sResponse'%(short_name))
+
+    # create separate MsgSpec objects for each half of file
+    msg_in = msgs.load_from_string(text_in.getvalue(), package_context, '%sRequest'%(full_name), '%sRequest'%(short_name))
+    msg_out = msgs.load_from_string(text_out.getvalue(), package_context, '%sResponse'%(full_name), '%sResponse'%(short_name))
     return SrvSpec(msg_in, msg_out, text, full_name, short_name, package_context)
 
 def load_from_file(file_name, package_context=''):
     """
-    Convert the .srv representation in the file to a SrvSpec instance.
-    @param file_name: name of file to load from
-    @type  file_name: str
-    @param package_context: context to use for type name, i.e. the package name,
-    or '' to use local naming convention.
-    @type package_context: str
-    @return: Message type name and message specification
-    @rtype: (str, L{SrvSpec})
-    @raise SrvSpecException: if syntax errors or other problems are detected in file
+    Convert the .srv representation in the file to a :class:`SrvSpec` instance.
+
+    :param file_name: name of file to load from, ``str``
+    :param package_context: context to use for type name, i.e. the package name,
+      or '' to use local naming convention, ``str``
+    :returns: Message type name and message specification, ``(str, SrvSpec)``
+    :raise: :exc:`MsgSpecException` If syntax errors or other problems are detected in file
     """
-    if VERBOSE:
-        if package_context:
-            sys.stdout.write("Load spec from %s into namespace [%s]\n"%(file_name, package_context))
-        else:
-            sys.stdout.write("Load spec from %s\n"%(file_name))
+    if package_context:
+        log("Load spec from %s into namespace [%s]\n"%(file_name, package_context))
+    else:
+        log("Load spec from %s\n"%(file_name))
     base_file_name = os.path.basename(file_name)
-    type_ = base_file_name[:-len(EXT)]
+    type_ = base_file_name[:-len(EXT_SRV)]
     base_type_ = type_
     # determine the type name
     if package_context:
         while package_context.endswith(SEP):
             package_context = package_context[:-1] #strip message separators
         type_ = "%s%s%s"%(package_context, SEP, type_)
-    if not roslib.names.is_legal_resource_name(type_):
-        raise SrvSpecException("%s: %s is not a legal service type name"%(file_name, type_))
+    if not names.is_legal_resource_name(type_):
+        raise MsgSpecException("%s: %s is not a legal service type name"%(file_name, type_))
     
     f = open(file_name, 'r')
     try:

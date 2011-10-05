@@ -43,6 +43,7 @@ import sys
 
 # roslib.msgs contains the utilities for parsing .msg specifications. It is meant to have no rospy-specific knowledge
 import genmsg.msgs 
+import genmsg.names
 import genmsg.packages 
 import genmsg.genpy 
 
@@ -55,7 +56,7 @@ class GenmsgPackage(genutil.Generator):
     def __init__(self):
         super(GenmsgPackage, self).__init__(
             'genmsg_py', 'messages', 
-            genmsg.msgs.EXT, 'msg', 
+            genmsg.EXT_MSG, 'msg', 
             genmsg.genpy.MsgGenerationException)
 
     def generate(self, package, f, outdir, includepath):
@@ -74,13 +75,13 @@ class GenmsgPackage(genutil.Generator):
         outfile_name = self.outfile_name(outdir, infile_name)
 
         (name, spec) = genmsg.msgs.load_from_file(f, package)
-        base_name = rosidl.names.resource_name_base(name)
+        base_name = genmsg.names.resource_name_base(name)
         
         self.write_gen(outfile_name, 
                        genmsg.genpy.msg_generator(package, base_name, spec, includepath), 
                        verbose)
 
-        rosidl.msgs.register(name, spec)
+        genmsg.msgs.register(name, spec)
         return outfile_name
 
 if __name__ == "__main__":

@@ -59,24 +59,23 @@ import tempfile
 import traceback
 import struct
 
-import genmsg.msgs
+from . import gentools
+from . import msgs
+
 import genmsg.packages
 from .genpy import MsgGenerationException
+
+import roslib.packages #for get_pkg_dir
 
 try:
     from cStringIO import StringIO # Python 2.x
 except ImportError:
     from io import StringIO # Python 3.x
 
-import roslib.exceptions
-import roslib.gentools
-import roslib.msgs
-import roslib.packages #for get_pkg_dir
-
 # indent width
 INDENT = '  '
 
-class MsgGenerationException(roslib.exceptions.ROSLibException):
+class MsgGenerationException(Exception):
     """
     Exception type for errors in roslib.genpy
     """
@@ -89,7 +88,7 @@ def get_registered_ex(type_):
     @type  type_: str
     """
     try:
-        return roslib.msgs.get_registered(type_)
+        return msgs.get_registered(type_)
     except KeyError:
         raise MsgGenerationException("Unknown type [%s]. Please check that the manifest.xml correctly declares dependencies."%type_)
 
@@ -172,9 +171,9 @@ class Special:
             return None
         
 _SPECIAL_TYPES = {
-    roslib.msgs.HEADER:   Special('std_msgs.msg._Header.Header()',     None, 'import std_msgs.msg'),
-    roslib.msgs.TIME:     Special('roslib.rostime.Time()',     '%s.canon()', 'import roslib.rostime'),
-    roslib.msgs.DURATION: Special('roslib.rostime.Duration()', '%s.canon()', 'import roslib.rostime'), 
+    msgs.HEADER:   Special('std_msgs.msg._Header.Header()',     None, 'import std_msgs.msg'),
+    msgs.TIME:     Special('roslib.rostime.Time()',     '%s.canon()', 'import roslib.rostime'),
+    msgs.DURATION: Special('roslib.rostime.Duration()', '%s.canon()', 'import roslib.rostime'), 
     }
 
 ################################################################################
@@ -202,7 +201,7 @@ def default_value(field_type, default_package):
     elif field_type == 'bool':
         return 'False'
     elif field_type.endswith(']'): # array type
-        base_type, is_array, array_len = roslib.msgs.parse_type(field_type)
+        base_type, is_array, array_len = msgs.parse_type(field_type)
         if base_type in ['byte', 'uint8']:
             # strings, byte[], and uint8s are all optimized to be strings
             if array_len is not None:
@@ -231,8 +230,8 @@ def flatten(msg):
     new_names = []
     for t, n in zip(msg.types, msg.names):
         #flatten embedded types - note: bug #59
-        if roslib.msgs.is_registered(t):
-            msg_spec = flatten(roslib.msgs.get_registered(t))
+        if msgs.is_registered(t):
+            msg_spec = flatten(msgs.get_registered(t))
             new_types.extend(msg_spec.types)
             for n2 in msg_spec.names:
                 new_names.append(n+'.'+n2)
@@ -241,7 +240,7 @@ def flatten(msg):
             #as you get n __getitems__ method calls vs. a single *array call
             new_types.append(t)
             new_names.append(n)
-    return roslib.msgs.MsgSpec(new_types, new_names, msg.constants, msg.text)
+    return msgs.MsgSpec(new_types, new_names, msg.constants, msg.text)
 
 def make_python_safe(spec):
     """
@@ -251,8 +250,8 @@ def make_python_safe(spec):
     @return: python-safe message specification
     @rtype: L{MsgSpec}
     """
-    new_c = [roslib.msgs.Constant(c.type, _remap_reserved(c.name), c.val, c.val_text) for c in spec.constants]
-    return roslib.msgs.MsgSpec(spec.types, [_remap_reserved(n) for n in spec.names], new_c, spec.text)
+    new_c = [msgs.Constant(c.type, _remap_reserved(c.name), c.val, c.val_text) for c in spec.constants]
+    return msgs.MsgSpec(spec.types, [_remap_reserved(n) for n in spec.names], new_c, spec.text)
 
 def _remap_reserved(field_name):
     """
@@ -307,7 +306,7 @@ def compute_constructor(package, type_):
         return get_special(type_).constructor
     else:
         base_pkg, base_type_ = compute_pkg_type(package, type_)
-        if not roslib.msgs.is_registered("%s/%s"%(base_pkg,base_type_)):
+        if not msgs.is_registered("%s/%s"%(base_pkg,base_type_)):
             return None
         else:
             return '%s.msg.%s()'%(base_pkg, base_type_)
@@ -320,7 +319,7 @@ def compute_pkg_type(package, type_):
     @type  type: str
     @return (str, str): python package and type name
     """
-    splits = type_.split(roslib.msgs.SEP)
+    splits = type_.split(msgs.SEP)
     if len(splits) == 1:
         return package, splits[0]
     elif len(splits) == 2:
@@ -339,7 +338,7 @@ def compute_import(package, type_):
     @rtype: [str]
     """
     # orig_base_type is the unresolved type
-    orig_base_type = roslib.msgs.base_msg_type(type_) # strip array-suffix
+    orig_base_type = msgs.base_msg_type(type_) # strip array-suffix
     # resolve orig_base_type based on the current package context.
     # base_type is the resolved type stripped of any package name.
     # pkg is the actual package of type_.
@@ -349,8 +348,8 @@ def compute_import(package, type_):
     # against the unresolved type builtins/specials are never
     # relative. This requires some special handling for Header, which has
     # two names (Header and std_msgs/Header).
-    if roslib.msgs.is_builtin(orig_base_type) or \
-           roslib.msgs.is_header_type(orig_base_type):
+    if msgs.is_builtin(orig_base_type) or \
+           msgs.is_header_type(orig_base_type):
         # of the builtin types, only special types require import
         # handling. we switch to base_type as special types do not
         # include package names.
@@ -358,7 +357,7 @@ def compute_import(package, type_):
             retval = [get_special(base_type).import_str]
         else:
             retval = []
-    elif not roslib.msgs.is_registered(type_str):
+    elif not msgs.is_registered(type_str):
         retval = []
     else:
         retval = ['import %s.msg'%pkg]
@@ -369,7 +368,7 @@ def compute_import(package, type_):
 
 def compute_full_text_escaped(gen_deps_dict):
     """
-    Same as roslib.gentools.compute_full_text, except that the
+    Same as genmsg.gentools.compute_full_text, except that the
     resulting text is escaped to be safe for Python's triple-quote string
     quoting
 
@@ -378,7 +377,7 @@ def compute_full_text_escaped(gen_deps_dict):
     @return: concatenated text for msg/srv file and embedded msg/srv types. Text will be escaped for triple-quote
     @rtype: str
     """
-    msg_definition = roslib.gentools.compute_full_text(gen_deps_dict)
+    msg_definition = gentools.compute_full_text(gen_deps_dict)
     msg_definition.replace('"""', r'\"\"\"')
     return msg_definition
 
@@ -620,7 +619,7 @@ def string_serializer_generator(package, type_, name, serialize):
 
     # the length generator is a noop if serialize is True as we
     # optimize the serialization call.
-    base_type, is_array, array_len = roslib.msgs.parse_type(type_)
+    base_type, is_array, array_len = msgs.parse_type(type_)
     # - don't serialize length for fixed-length arrays of bytes
     if base_type not in ['uint8', 'byte'] or array_len is None:
         for y in len_serializer_generator(var, True, serialize):
@@ -630,7 +629,7 @@ def string_serializer_generator(package, type_, name, serialize):
         #serialize length and string together
 
         #check to see if its a uint8/byte type, in which case we need to convert to string before serializing
-        base_type, is_array, array_len = roslib.msgs.parse_type(type_)
+        base_type, is_array, array_len = msgs.parse_type(type_)
         if base_type in ['uint8', 'byte']:
             yield "# - if encoded as a list instead, serialize as bytes instead of string"
             if array_len is None:
@@ -659,7 +658,7 @@ def array_serializer_generator(package, type_, name, serialize, is_numpy):
     Generator for array types
     @raise MsgGenerationException: if array spec is invalid
     """
-    base_type, is_array, array_len = roslib.msgs.parse_type(type_)
+    base_type, is_array, array_len = msgs.parse_type(type_)
     if not is_array:
         raise MsgGenerationException("Invalid array spec: %s"%type_)
     var_length = array_len is None
@@ -771,7 +770,7 @@ def complex_serializer_generator(package, type_, name, serialize, is_numpy):
     # brackets, then we check for the 'complex' builtin types (string,
     # time, duration, Header), then we canonicalize it to an embedded
     # message type.
-    _, is_array, _ = roslib.msgs.parse_type(type_)
+    _, is_array, _ = msgs.parse_type(type_)
 
     #Array
     if is_array:
@@ -786,7 +785,7 @@ def complex_serializer_generator(package, type_, name, serialize, is_numpy):
             # canonicalize type
             pkg, base_type = compute_pkg_type(package, type_)
             type_ = "%s/%s"%(pkg, base_type)
-        if roslib.msgs.is_registered(type_):
+        if msgs.is_registered(type_):
             # descend data structure ####################
             ctx_var = next_var()
             yield "%s = %s"%(ctx_var, _serial_context+name) 
@@ -904,7 +903,7 @@ def deserialize_fn_generator(package, spec, is_numpy=False):
     
     #Instantiate embedded type classes
     for type_, name in spec.fields():
-        if roslib.msgs.is_registered(type_):
+        if msgs.is_registered(type_):
             yield "  if self.%s is None:"%name
             yield "    self.%s = %s"%(name, compute_constructor(package, type_))
     yield "  end = 0" #initialize var
@@ -947,10 +946,10 @@ def msg_generator(package, name, spec):
     # rely on in-memory MsgSpecs instead so that we can generate code
     # for older versions of msg files
     try:
-        gendeps_dict = roslib.gentools.get_dependencies(spec, package, compute_files=False)
-    except roslib.msgs.MsgSpecException as e:
+        gendeps_dict = gentools.get_dependencies(spec, package, compute_files=False)
+    except msgs.MsgSpecException as e:
         raise MsgGenerationException("Cannot generate .msg for %s/%s: %s"%(package, name, str(e)))
-    md5sum = roslib.gentools.compute_md5(gendeps_dict)
+    md5sum = gentools.compute_md5(gendeps_dict)
     
     # remap spec names to be Python-safe
     spec = make_python_safe(spec) 
@@ -1180,7 +1179,7 @@ def generate_dynamic(core_type, msg_cat):
     deps_msgs = splits[1:]
 
     # create MsgSpec representations of .msg text
-    specs = { core_type: roslib.msgs.load_from_string(core_msg, core_pkg) }
+    specs = { core_type: msgs.load_from_string(core_msg, core_pkg) }
     # - dependencies
     for dep_msg in deps_msgs:
         # dependencies require more handling to determine type name
@@ -1232,7 +1231,7 @@ def generate_dynamic(core_type, msg_cat):
             raise MsgGenerationException("cannot retrieve message class for %s/%s"%(pkg, s_type))
         
     # erase the dirty work we've done
-    roslib.msgs.reinit()
+    msgs.reinit()
 
     return messages
 
@@ -1378,31 +1377,8 @@ class Generator(object):
             print "\nERROR[%s]: package name '%s' is illegal and cannot be used in message generation.\nPlease see http://ros.org/wiki/Names"%(self.name, package)
             return 1 # flag error
         
-        #package_dir = rosidl.packages.get_pkg_dir(package, True)
-        #if package_dir is None:
-        #print "\nERROR[%s]: Unable to locate package '%s'\n"%(self.name, package)
-        #return 1 #flag error
-
         # package/src/package/msg for messages, packages/src/package/srv for services
         outdir = options.outdir #self.outdir(package_dir)
-        try:
-            # TODO: this can result in packages getting dependencies
-            # that they shouldn't. To implement this correctly will
-            # require an overhaul of the message generator
-            # infrastructure.
-            #rosidl.msgs.load_package_dependencies(package, load_recursive=True)
-            pass
-        except Exception, e:
-            #traceback.print_exc()
-            print "\nERROR[%s]: Unable to load package dependencies for %s: %s\n"%(self.name, package, e)
-            return 1 #flag error
-        try:
-            # rosidl.msgs.load_package(package)        
-            pass
-        except Exception, e:
-            print "\nERROR[%s]: Unable to load package %s: %s\n"%(self.name, package, e)
-            return 1 #flag error
-
         retcode = 0
         for f in pfiles:
             try:
@@ -1452,7 +1428,7 @@ class Generator(object):
         # pass 1: collect list of files for each package
         # retcode = self.generate_package_files(package_files, files, self.ext)
 
-        # pass 2: genmsg.msgs.load_package(), generate messages
+        # pass 2: generate messages
         retcode = self.generate_all_by_package(package_files, options)
 
         # backwards compat
