@@ -1,0 +1,2 @@
+roslisp genmsg scripts
+need to deal with roslib.Message base class appropriately
