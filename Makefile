@@ -1,6 +1,6 @@
 .PHONY: all setup clean_dist distro clean install dsc source_deb upload
 
-NAME='genpy'
+NAME='genmsg'
 VERSION=`./setup.py --version`
 
 all:
