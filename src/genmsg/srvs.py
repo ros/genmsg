@@ -44,9 +44,9 @@ try:
 except ImportError:
     from io import StringIO # Python 3.x
 
-from . import log
 from . import msgs
-from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, MsgSpecException
+from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, MsgSpecException, log
+from . names import is_legal_resource_name
 
 # model ##########################################
 
@@ -125,15 +125,12 @@ def load_from_file(file_name, package_context=''):
         while package_context.endswith(SEP):
             package_context = package_context[:-1] #strip message separators
         type_ = "%s%s%s"%(package_context, SEP, type_)
-    if not names.is_legal_resource_name(type_):
+    if not is_legal_resource_name(type_):
         raise MsgSpecException("%s: %s is not a legal service type name"%(file_name, type_))
     
-    f = open(file_name, 'r')
-    try:
+    with  open(file_name, 'r') as f:
         text = f.read()
         return (type_, load_from_string(text, package_context, type_, base_type_))
-    finally:
-        f.close()
 
 
 

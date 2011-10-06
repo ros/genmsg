@@ -32,23 +32,8 @@
 
 __version__ = '0.1.0'
 
-from . base import EXT_MSG, EXT_SRV, SEP
-from . names import resource_name_base, package_resource_name
-from . msgs import HEADER, TIME, DURATION, MsgSpec, Constant
+from . base import EXT_MSG, EXT_SRV, SEP, log, plog, MsgNotFound, MsgSpecException
+from . names import resource_name_base, package_resource_name, is_legal_resource_base_name
+from . msgs import HEADER, TIME, DURATION, MsgSpec, Constant, MsgSpecException
 from . srvs import SrvSpec
 
-verbose = False
-
-if verbose:
-    import inspect, pprint
-    def log(*args):
-        print "%s:%d" % inspect.stack()[1][1:3],
-        print ' '.join([str(x) for x in args])
-
-    def plog(msg, obj):
-        print "%s:%d" % inspect.stack()[1][1:3],
-        print msg, " ",
-        pprint.pprint(obj)
-else:
-    def log(*args): pass
-    def plog(*args): pass

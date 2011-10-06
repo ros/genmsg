@@ -43,7 +43,23 @@ CONSTCHAR   = '='
 COMMENTCHAR = '#'
 IODELIM   = '---'
 
-class MessageNotFound(Exception):
+verbose = False
+
+if verbose:
+    import inspect, pprint
+    def log(*args):
+        print "%s:%d" % inspect.stack()[1][1:3],
+        print ' '.join([str(x) for x in args])
+
+    def plog(msg, obj):
+        print "%s:%d" % inspect.stack()[1][1:3],
+        print msg, " ",
+        pprint.pprint(obj)
+else:
+    def log(*args): pass
+    def plog(*args): pass
+
+class MsgNotFound(Exception):
     pass
 
 class MsgSpecException(Exception):

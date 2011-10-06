@@ -49,7 +49,8 @@ import sys
 import re
 import string
 
-from . base import MessageNotFound, MsgSpecException, CONSTCHAR, COMMENT, EXT_MSG, MSG_DIR, SEP
+from . base import MsgNotFound, MsgSpecException, CONSTCHAR, COMMENTCHAR, EXT_MSG, MSG_DIR, SEP
+from . names import is_legal_resource_name, is_legal_resource_base_name, package_resource_name, resource_name
 
 #TODOXXX: unit test
 def base_msg_type(type_):
@@ -129,7 +130,7 @@ def is_valid_msg_type(x):
     if not x or len(x) != len(x.strip()):
         return False
     base = base_msg_type(x)
-    if not names.is_legal_resource_name(base):
+    if not is_legal_resource_name(base):
         return False
     #parse array indicies
     x = x[len(base):]
@@ -160,7 +161,7 @@ def is_valid_msg_field_name(x):
     """
     :returns: ``True`` if the name is a syntatically legal message field name, ``bool``
     """
-    return names.is_legal_resource_base_name(x)
+    return is_legal_resource_base_name(x)
 
 # msg spec representation ##########################################
 
@@ -326,7 +327,7 @@ def reinit():
     _initialized = False
     del _loaded_packages[:]
     REGISTERED_TYPES.clear()
-    _init()
+    _initialized = True    
     
 # .msg file routines ##############################################################       
 
@@ -388,19 +389,19 @@ def load_by_type(msgtype, includepath, package_context=''):
     :param package_context: package name to use for the type name or
       '' to use the local (relative) naming convention, ``str``
     :returns: Message type name and message specification, ``(str, MsgSpec)``
-    :raises: :exc:`MessageNotFound`
+    :raises: :exc:`MsgNotFound`
     """
     assert isinstance(includepath, list)
 
     log("load_by_type(%s, %s, %s)" % (msgtype, str(includepath), package_context))
-    pkg, basetype = rosidl.names.package_resource_name(msgtype)
+    pkg, basetype = package_resource_name(msgtype)
     pkg = pkg or package_context # convert '' -> local package
     
     log("pkg", pkg)
     m_f = msg_file(pkg, basetype, includepath)
     log("m_f", m_f)
     if m_f is None:
-        raise MessageNotFound(msgtype)
+        raise MsgNotFound(msgtype)
     return load_from_file(m_f, pkg)
 
 def load_from_string(text, package_context='', full_name='', short_name=''):
@@ -481,7 +482,7 @@ def load_from_file(file_path, package_context=''):
         while package_context.endswith(SEP):
             package_context = package_context[:-1] #strip message separators
         type_ = "%s%s%s"%(package_context, SEP, type_)
-    if not names.is_legal_resource_name(type_):
+    if not is_legal_resource_name(type_):
         raise MsgSpecException("%s: [%s] is not a legal type name"%(file_path, type_))
     
     f = open(file_path, 'r')
@@ -563,9 +564,9 @@ def get_registered(msg_type_name, default_package=None):
         return REGISTERED_TYPES[msg_type_name]
     elif default_package:
         # if msg_type_name has no package specifier, try with default package resolution
-        p, n = names.package_resource_name(msg_type_name)
+        p, n = package_resource_name(msg_type_name)
         if not p:
-            return REGISTERED_TYPES[names.resource_name(default_package, msg_type_name)]
+            return REGISTERED_TYPES[resource_name(default_package, msg_type_name)]
     raise KeyError(msg_type_name)
 
 def register(msg_type_name, msg_spec):
