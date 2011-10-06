@@ -29,10 +29,13 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Revision $Id: __init__.py 8788 2010-03-22 22:30:04Z kwc $
 
-from . base import EXT_MSG, EXT_SRV
+__version__ = '0.1.0'
+
+from . base import EXT_MSG, EXT_SRV, SEP
+from . names import resource_name_base, package_resource_name
+from . msgs import HEADER, TIME, DURATION, MsgSpec, Constant
+from . srvs import SrvSpec
 
 verbose = False
 

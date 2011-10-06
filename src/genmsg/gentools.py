@@ -30,9 +30,6 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Revision $Id: gentools.py 14229 2011-07-11 23:34:24Z kwc $
-# $Author: kwc $
 
 """
 Library for supporting message and service generation for all ROS

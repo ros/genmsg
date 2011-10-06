@@ -29,9 +29,6 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Revision $Id: msgs.py 14304 2011-07-13 08:00:40Z kwc $
-# $Author: kwc $
 
 from __future__ import print_function
 
@@ -52,7 +49,7 @@ import sys
 import re
 import string
 
-from . base import MessageNotFound, MsgSpecException, CONSTCHAR, COMMENT, EXT_MSG, MSG_DIR
+from . base import MessageNotFound, MsgSpecException, CONSTCHAR, COMMENT, EXT_MSG, MSG_DIR, SEP
 
 #TODOXXX: unit test
 def base_msg_type(type_):
