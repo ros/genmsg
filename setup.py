@@ -1,7 +1,14 @@
+#!/usr/bin/env python
+
 from distutils.core import setup
 
+import sys
+sys.path.insert(0, 'src')
+
+from genmsg import __version__
+
 setup(name='genmsg',
-      version= '0.1.0',
+      version= __version__,
       packages=['genmsg'],
       package_dir = {'':'src'},
       scripts = [],
