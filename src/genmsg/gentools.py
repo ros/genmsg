@@ -49,7 +49,7 @@ except ImportError:
 
 from . import msgs
 
-from .msgs import MsgSpecException, MsgSpec
+from .msgs import InvalidMsgSpec, MsgSpec
 from .srvs import SrvSpec
 from . import names
 
@@ -214,9 +214,9 @@ def get_dependencies(spec, package, compute_files=True, stdout=sys.stdout, stder
             _add_msgs_depends(spec.request, deps, package)
             _add_msgs_depends(spec.response, deps, package)                
         else:
-            raise MsgSpecException("spec does not appear to be a message or service")
+            raise InvalidMsgSpec("spec does not appear to be a message or service")
     except KeyError as e:
-        raise MsgSpecException("Cannot load type %s.  Perhaps the package is missing a dependency."%(str(e)))
+        raise InvalidMsgSpec("Cannot load type %s.  Perhaps the package is missing a dependency."%(str(e)))
 
     # convert from type names to file names
     
