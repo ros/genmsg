@@ -35,20 +35,20 @@ import sys
 
 import random
 
-def test_base_msg_type():
+def test_bare_msg_type():
     import genmsg.msgs    
     tests = [(None, None), ('String', 'String'), ('std_msgs/String', 'std_msgs/String'),
              ('String[10]', 'String'), ('string[10]', 'string'), ('std_msgs/String[10]', 'std_msgs/String'),
              ]
     for val, res in tests:
-      assert res == genmsg.msgs.base_msg_type(val)
+      assert res == genmsg.msgs.bare_msg_type(val)
 
 PKG = 'genmsg'
 
 def test_resolve_type():
-    from genmsg.msgs import resolve_type, base_msg_type
+    from genmsg.msgs import resolve_type, bare_msg_type
     for t in ['string', 'string[]', 'string[14]', 'int32', 'int32[]']:
-        bt = base_msg_type(t)
+        bt = bare_msg_type(t)
         t == resolve_type(t, PKG)
       
     assert 'foo/string' == resolve_type('foo/string', PKG)
@@ -159,9 +159,9 @@ def test_MsgSpec():
     
     # test variations of multiple fields and headers
     two_fields = sub_test_MsgSpec(['int32', 'string'], ['x', 'str'], [], 'int32 x\nstring str', False)
-    one_header = sub_test_MsgSpec(['Header'], ['header'], [], 'Header header', True)
-    header_and_fields = sub_test_MsgSpec(['Header', 'int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nint32 x\nstring str', True)
-    embed_types = sub_test_MsgSpec(['Header', 'std_msgs/Int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nstd_msgs/Int32 x\nstring str', True)
+    one_header = sub_test_MsgSpec(['std_msgs/Header'], ['header'], [], 'Header header', True)
+    header_and_fields = sub_test_MsgSpec(['std_msgs/Header', 'int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nint32 x\nstring str', True)
+    embed_types = sub_test_MsgSpec(['std_msgs/Header', 'std_msgs/Int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nstd_msgs/Int32 x\nstring str', True)
     #test strify
     assert "int32 x\nstring str" == str(two_fields).strip()
 
@@ -189,7 +189,7 @@ def test_reinit():
 
 def test___convert_val():
     from genmsg.msgs import _convert_val
-    from genmsg import MsgSpecException
+    from genmsg import InvalidMsgSpec
     assert 0. == _convert_val('float32', '0.0')
     assert 0. == _convert_val('float64', '0.0')
     
@@ -215,7 +215,7 @@ def test___convert_val():
         try:
             _convert_val(t, v)
             assert False, "should have failed width check: %s, %s"%(t, v)
-        except MsgSpecException:
+        except InvalidMsgSpec:
             pass
     type_fail = [('int32', 'f'), ('float32', 'baz')]
     for t, v in type_fail:
@@ -227,27 +227,89 @@ def test___convert_val():
     try:
         _convert_val('foo', '1')
         assert False, "should have failed invalid type"
-    except MsgSpecException:
+    except InvalidMsgSpec:
         pass
     
-def test_load_by_type():
-    from genmsg.msgs import load_by_type
-    name, msgspec = load_by_type('std_msgs/String')
-    assert 'std_msgs/String' == name
-    assert ['data'] == msgspec.names
-    assert ['string'] == msgspec.types
+def test_load_from_string():
+    # make sure Header -> std_msgs/Header conversion works
+    from genmsg.msgs import load_from_string, MsgContext
+    context = MsgContext.create_default()
+    msgspec = load_from_string(context, "Header header", package_context='test_pkg', full_name='test_pkg/HeaderTest', short_name='HeaderTest')
+    print msgspec
+    assert msgspec.has_header()
+    assert msgspec.types == ['std_msgs/Header']
+    assert msgspec.names == ['header']
+    assert msgspec.constants == []
+    assert msgspec.short_name == 'HeaderTest'
     
-    
-def test_msg_file():
-    import genmsg.msgs    
-    f = genmsg.msgs.msg_file('rosgraph_msgs', 'Log')
-    assert os.path.isfile(f)
-    assert f.endswith('rosgraph_msgs/msg/Log.msg')
+def _validate_TestString(msgspec):
+    assert ['caller_id', 'orig_caller_id', 'data'] == msgspec.names, msgspec.names
+    assert ['string', 'string', 'string'] == msgspec.types, msgspec.types
 
-    # msg_file should return paths even for non-existent resources
-    f = genmsg.msgs.msg_file('roslib', 'Fake')
-    assert not (os.path.isfile(f))
-    assert f.endswith('roslib/msg/Fake.msg')
+def test_load_from_file():
+    from genmsg.msgs import load_from_file, MsgContext
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
+    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
+
+    msg_context = MsgContext.create_default()
+    load_from_file(msg_context, test_string_path, package_context='test_ros', full_name='test_ros/TestString', short_name='TestString')
+    # not supposed to register
+    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
+    assert not msg_context.is_registered('test_ros', 'TestString')    
+    
+def test_load_from_string_TestString():
+    from genmsg.msgs import load_from_string, MsgContext
+
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
+    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
+    with open(test_string_path) as f:
+        text = f.read()
+
+    msg_context = MsgContext.create_default()
+    _validate_TestString(load_from_string(msg_context, text, 'test_ros', 'test_ros/TestString', 'TestString'))
+    # not supposed to register
+    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
+    assert not msg_context.is_registered('test_ros', 'TestString')    
+
+def test_load_by_type():
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
+    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
+    search_path = {
+        'test_ros': test_ros_dir,
+        }
+    from genmsg.msgs import load_by_type, MsgContext
+    msg_context = MsgContext.create_default()
+    msgspec = load_by_type(msg_context, 'test_ros/TestString', search_path)
+    _validate_TestString(msgspec)
+    # not supposed to register
+    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
+    assert not msg_context.is_registered('test_ros', 'TestString')    
+    
+def get_test_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
+
+def test_get_msg_file():
+    from genmsg.msgs import get_msg_file, MsgNotFound
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
+    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
+    search_path = {
+        'test_ros': test_ros_dir,
+        }
+    assert test_string_path == get_msg_file('test_ros', 'TestString', search_path)
+    try:
+        get_msg_file('test_ros', 'Bad', search_path)
+        assert False, "should have raised"
+    except MsgNotFound:
+        pass
+    try:
+        get_msg_file('bad_pkg', 'TestString', search_path)
+        assert False, "should have raised"
+    except MsgNotFound:
+        pass
 
 def test_is_valid_msg_type():
     import genmsg.msgs

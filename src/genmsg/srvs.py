@@ -45,7 +45,7 @@ except ImportError:
     from io import StringIO # Python 3.x
 
 from . import msgs
-from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, MsgSpecException, log
+from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, InvalidMsgSpec, log
 from . names import is_legal_resource_name
 
 # model ##########################################
@@ -80,13 +80,16 @@ class SrvSpec(object):
     
 # srv spec loading utilities ##########################################
 
-def load_from_string(text, package_context='', full_name='', short_name=''):
+def load_from_string(msg_context, text, package_context='', full_name='', short_name=''):
     """
+    NOTE: this will *not* register the message in the *msg_context*.
+    
+    :param msg_context: :class:`MsgContext` for finding loaded dependencies
     :param text: .msg text , ``str``
     :param package_context: context to use for msg type name, i.e. the package name,
       or '' to use local naming convention. ``str``
-    :returns: Message type name and :class:`MsgSpec` message specification
-    :raises :exc:`MsgSpecException` If syntax errors or other problems are detected in file
+    :returns: :class:`SrvSpec` instance
+    :raises :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
     text_in  = StringIO()
     text_out = StringIO()
@@ -99,38 +102,30 @@ def load_from_string(text, package_context='', full_name='', short_name=''):
             accum.write(l+'\n')
 
     # create separate MsgSpec objects for each half of file
-    msg_in = msgs.load_from_string(text_in.getvalue(), package_context, '%sRequest'%(full_name), '%sRequest'%(short_name))
-    msg_out = msgs.load_from_string(text_out.getvalue(), package_context, '%sResponse'%(full_name), '%sResponse'%(short_name))
+    msg_in = msgs.load_from_string(msg_context, text_in.getvalue(), package_context, '%sRequest'%(full_name), '%sRequest'%(short_name))
+    msg_out = msgs.load_from_string(msg_context, text_out.getvalue(), package_context, '%sResponse'%(full_name), '%sResponse'%(short_name))
     return SrvSpec(msg_in, msg_out, text, full_name, short_name, package_context)
 
-def load_from_file(file_name, package_context=''):
+def load_from_file(msg_context, file_path, package_context='', full_name='', short_name=''):
     """
     Convert the .srv representation in the file to a :class:`SrvSpec` instance.
 
+    NOTE: this will *not* register the message in the *msg_context*.
+    
+    :param msg_context: :class:`MsgContext` for finding loaded dependencies
     :param file_name: name of file to load from, ``str``
     :param package_context: context to use for type name, i.e. the package name,
       or '' to use local naming convention, ``str``
-    :returns: Message type name and message specification, ``(str, SrvSpec)``
-    :raise: :exc:`MsgSpecException` If syntax errors or other problems are detected in file
+    :returns: :class:`SrvSpec` instance
+    :raise: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
     if package_context:
-        log("Load spec from %s into namespace [%s]\n"%(file_name, package_context))
+        log("Load spec from %s into namespace [%s]\n"%(file_path, package_context))
     else:
-        log("Load spec from %s\n"%(file_name))
-    base_file_name = os.path.basename(file_name)
-    type_ = base_file_name[:-len(EXT_SRV)]
-    base_type_ = type_
-    # determine the type name
-    if package_context:
-        while package_context.endswith(SEP):
-            package_context = package_context[:-1] #strip message separators
-        type_ = "%s%s%s"%(package_context, SEP, type_)
-    if not is_legal_resource_name(type_):
-        raise MsgSpecException("%s: %s is not a legal service type name"%(file_name, type_))
-    
-    with  open(file_name, 'r') as f:
+        log("Load spec from %s\n"%(file_path))
+    with open(file_path, 'r') as f:
         text = f.read()
-        return (type_, load_from_string(text, package_context, type_, base_type_))
+    return load_from_string(msg_context, text, package_context, full_name, short_name)
 
 
 

@@ -43,7 +43,7 @@ CONSTCHAR   = '='
 COMMENTCHAR = '#'
 IODELIM   = '---'
 
-verbose = False
+verbose = True
 
 if verbose:
     import inspect, pprint
@@ -62,5 +62,5 @@ else:
 class MsgNotFound(Exception):
     pass
 
-class MsgSpecException(Exception):
+class InvalidMsgSpec(Exception):
     pass

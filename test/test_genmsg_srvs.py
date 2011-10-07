@@ -90,23 +90,27 @@ def test_SrvSpec():
     assert spec == spec2
         
 def test_load_from_file():
+    from genmsg.msgs import MsgContext
     from genmsg.srvs import load_from_file
         
+    msg_context = MsgContext.create_default()
+    
     d = get_test_dir()
     filename = os.path.join(d, 'test_ros', 'srv', 'AddTwoInts.srv')
     with open(filename, 'r') as f:
         text = f.read()
         
-    name, spec = load_from_file(filename)
-    assert 'AddTwoInts' == name
-    assert ['int64', 'int64'] == spec.request.types
+    spec = load_from_file(msg_context, filename)
+    assert ['int64', 'int64'] == spec.request.types, spec.request.types
     assert ['a', 'b'] == spec.request.names
     assert text == spec.text
     
-    name2, spec2 = load_from_file(filename, package_context='foo')
-    assert 'foo/AddTwoInts' == name2
-    name2, spec2 = load_from_file(filename, package_context='foo/')
-    assert 'foo/AddTwoInts' == name2
-    name2, spec2 = load_from_file(filename, package_context='foo//')
-    assert 'foo/AddTwoInts' == name2
+    # test that package_context gets normalized
+    spec2 = load_from_file(msg_context, filename, package_context='foo')
+    spec2b = load_from_file(msg_context, filename, package_context='foo/')
+    spec2c = load_from_file(msg_context, filename, package_context='foo//')
+
+    assert spec2 == spec2b
+    assert spec2 == spec2c    
+
 
