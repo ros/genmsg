@@ -53,12 +53,10 @@ from .msgs import MsgSpecException, MsgSpec
 from .srvs import SrvSpec
 from . import names
 
-# name of the Header type as gentools knows it
-_header_type_name = 'std_msgs/Header'
-
 def _add_msgs_depends(spec, deps, package_context, includepath):
     """
     Add the list of message types that spec depends on to depends.
+
     :param spec: message to compute dependencies for, :class:`MsgSpec`/:class:`SrvSpec`
     :param deps [str]: list of dependencies. This list will be updated
       with the dependencies of spec when the method completes, ``[str]``
@@ -79,7 +77,6 @@ def _add_msgs_depends(spec, deps, package_context, includepath):
                 rosidl.msgs.register(key, depspec)
             _add_msgs_depends(depspec, deps, package_context, includepath)
             
-
 def compute_md5_text(get_deps_dict, spec):
     """
     Compute the text used for md5 calculation. MD5 spec states that we
@@ -136,35 +133,6 @@ def _compute_hash(get_deps_dict, hash):
     else:
         raise Exception("[%s] is not a message or service"%spec)   
     return hash.hexdigest()
-
-def _compute_hash_v1(get_deps_dict, hash):
-    """
-    subroutine of compute_md5_v1()
-    @param get_deps_dict: dictionary returned by get_dependencies call
-    @type  get_deps_dict: dict
-    @param hash: hash instance
-    @type  hash: hash instance    
-    """
-    uniquedeps = get_deps_dict['uniquedeps']
-    spec = get_deps_dict['spec']    
-    # accumulate the hash
-    # - root file
-    hash.update(spec.text)
-    # - dependencies
-    for d in uniquedeps:
-        hash.update(msgs.get_registered(d).text)
-    return hash.hexdigest()
-
-def compute_md5_v1(get_deps_dict):
-    """
-    Compute original V1 md5 hash for message/service. This was replaced with V2 in ROS 0.6.
-    @param get_deps_dict: dictionary returned by get_dependencies call
-    @type  get_deps_dict: dict
-    @return: md5 hash
-    @rtype: str
-    """
-    import hashlib
-    return _compute_hash_v1(get_deps_dict, hashlib.md5())
 
 def compute_md5(get_deps_dict):
     """

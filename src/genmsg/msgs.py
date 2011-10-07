@@ -51,7 +51,7 @@ import string
 import traceback
 
 from . base import MsgNotFound, InvalidMsgSpec, CONSTCHAR, COMMENTCHAR, EXT_MSG, MSG_DIR, SEP, log
-from . names import is_legal_resource_name, is_legal_resource_base_name, package_resource_name, resource_name
+from . names import is_legal_resource_name, is_legal_resource_base_name, package_resource_name, resource_name, normalize_package_context
 
 #TODOXXX: unit test
 def bare_msg_type(msg_type):
@@ -94,22 +94,22 @@ def resolve_type(type_, package_context):
 
 #NOTE: this assumes that we aren't going to support multi-dimensional
 
-def parse_type(type_):
+def parse_type(msg_type):
     """
     Parse ROS message field type
-    :param type_: ROS field type, ``str``
+    :param msg_type: ROS field type, ``str``
     :returns: base_type, is_array, array_length, ``(str, bool, int)``
-    :raises: :exc:`ValueError` If *type_* cannot be parsed
+    :raises: :exc:`ValueError` If *msg_type* cannot be parsed
     """
-    if not type_:
+    if not msg_type:
         raise ValueError("Invalid empty type")
-    if '[' in type_:
-        var_length = type_.endswith('[]')
-        splits = type_.split('[')
+    if '[' in msg_type:
+        var_length = msg_type.endswith('[]')
+        splits = msg_type.split('[')
         if len(splits) > 2:
-            raise ValueError("Currently only support 1-dimensional array types: %s"%type_)
+            raise ValueError("Currently only support 1-dimensional array types: %s"%msg_type)
         if var_length:
-            return type_[:-2], True, None
+            return msg_type[:-2], True, None
         else:
             try:
                 length = int(splits[1][:-1])
@@ -117,7 +117,7 @@ def parse_type(type_):
             except ValueError:
                 raise ValueError("Invalid array dimension: [%s]"%splits[1][:-1])
     else:
-        return type_, False, None
+        return msg_type, False, None
    
 ################################################################################
 # name validation 
@@ -200,27 +200,6 @@ class Constant(object):
     def __str__(self):
         return "%s %s=%s"%(self.type, self.name, self.val)
 
-def strify_spec(msg_context, spec, buff=None, indent=''):
-    """
-    Convert spec into a string representation. 
-    :param msg_context: :class:`MsgContext` for looking up message types
-    :param indent: internal use only, ``str``
-    :param buff: internal use only, ``StringIO``
-    :returns: string representation of spec, ``str``
-    """
-    if buff is None:
-        buff = StringIO()
-    for c in spec.constants:
-        buff.write("%s%s %s=%s\n"%(indent, c.type, c.name, c.val_text))
-    for type_, name in zip(spec.types, spec.names):
-        buff.write("%s%s %s\n"%(indent, type_, name))
-        base_type = bare_msg_type(type_)
-        if not base_type in BUILTIN_TYPES:
-            package, base_type = package_resource_name(base_type)
-            subspec = msg_context.get_registered(base_type)
-            _strify_spec(subspec, buff, indent + '  ')
-    return buff.getvalue()
-
 class Field(object):
     """
     Container class for storing information about a single field in a MsgSpec
@@ -239,9 +218,16 @@ class Field(object):
         self.name = name
         self.type = type
         (self.base_type, self.is_array, self.array_len) = parse_type(type)
-        self.is_header = is_header_type(self.base_type)
+        self.is_header = is_header_type(self.type)
         self.is_builtin = is_builtin(self.base_type)
 
+    def __eq__(self, other):
+        if not isinstance(other, Field):
+            return False
+        else:
+            return self.name == other.name and \
+                   self.type == other.type
+    
     def __repr__(self):
         return "[%s, %s, %s, %s, %s]"%(self.name, self.type, self.base_type, self.is_array, self.array_len)
 
@@ -303,7 +289,9 @@ class MsgSpec(object):
         if not other or not isinstance(other, MsgSpec):
             return False 
         return self.types == other.types and self.names == other.names and \
-               self.constants == other.constants and self.text == other.text
+               self.constants == other.constants and self.text == other.text and \
+               self.full_name == other.full_name and self.short_name == other.short_name and \
+               self.package == other.package
 
     def __ne__(self, other):
         if not other or not isinstance(other, MsgSpec):
@@ -357,28 +345,28 @@ def get_msg_file(package, base_type, search_path):
         else:
             raise MsgNotFound("Cannot locate message [%s] in package [%s]"%(base_type, package))
 
-def _convert_val(type_, val):
+def _convert_val(field_type, val):
     """
     Convert constant value declaration to python value. Does not do
     type-checking, so ValueError or other exceptions may be raised.
     
-    :param type_: ROS field type, ``str``
+    :param field_type: ROS field type, ``str``
     :param val: string representation of constant, ``str``
     :raises: :exc:`ValueError` If unable to convert to python representation
     :raises: :exc:`InvalidMsgSpec` If value exceeds specified integer width
     """
-    if type_ in ['float32','float64']:
+    if field_type in ['float32','float64']:
         return float(val)
-    elif type_ in ['string']:
+    elif field_type in ['string']:
         return val.strip() #string constants are always stripped 
-    elif type_ in ['int8', 'uint8', 'int16','uint16','int32','uint32','int64','uint64', 'char', 'byte']:
+    elif field_type in ['int8', 'uint8', 'int16','uint16','int32','uint32','int64','uint64', 'char', 'byte']:
         # bounds checking
         bits = [('int8', 8), ('uint8', 8), ('int16', 16),('uint16', 16),\
                 ('int32', 32),('uint32', 32), ('int64', 64),('uint64', 64),\
                 ('byte', 8), ('char', 8)]
-        b = [b for t, b in bits if t == type_][0]
+        b = [b for t, b in bits if t == field_type][0]
         import math
-        if type_[0] == 'u' or type_ == 'char':
+        if field_type[0] == 'u' or field_type == 'char':
             lower = 0
             upper = int(math.pow(2, b)-1)
         else:
@@ -386,12 +374,12 @@ def _convert_val(type_, val):
             lower = -upper - 1 #two's complement min
         val = int(val) #python will autocast to long if necessary
         if val > upper or val < lower:
-            raise InvalidMsgSpec("cannot coerce [%s] to %s (out of bounds)"%(val, type_))
+            raise InvalidMsgSpec("cannot coerce [%s] to %s (out of bounds)"%(val, field_type))
         return val
-    elif type_ == 'bool':
+    elif field_type == 'bool':
         # TODO: need to nail down constant spec for bool
         return True if eval(val) else False
-    raise InvalidMsgSpec("invalid constant type: [%s]"%type_)
+    raise InvalidMsgSpec("invalid constant type: [%s]"%field_type)
         
 def load_by_type(msg_context, msg_type, search_path, package_context=''):
     """
@@ -417,14 +405,14 @@ def load_by_type(msg_context, msg_type, search_path, package_context=''):
     log("pkg", pkg)
     file_path = get_msg_file(pkg, base_type, search_path)
     log("file_path", file_path)
-    if file_path is None:
-        raise MsgNotFound(msg_type)
     return load_from_file(msg_context, file_path, package_context=pkg, full_name=msg_type, short_name=base_type)
 
-def _load_constant_line(orig_line, line_splits):
+def _load_constant_line(orig_line):
     """
     :raises: :exc:`InvalidMsgSpec`
     """
+    clean_line = _strip_comments(orig_line)
+    line_splits = [s for s in [x.strip() for x in clean_line.split(" ")] if s] #split type/name, filter out empties
     field_type = line_splits[0]
     if not is_valid_constant_type(field_type):
         raise InvalidMsgSpec("%s is not a legal constant type"%field_type)
@@ -447,17 +435,21 @@ def _load_constant_line(orig_line, line_splits):
         raise InvalidMsgSpec("Invalid constant value: %s"%e)
     return Constant(field_type, name, val_converted, val.strip())
 
-def _load_field_line(orig_line, line_splits, package_context):
+def _load_field_line(orig_line, package_context):
     """
     :returns: (field_type, name) tuple, ``(str, str)``
     :raises: :exc:`InvalidMsgSpec`
     """
-    log("_load_field_line", orig_line, line_splits, package_context)
+    log("_load_field_line", orig_line, package_context)
+    clean_line = _strip_comments(orig_line)
+    line_splits = [s for s in [x.strip() for x in clean_line.split(" ")] if s] #split type/name, filter out empties
     if len(line_splits) != 2:
         raise InvalidMsgSpec("Invalid declaration: %s"%(orig_line))
     field_type, name = line_splits
     if not is_valid_msg_field_name(name):
         raise InvalidMsgSpec("%s is not a legal message field name"%name)
+    if not is_valid_msg_type(field_type):
+        raise InvalidMsgSpec("%s is not a legal message field type"%field_type)
     if package_context and not SEP in field_type:
         if field_type == HEADER:
             field_type = HEADER_FULL_NAME
@@ -467,6 +459,9 @@ def _load_field_line(orig_line, line_splits, package_context):
         field_type = HEADER_FULL_NAME
     return field_type, name
 
+def _strip_comments(line):
+    return line.split(COMMENTCHAR)[0].strip() #strip comments
+    
 def load_from_string(msg_context, text, package_context='', full_name='', short_name=''):
     """
     Load message specification from a string.
@@ -481,19 +476,18 @@ def load_from_string(msg_context, text, package_context='', full_name='', short_
     :raises: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
     log("load_from_string", text, package_context, full_name, short_name)
+    package_context = normalize_package_context(package_context)
     types = []
     names = []
     constants = []
     for orig_line in text.split('\n'):
-        l = orig_line.split(COMMENTCHAR)[0].strip() #strip comments
-        if not l:
+        clean_line = _strip_comments(orig_line)
+        if not clean_line:
             continue #ignore empty lines
-        line_splits = [s for s in [x.strip() for x in l.split(" ")] if s] #split type/name, filter out empties
-        if CONSTCHAR in l:
-            print("LINE", l)
-            constants.append(_load_constant_line(orig_line, line_splits))
+        if CONSTCHAR in clean_line:
+            constants.append(_load_constant_line(orig_line))
         else:
-            field_type, name = _load_field_line(orig_line, line_splits, package_context)
+            field_type, name = _load_field_line(orig_line, package_context)
             types.append(field_type)
             names.append(name)
     return MsgSpec(types, names, constants, text, full_name, short_name, package_context)
@@ -520,7 +514,6 @@ def load_from_file(msg_context, file_path, package_context='', full_name='', sho
     try:
         return load_from_string(msg_context, text, package_context, full_name, short_name)
     except InvalidMsgSpec as e:
-        log(traceback.format_exc())
         raise InvalidMsgSpec('%s: %s'%(file_path, e))
 
 # data structures and builtins specification ###########################
@@ -586,42 +579,54 @@ class MsgContext(object):
             self._registered_packages[package] = {}
         self._registered_packages[package][base_type] = msgspec
 
-    def is_registered_full(self, full_msg_type):
+    def is_registered_full(self, full_msg_type, default_package=''):
         full_msg_type = bare_msg_type(full_msg_type)
         package, base_type = package_resource_name(full_msg_type)
-        return self.is_registered(package, base_type)
+        return self.is_registered(package, base_type, default_package)
+        
+    def _resolve_package(self, package, base_type, default_package):
+        # support for HEADER and time/duration types
+        if not package:
+            if base_type == HEADER:
+                package = 'std_msgs'
+            elif base_type in BUILTIN_TYPES:
+                pass
+            else:
+                package = default_package
+        return package
         
     def is_registered(self, package, base_type, default_package=''):
         """
         :param package: package name of type, or ``None`` if package name not specified
         :param base_type: base type name of message
         :param default_package: default package namespace to resolve
-          in.  May be overridden by special types.
+          in.  May be ignored by special types (e.g. time/duration).
           
         :returns: ``True`` if :class:`MsgSpec` instance has been loaded for the requested type.
         """
-        # support for HEADER type
-        if not package:
-            if base_type == HEADER:
-                package = 'std_msgs'
-            else:
-                package = default_package
-
+        package = self._resolve_package(package, base_type, default_package)
         if package in self._registered_packages:
-            return base_type in self._registered_packages
+            return base_type in self._registered_packages[package]
         else:
             return False
 
-    def get_registered(self, package, base_type):
-        if self.is_regisered(self, package, base_type):
+    def get_registered(self, package, base_type, default_package=''):
+        """
+        :raises: :exc:`KeyError` If not registered
+        """
+        if self.is_registered(package, base_type, default_package):
+            package = self._resolve_package(package, base_type, default_package)        
             return self._registered_packages[package][base_type]
         else:
-            return False
+            raise KeyError("%s/%s"%(package, base_type))
 
-    def get_registered_full(self, full_msg_type):
+    def get_registered_full(self, full_msg_type, default_package=''):
+        """
+        :raises: :exc:`KeyError` If not registered
+        """
         full_msg_type = bare_msg_type(full_msg_type)
         package, base_type = package_resource_name(full_msg_type)
-        return self.get_registered(package, base_type)
+        return self.get_registered(package, base_type, default_package)
 
     def __str__(self):
         return str(self._registered_packages)

@@ -46,7 +46,7 @@ except ImportError:
 
 from . import msgs
 from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, InvalidMsgSpec, log
-from . names import is_legal_resource_name
+from . names import is_legal_resource_name, normalize_package_context
 
 # model ##########################################
 
@@ -91,6 +91,8 @@ def load_from_string(msg_context, text, package_context='', full_name='', short_
     :returns: :class:`SrvSpec` instance
     :raises :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
+    package_context = normalize_package_context(package_context)
+    
     text_in  = StringIO()
     text_out = StringIO()
     accum = text_in

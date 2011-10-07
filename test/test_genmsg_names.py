@@ -29,9 +29,19 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 import os
 import sys
 
+def test_normalize_package_context():
+    # normalize isn't meant to be fancy; just correct minor differences
+    from genmsg.names import normalize_package_context
+    assert 'foo' == normalize_package_context('foo')
+    assert 'foo' == normalize_package_context(' foo ')
+    assert 'foo' == normalize_package_context('foo/')
+    assert 'foo' == normalize_package_context('foo//')
+    assert 'foo' == normalize_package_context('foo///')
+    
 def test_resource_name():
     from genmsg import resource_name
     assert 'foo/bar' == resource_name('foo', 'bar')

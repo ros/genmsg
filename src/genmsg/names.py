@@ -34,6 +34,12 @@ PRN_SEPARATOR = '/'
 
 import re
 
+def normalize_package_context(package_context):
+    package_context = package_context.strip()
+    while package_context.endswith(PRN_SEPARATOR):
+        package_context = package_context[:-1]
+    return package_context
+    
 #######################################################################
 # RESOURCE NAMES
 # resource names refer to entities in a file system
