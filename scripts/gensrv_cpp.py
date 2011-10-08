@@ -36,6 +36,8 @@
 ## 
 ## Converts ROS .msg files in a package into C++ source code implementations.
 
+from __future__ import print_function
+
 from genmsg import log, plog
 
 import genmsg_cpp
@@ -47,7 +49,10 @@ import traceback
 import genmsg.srvs
 import genmsg.gentools
 
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO # Python 2.x
+except ImportError:
+    from io import StringIO # Python 3.x
 
 def write_begin(s, spec, file):
     """
@@ -133,7 +138,9 @@ def generate(srv_path, options):
     @param srv_path: the path to the .srv file
     @type srv_path: str
     """
-    (_, spec) = genmsg.srvs.load_from_file(srv_path, options.package)
+    msg_context = MsgContext.create_default()
+    full_name = 'TODO'
+    (_, spec) = genmsg.msg_loader.load_srv_from_file(msg_context, srv_path, full_name, options.package)
     
     s = StringIO()  
     cpp_prefix = '%s::'%(options.package)
@@ -145,8 +152,7 @@ def generate(srv_path, options):
     genmsg_cpp.write_includes(s, spec.response)
     
     gendeps_dict = genmsg.gentools.get_dependencies(spec, spec.package,
-                                                    options.includepath,
-                                                    compute_files=False)
+                                                    options.includepath)
 
     md5sum = genmsg.gentools.compute_md5(gendeps_dict, options.includepath)
     
@@ -187,13 +193,13 @@ def generate(srv_path, options):
         # another copy just created the directory
         try:
             os.makedirs(output_dir)
-        except OSError, e:
+        except OSError as e:
             pass
         
     ofile = os.path.join(output_dir, spec.short_name + ".h")
-    f = open(ofile, 'w')
-    print "Writing to", ofile  
-    print >> f, s.getvalue()
+    with open(ofile, 'w') as f:
+        print("Writing to", ofile)
+        print(s.getvalue(), file=f)
     
     s.close()
 

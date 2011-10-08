@@ -130,15 +130,15 @@ def test_Constant():
     except: pass
     
 def test_MsgSpec():
-    def sub_test_MsgSpec(types, names, constants, text, has_header):
-        m = MsgSpec(types, names, constants, text)
+    def sub_test_MsgSpec(types, names, constants, text, full_name, has_header):
+        m = MsgSpec(types, names, constants, text, full_name)
         assert m.types == types
         assert m.names == names
         assert m.text == text
         assert has_header == m.has_header()
         assert m.constants == constants
         assert zip(types, names) == m.fields()
-        assert m == MsgSpec(types, names, constants, text)
+        assert m == MsgSpec(types, names, constants, text, full_name)
         return m
     
     from genmsg import MsgSpec, InvalidMsgSpec
@@ -146,42 +146,46 @@ def test_MsgSpec():
 
     # don't allow duplicate fields
     try:
-        MsgSpec(['int32', 'int64'], ['x', 'x'], [], 'int32 x\nint64 x')
+        MsgSpec(['int32', 'int64'], ['x', 'x'], [], 'int32 x\nint64 x', 'x/DupFields')
         assert False, "should have raised"
     except InvalidMsgSpec:
         pass
     # don't allow invalid fields
     try:
-        MsgSpec(['string['], ['x'], [], 'int32 x\nint64 x')
+        MsgSpec(['string['], ['x'], [], 'int32 x\nint64 x', 'x/InvalidFields')
         assert False, "should have raised"
     except InvalidMsgSpec:
         pass
 
     # allow empty msg
-    empty = sub_test_MsgSpec([], [], [], '', False)
+    empty = sub_test_MsgSpec([], [], [], '', 'x/Nothing', False)
     assert [] == empty.fields()
     assert [] == empty.parsed_fields()
+    assert 'x/Nothing' == empty.full_name
+    assert 'x' == empty.package
+    assert 'Nothing' == empty.short_name    
 
     # one-field
-    one_field = sub_test_MsgSpec(['int32'], ['x'], [], 'int32 x', False)
+    one_field = sub_test_MsgSpec(['int32'], ['x'], [], 'int32 x', 'x/OneInt', False)
     # make sure that equals tests every declared field
-    assert one_field == MsgSpec(['int32'], ['x'], [], 'int32 x')
-    assert one_field != MsgSpec(['uint32'], ['x'], [], 'int32 x')
-    assert one_field != MsgSpec(['int32'], ['y'], [], 'int32 x')
-    assert one_field != MsgSpec(['int32'], ['x'], [], 'uint32 x')
+    assert one_field == MsgSpec(['int32'], ['x'], [], 'int32 x', 'x/OneInt')
+    assert one_field != MsgSpec(['uint32'], ['x'], [], 'int32 x', 'x/OneInt')
+    assert one_field != MsgSpec(['int32'], ['y'], [], 'int32 x', 'x/OneInt')
+    assert one_field != MsgSpec(['int32'], ['x'], [], 'uint32 x', 'x/OneInt')
+    assert one_field != MsgSpec(['int32'], ['x'], [], 'int32 x', 'x/OneIntBad')
     # test against __ne__ as well
-    assert one_field != MsgSpec(['int32'], ['x'], [], 'uint32 x')
+    assert one_field != MsgSpec(['int32'], ['x'], [], 'uint32 x', 'x/OneInt')
     assert [Field('x', 'int32')] == one_field.parsed_fields(), "%s vs %s"%([Field('x', 'int32')], one_field.parsed_fields())
     #test str
     assert "int32 x" == str(one_field).strip()
     
     # test variations of multiple fields and headers
-    two_fields = sub_test_MsgSpec(['int32', 'string'], ['x', 'str'], [], 'int32 x\nstring str', False)
+    two_fields = sub_test_MsgSpec(['int32', 'string'], ['x', 'str'], [], 'int32 x\nstring str', 'x/TwoFields', False)
     assert [Field('x', 'int32'), Field('str', 'string')] == two_fields.parsed_fields()
     
-    one_header = sub_test_MsgSpec(['std_msgs/Header'], ['header'], [], 'Header header', True)
-    header_and_fields = sub_test_MsgSpec(['std_msgs/Header', 'int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nint32 x\nstring str', True)
-    embed_types = sub_test_MsgSpec(['std_msgs/Header', 'std_msgs/Int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nstd_msgs/Int32 x\nstring str', True)
+    one_header = sub_test_MsgSpec(['std_msgs/Header'], ['header'], [], 'Header header', 'x/OneHeader', True)
+    header_and_fields = sub_test_MsgSpec(['std_msgs/Header', 'int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nint32 x\nstring str', 'x/HeaderAndFields', True)
+    embed_types = sub_test_MsgSpec(['std_msgs/Header', 'std_msgs/Int32', 'string'], ['header', 'x', 'str'], [], 'Header header\nstd_msgs/Int32 x\nstring str', 'x/EmbedTypes', True)
     #test strify
     assert "int32 x\nstring str" == str(two_fields).strip()
 
@@ -197,7 +201,7 @@ def test_MsgSpec():
 
     # test constants
     from genmsg.msgs import Constant
-    msgspec = MsgSpec(['int32'], ['x'], [Constant('int8', 'c', 1, '1')], 'int8 c=1\nuint32 x')
+    msgspec = MsgSpec(['int32'], ['x'], [Constant('int8', 'c', 1, '1')], 'int8 c=1\nuint32 x', 'x/Constants')
     assert msgspec.constants == [Constant('int8', 'c', 1, '1')]
     # tripwire
     str(msgspec)
@@ -205,14 +209,6 @@ def test_MsgSpec():
 
     # test that repr doesn't throw an error
     [repr(x) for x in [empty, one_field, one_header, two_fields, embed_types]]
-
-def test_reinit():
-    import genmsg.msgs    
-    genmsg.msgs._initialized = False
-    genmsg.msgs.reinit()
-    assert genmsg.msgs._initialized
-    # test repeated initialization
-    genmsg.msgs.reinit()    
 
 def test_Field():
     from genmsg.msgs import Field
@@ -268,249 +264,6 @@ def test_Field():
     #tripwire
     repr(field)
     
-def test___convert_val():
-    from genmsg.msgs import _convert_val
-    from genmsg import InvalidMsgSpec
-    assert 0. == _convert_val('float32', '0.0')
-    assert 0. == _convert_val('float64', '0.0')
-    
-    assert 'fo o' == _convert_val('string', '   fo o ')
-
-    assert 1 == _convert_val('byte', '1')
-    assert 1 == _convert_val('char', '1')
-    assert 1 == _convert_val('int8', '1')
-    assert 12 == _convert_val('int16', '12')
-    assert -13 == _convert_val('int32', '-13')
-    assert 14 == _convert_val('int64', '14')
-    assert 0 == _convert_val('uint8', '0')
-    assert 18 == _convert_val('uint16', '18')
-    assert 19 == _convert_val('uint32', '19')
-    assert 20 == _convert_val('uint64', '20')
-
-    assert True == _convert_val('bool', '1')
-    assert False == _convert_val('bool', '0')    
-
-    width_fail = [('int8', '129'), ('uint8', '256'),
-                  ('int16', '35536'), ('uint16', '-1'),('uint16', '65536'),
-                  ('int32', '3000000000'),('int32', '-2700000000'),
-                  ('uint32', '-1'),('uint32', '41000000000'),
-                  ('uint64', '-1')]
-    for t, v in width_fail:
-        try:
-            _convert_val(t, v)
-            assert False, "should have failed width check: %s, %s"%(t, v)
-        except InvalidMsgSpec:
-            pass
-    type_fail = [('int32', 'f'), ('float32', 'baz')]
-    for t, v in type_fail:
-        try:
-            _convert_val(t, v)
-            assert False, "should have failed type check: %s, %s"%(t, v)
-        except ValueError:
-            pass
-    try:
-        _convert_val('foo', '1')
-        assert False, "should have failed invalid type"
-    except InvalidMsgSpec:
-        pass
-    
-def test__load_constant_line():
-    from genmsg.msgs import _load_constant_line, Constant, InvalidMsgSpec
-    try:
-        _load_constant_line("int8 field=alpha")
-        assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    try:
-        _load_constant_line("int8 field=")
-        assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    try:
-        _load_constant_line("faketype field=1")
-        assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    
-    c = _load_constant_line("int8 field=1")
-    assert c == Constant('int8', 'field', 1, '1')
-    c = _load_constant_line("string val=hello #world")
-    assert c == Constant('string', 'val', 'hello #world', 'hello #world')
-    
-def test__load_field_line():
-    from genmsg.msgs import _load_field_line, InvalidMsgSpec, Field, is_valid_msg_field_name
-    try:
-       _load_field_line("string", 'foo')
-       assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    assert not is_valid_msg_field_name('string[')
-    try:
-       _load_field_line("string data!", 'foo')
-       assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    try:
-       _load_field_line("string[ data", 'foo')
-       assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    
-    f =_load_field_line("string str", 'foo')
-    assert f == ('string', 'str')
-    
-    f =_load_field_line("string str #nonsense", 'foo')
-    assert f == ('string', 'str')
-
-    f =_load_field_line("String str #nonsense", '')
-    assert f == ('String', 'str')
-    f =_load_field_line("String str #nonsense", 'foo')
-    assert f == ('foo/String', 'str')
-
-    # make sure Header is mapped
-    f =_load_field_line("Header header #nonsense", 'somewhere')
-    assert f == ('std_msgs/Header', 'header'), f
-    f =_load_field_line("Header header #nonsense", '')
-    assert f == ('std_msgs/Header', 'header'), f
-
-def test_load_from_string():
-    # make sure Header -> std_msgs/Header conversion works
-    from genmsg.msgs import load_from_string, MsgContext, Constant
-    context = MsgContext.create_default()
-    msgspec = load_from_string(context, "Header header", package_context='test_pkg', full_name='test_pkg/HeaderTest', short_name='HeaderTest')
-    print msgspec
-    assert msgspec.has_header()
-    assert msgspec.types == ['std_msgs/Header']
-    assert msgspec.names == ['header']
-    assert msgspec.constants == []
-    assert msgspec.short_name == 'HeaderTest'
-
-    msgspec = load_from_string(context, "int8 c=1\nHeader header\nint64 data", package_context='test_pkg', full_name='test_pkg/HeaderValsTest', short_name='HeaderValsTest')    
-    assert msgspec.has_header()
-    assert msgspec.types == ['std_msgs/Header', 'int64']
-    assert msgspec.names == ['header', 'data']
-    assert msgspec.constants == [Constant('int8', 'c', 1, '1')]
-    assert msgspec.short_name == 'HeaderValsTest'
-    
-    msgspec = load_from_string(context, "string data\nint64 data2", package_context='test_pkg', full_name='test_pkg/ValsTest', short_name='ValsTest')    
-    assert not msgspec.has_header()
-    assert msgspec.types == ['string', 'int64']
-    assert msgspec.names == ['data', 'data2']
-    assert msgspec.constants == []
-    assert msgspec.short_name == 'ValsTest'
-
-def _validate_TestString(msgspec):
-    assert ['caller_id', 'orig_caller_id', 'data'] == msgspec.names, msgspec.names
-    assert ['string', 'string', 'string'] == msgspec.types, msgspec.types
-
-def test_load_from_file():
-    from genmsg.msgs import load_from_file, MsgContext, InvalidMsgSpec
-    test_d = get_test_dir()
-    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
-    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-
-    msg_context = MsgContext.create_default()
-    spec = load_from_file(msg_context, test_string_path, package_context='test_ros', full_name='test_ros/TestString', short_name='TestString')
-
-    _validate_TestString(spec)
-    
-    spec_a = load_from_file(msg_context, test_string_path, package_context='test_ros/', full_name='test_ros/TestString', short_name='TestString')
-    spec_b = load_from_file(msg_context, test_string_path, package_context='test_ros//', full_name='test_ros/TestString', short_name='TestString')
-
-    # test normalization
-    assert spec == spec_a
-    assert spec == spec_b    
-
-    # test w/o package_context
-    spec_2 = load_from_file(msg_context, test_string_path)
-    assert spec != spec_2
-
-    # test w/ bad file
-    test_bad_path = os.path.join(test_ros_dir, 'Bad.msg')
-    try:
-        load_from_file(msg_context, test_bad_path)
-        assert False, "should have raised"
-    except InvalidMsgSpec:
-        pass
-    
-    # not supposed to register
-    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
-    assert not msg_context.is_registered('test_ros', 'TestString')    
-    
-def test_load_from_string_TestString():
-    from genmsg.msgs import load_from_string, MsgContext
-
-    test_d = get_test_dir()
-    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
-    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-    with open(test_string_path) as f:
-        text = f.read()
-
-    msg_context = MsgContext.create_default()
-    _validate_TestString(load_from_string(msg_context, text, 'test_ros', 'test_ros/TestString', 'TestString'))
-    # not supposed to register
-    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
-    assert not msg_context.is_registered('test_ros', 'TestString')    
-
-def test_load_by_type():
-    from genmsg.msgs import load_by_type, MsgContext,MsgNotFound
-
-    test_d = get_test_dir()
-    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
-    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-    search_path = {
-        'test_ros': test_ros_dir,
-        }
-    msg_context = MsgContext.create_default()
-    msgspec = load_by_type(msg_context, 'test_ros/TestString', search_path)
-    _validate_TestString(msgspec)
-    # not supposed to register
-    assert not msg_context.is_registered_full('test_ros/TestString'), msg_context
-    assert not msg_context.is_registered('test_ros', 'TestString')
-
-    # test invalid search path
-    try:
-        load_by_type(msg_context, 'test_ros/TestString', [test_string_path])
-        assert False, "should have raised"
-    except ValueError:
-        pass
-    # test not found
-    try:
-        load_by_type(msg_context, 'test_ros/Fake', search_path)
-        assert False, "should have raised"
-    except MsgNotFound:
-        pass
-    
-def get_test_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
-
-def test_get_msg_file():
-    from genmsg.msgs import get_msg_file, MsgNotFound
-    test_d = get_test_dir()
-    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
-    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-    search_path = {
-        'test_ros': test_ros_dir,
-        }
-    assert test_string_path == get_msg_file('test_ros', 'TestString', search_path)
-    try:
-        get_msg_file('test_ros', 'DNE', search_path)
-        assert False, "should have raised"
-    except MsgNotFound:
-        pass
-    try:
-        get_msg_file('bad_pkg', 'TestString', search_path)
-        assert False, "should have raised"
-    except MsgNotFound:
-        pass
-
-    # test with invalid search path
-    try:
-        get_msg_file('test_ros', 'TestString', [test_string_path])
-        assert False, "should have raised"
-    except ValueError:
-        pass
-
 def test_is_valid_msg_type():
     import genmsg.msgs
     vals = [
@@ -543,61 +296,3 @@ def test_is_valid_constant_type():
     for v in invalid:
         assert not genmsg.msgs.is_valid_constant_type(v), "genmsg.msgs.is_valid_constant_type should have returned False for '%s'"%v
 
-def test_MsgContext():
-    from genmsg.msgs import MsgContext, load_from_file
-    msg_context = MsgContext()
-    assert not msg_context.is_registered('', 'time')
-    assert not msg_context.is_registered('', 'duration')
-    
-    msg_context = MsgContext.create_default()
-    # tripwires
-    repr(msg_context)
-    str(msg_context)
-
-    assert msg_context.is_registered('', 'time'), msg_context._registered_packages
-    assert msg_context.is_registered('', 'time', 'foo')
-    assert msg_context.is_registered('', 'duration')
-    assert msg_context.is_registered('', 'duration', 'foo')
-
-    assert not msg_context.is_registered('test_ros', 'TestString')
-    assert not msg_context.is_registered('', 'TestString', 'test_ros')    
-    assert not msg_context.is_registered_full('test_ros/TestString', 'foo')
-    assert not msg_context.is_registered_full('TestString', 'test_ros')
-    assert not msg_context.is_registered('', 'TestString', 'test_ros')
-
-    assert not msg_context.is_registered('', 'Header', 'test_ros')
-    
-    # start loading stuff into context
-    test_d = get_test_dir()
-    test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
-    test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-    spec = load_from_file(msg_context, test_string_path, package_context='test_ros',
-                          full_name='test_ros/TestString', short_name='TestString')
-    msg_context.register('test_ros', 'TestString', spec)
-    assert msg_context.get_registered('test_ros', 'TestString') == spec
-    assert msg_context.get_registered_full('test_ros/TestString') == spec
-    assert msg_context.get_registered_full('test_ros/TestString', 'bar') == spec
-    assert msg_context.get_registered_full('TestString', 'test_ros') == spec
-    try:
-        msg_context.get_registered_full('TestString', 'bad') == spec
-        assert False, 'should have raised'
-    except KeyError:
-        pass
-    
-    assert msg_context.is_registered('test_ros', 'TestString')
-    assert msg_context.is_registered('', 'TestString', 'test_ros')    
-    assert msg_context.is_registered_full('test_ros/TestString', 'foo')
-    assert msg_context.is_registered_full('TestString', 'test_ros')
-    assert not msg_context.is_registered_full('TestString', 'test_bad')
-    assert msg_context.is_registered('', 'TestString', 'test_ros')
-    assert not msg_context.is_registered('', 'TestString', 'test_bad')
-
-    # test Header
-    assert not msg_context.is_registered('', 'Header')
-    assert not msg_context.is_registered('', 'Header', 'foo')
-    assert not msg_context.is_registered('std_msgs', 'Header', 'foo')        
-    
-    msg_context.register('std_msgs', 'Header', spec)
-    assert msg_context.is_registered('', 'Header')
-    assert msg_context.is_registered('', 'Header', 'foo')
-    assert msg_context.is_registered('std_msgs', 'Header', 'foo')

@@ -9,11 +9,7 @@ def test_plog():
     plog("hello", Foo())
         
 def test_exceptions():
-    from genmsg import MsgNotFound, InvalidMsgSpec
-    try:
-        raise MsgNotFound('hello')
-    except MsgNotFound:
-        pass
+    from genmsg import InvalidMsgSpec
     try:
         raise InvalidMsgSpec('hello')
     except InvalidMsgSpec:

@@ -37,18 +37,6 @@ Implements http://ros.org/wiki/srv
 
 import os
 import sys
-import re
-
-try:
-    from cStringIO import StringIO # Python 2.x
-except ImportError:
-    from io import StringIO # Python 3.x
-
-from . import msgs
-from . base import SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_SRV, InvalidMsgSpec, log
-from . names import is_legal_resource_name, normalize_package_context
-
-# model ##########################################
 
 class SrvSpec(object):
     
@@ -78,57 +66,3 @@ class SrvSpec(object):
     def __repr__(self):
         return "SrvSpec[%s, %s]"%(repr(self.request), repr(self.response))
     
-# srv spec loading utilities ##########################################
-
-def load_from_string(msg_context, text, package_context='', full_name='', short_name=''):
-    """
-    NOTE: this will *not* register the message in the *msg_context*.
-    
-    :param msg_context: :class:`MsgContext` for finding loaded dependencies
-    :param text: .msg text , ``str``
-    :param package_context: context to use for msg type name, i.e. the package name,
-      or '' to use local naming convention. ``str``
-    :returns: :class:`SrvSpec` instance
-    :raises :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
-    """
-    package_context = normalize_package_context(package_context)
-    
-    text_in  = StringIO()
-    text_out = StringIO()
-    accum = text_in
-    for l in text.split('\n'):
-        l = l.split(COMMENTCHAR)[0].strip() #strip comments        
-        if l.startswith(IODELIM): #lenient, by request
-            accum = text_out
-        else:
-            accum.write(l+'\n')
-
-    # create separate MsgSpec objects for each half of file
-    msg_in = msgs.load_from_string(msg_context, text_in.getvalue(), package_context, '%sRequest'%(full_name), '%sRequest'%(short_name))
-    msg_out = msgs.load_from_string(msg_context, text_out.getvalue(), package_context, '%sResponse'%(full_name), '%sResponse'%(short_name))
-    return SrvSpec(msg_in, msg_out, text, full_name, short_name, package_context)
-
-def load_from_file(msg_context, file_path, package_context='', full_name='', short_name=''):
-    """
-    Convert the .srv representation in the file to a :class:`SrvSpec` instance.
-
-    NOTE: this will *not* register the message in the *msg_context*.
-    
-    :param msg_context: :class:`MsgContext` for finding loaded dependencies
-    :param file_name: name of file to load from, ``str``
-    :param package_context: context to use for type name, i.e. the package name,
-      or '' to use local naming convention, ``str``
-    :returns: :class:`SrvSpec` instance
-    :raise: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
-    """
-    if package_context:
-        log("Load spec from %s into namespace [%s]\n"%(file_path, package_context))
-    else:
-        log("Load spec from %s\n"%(file_path))
-    with open(file_path, 'r') as f:
-        text = f.read()
-    return load_from_string(msg_context, text, package_context, full_name, short_name)
-
-
-
-

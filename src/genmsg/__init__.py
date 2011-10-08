@@ -32,9 +32,10 @@
 
 __version__ = '0.1.0'
 
-from . base import EXT_MSG, EXT_SRV, SEP, log, plog, MsgNotFound, InvalidMsgSpec
+from . base import EXT_MSG, EXT_SRV, SEP, log, plog, InvalidMsgSpec
 from . names import resource_name_base, package_resource_name, is_legal_resource_base_name, \
      resource_name_package, resource_name, is_legal_resource_name
 from . msgs import HEADER, TIME, DURATION, MsgSpec, Constant
+from . msg_loader import MsgNotFound, MsgContext
 from . srvs import SrvSpec
 

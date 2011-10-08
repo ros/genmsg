@@ -36,6 +36,8 @@
 ## 
 ## Converts ROS .msg files in a package into C++ source code implementations.
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -43,7 +45,10 @@ from genmsg import log, plog
 import genmsg.msgs 
 import genmsg.gentools
 
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO # Python 2.x
+except ImportError:
+    from io import StringIO # Python 3.x
 
 MSG_TYPE_TO_CPP = {'byte': 'int8_t', 'char': 'uint8_t',
                    'bool': 'uint8_t',
@@ -193,9 +198,9 @@ def write_struct(s, spec, cpp_name_prefix, includepath,
     write_members(s, spec)
     write_constant_declarations(s, spec)
     
+    #TODOXXX: convert to loader
     gendeps_dict = genmsg.gentools.get_dependencies(spec, spec.package, 
-                                                    includepath,
-                                                    compute_files=False)
+                                                    includepath)
     md5sum = genmsg.gentools.compute_md5(gendeps_dict, includepath)
     full_text = compute_full_text_escaped(gendeps_dict)
     
@@ -446,7 +451,7 @@ def is_fixed_length(spec, includepath):
     types = set(types)
     for type in types:
         type = genmsg.msgs.resolve_type(type, spec.package)
-        (_, new_spec) = genmsg.msgs.load_by_type(type, includepath, spec.package)
+        (_, new_spec) = genmsg.msg_loader.load_by_type(msg_context, type, includepath, spec.package)
         if (not is_fixed_length(new_spec, includepath)):
             return False
         
@@ -587,7 +592,7 @@ def write_traits(s, spec, cpp_name_prefix, includepath, datatype = None):
 
     # generate dependencies dictionary
     gendeps_dict = genmsg.gentools.get_dependencies(spec, spec.package, 
-                                                    includepath, compute_files=False)
+                                                    includepath)
     md5sum = genmsg.gentools.compute_md5(gendeps_dict, includepath)
     full_text = compute_full_text_escaped(gendeps_dict)
     
@@ -710,11 +715,9 @@ def generate(args):
         options.includepath = []
     # print "input==", options.input, "outdir==", options.outdir
 
-    # package = os.path.basename
-    # (package_dir, package) = genmsg.packages.get_dir_pkg(args[1])
-    genmsg.msgs._init()
-    
-    (_, spec) = genmsg.msgs.load_from_file(args[1], options.package)
+    msg_context = MsgContext.create_default()
+    full_name = "TODO"
+    (_, spec) = genmsg.msg_loader.load_msg_from_file(msg_context, args[1], full_name, options.package)
     plog("spec", spec)
     
     s = StringIO()
@@ -749,17 +752,17 @@ def generate(args):
     
     odir = os.path.join(options.outdir, options.package)
 
-    if (not os.path.exists(odir)):
+    if not os.path.exists(odir):
         # if we're being run concurrently, the above test can report false but os.makedirs can still fail if
         # another copy just created the directory
         try:
             os.makedirs(odir)
-        except OSError, e:
+        except OSError as e:
             pass
          
     oname = '%s/%s.h' % (odir, spec.short_name)
-    f = open(oname, 'w')
-    print >> f, s.getvalue()
+    with open(oname, 'w') as f:
+        print(f, s.getvalue(), file=f)
     
     s.close()
 

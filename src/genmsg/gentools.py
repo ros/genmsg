@@ -50,34 +50,11 @@ except ImportError:
 from . import msgs
 
 from .msgs import InvalidMsgSpec, MsgSpec
+from .msg_loader import load_dependencies
 from .srvs import SrvSpec
 from . import names
 
-def _add_msgs_depends(spec, deps, package_context, includepath):
-    """
-    Add the list of message types that spec depends on to depends.
-
-    :param spec: message to compute dependencies for, :class:`MsgSpec`/:class:`SrvSpec`
-    :param deps [str]: list of dependencies. This list will be updated
-      with the dependencies of spec when the method completes, ``[str]``
-    """
-    log("_add_msgs_depends <spec>", deps, package_context)
-    for t in spec.types:
-        t = msgs.base_msg_type(t)
-        if not msgs.is_builtin(t):
-            if msgs.is_registered(t):
-                depspec = msgs.get_registered(t)
-                if '/' in t:
-                    deps.append(t)
-                else:
-                    deps.append(package_context+'/'+t)
-            else:
-                #lazy-load
-                key, depspec = msgs.load_by_type(t, includepath, package_context)
-                rosidl.msgs.register(key, depspec)
-            _add_msgs_depends(depspec, deps, package_context, includepath)
-            
-def compute_md5_text(get_deps_dict, spec):
+def compute_md5_text(msg_context, get_deps_dict, spec):
     """
     Compute the text used for md5 calculation. MD5 spec states that we
     removes comments and non-meaningful whitespace. We also strip
@@ -87,10 +64,8 @@ def compute_md5_text(get_deps_dict, spec):
 
     :returns: text for ROS MD5-processing, ``str``
     """
-    uniquedeps = get_deps_dict['uniquedeps']
-    package = get_deps_dict['package']
-    # #1554: need to suppress computation of files in dynamic generation case
-    compute_files = 'files' in get_deps_dict
+    set(get_deps_dict['deps'])
+    package = spec.package
 
     buff = StringIO()    
 
@@ -107,17 +82,17 @@ def compute_md5_text(get_deps_dict, spec):
             # generate md5
             sub_pkg, _ = names.package_resource_name(base_msg_type)
             sub_pkg = sub_pkg or package
-            sub_spec = msgs.get_registered(base_msg_type, package)
-            sub_deps = get_dependencies(sub_spec, sub_pkg, compute_files=compute_files)
+            sub_spec = msg_context.get_registered(base_msg_type, package)
+            sub_deps = load_dependencies(msg_context, sub_spec, sub_pkg)
             sub_md5 = compute_md5(sub_deps)
             buff.write("%s %s\n"%(sub_md5, name))
     
     return buff.getvalue().strip() # remove trailing new line
 
-def _compute_hash(get_deps_dict, hash):
+def _compute_hash(msg_context, get_deps_dict, hash):
     """
     subroutine of compute_md5()
-    @param get_deps_dict: dictionary returned by get_dependencies call
+    @param get_deps_dict: dictionary returned by load_dependencies call
     @type  get_deps_dict: dict
     @param hash: hash instance            
     @type  hash: hash instance            
@@ -126,18 +101,18 @@ def _compute_hash(get_deps_dict, hash):
     # - root file
     spec = get_deps_dict['spec']
     if isinstance(spec, MsgSpec):
-        hash.update(compute_md5_text(get_deps_dict, spec))
+        hash.update(compute_md5_text(msg_context, get_deps_dict, spec))
     elif isinstance(spec, SrvSpec):
-        hash.update(compute_md5_text(get_deps_dict, spec.request))
-        hash.update(compute_md5_text(get_deps_dict, spec.response))        
+        hash.update(compute_md5_text(msg_context, get_deps_dict, spec.request))
+        hash.update(compute_md5_text(msg_context, get_deps_dict, spec.response))        
     else:
         raise Exception("[%s] is not a message or service"%spec)   
     return hash.hexdigest()
 
-def compute_md5(get_deps_dict):
+def compute_md5(msg_context, get_deps_dict):
     """
     Compute md5 hash for message/service
-    @param get_deps_dict dict: dictionary returned by get_dependencies call
+    @param get_deps_dict dict: dictionary returned by load_dependencies call
     @type  get_deps_dict: dict
     @return: md5 hash
     @rtype: str
@@ -146,15 +121,15 @@ def compute_md5(get_deps_dict):
         # md5 is deprecated in Python 2.6 in favor of hashlib, but hashlib is
         # unavailable in Python 2.4
         import hashlib
-        return _compute_hash(get_deps_dict, hashlib.md5())
+        return _compute_hash(msg_context, get_deps_dict, hashlib.md5())
     except ImportError:
         import md5
-        return _compute_hash(get_deps_dict, md5.new())
+        return _compute_hash(msg_context, get_deps_dict, md5.new())
 
 ## alias
 compute_md5_v2 = compute_md5
 
-def compute_full_text(get_deps_dict):
+def compute_full_text(msg_context, get_deps_dict):
     """
     Compute full text of message/service, including text of embedded
     types.  The text of the main msg/srv is listed first. Embedded
@@ -162,7 +137,7 @@ def compute_full_text(get_deps_dict):
     followed by a type declaration line,'MSG: pkg/type', followed by
     the text of the embedded type.
 
-    @param get_deps_dict dict: dictionary returned by get_dependencies call
+    @param get_deps_dict dict: dictionary returned by load_dependencies call
     @type  get_deps_dict: dict
     @return: concatenated text for msg/srv file and embedded msg/srv types.
     @rtype:  str
@@ -174,71 +149,11 @@ def compute_full_text(get_deps_dict):
     buff.write(get_deps_dict['spec'].text)
     buff.write('\n')    
     # append the text of the dependencies (embedded types)
-    for d in get_deps_dict['uniquedeps']:
+    for d in set(get_deps_dict['deps']):
         buff.write(sep)
         buff.write("MSG: %s\n"%d)
         buff.write(msgs.get_registered(d).text)
         buff.write('\n')
     # #1168: remove the trailing \n separator that is added by the concatenation logic
     return buff.getvalue()[:-1]
-
-def get_dependencies(spec, package, compute_files=True, stdout=sys.stdout, stderr=sys.stderr):
-    """
-    Compute dependencies of the specified Msgs/Srvs
-    :param spec: :class:`MsgSpec` or :class:`SrvSpec` instance
-    :param package: package name, ``str``
-    :param stdout: (optional) stdout pipe, ``file``
-    :param stderr: (optional) stderr pipe, ``file``
-    :param compute_files: (optional, default=True) compute file
-      dependencies of message ('files' key in return value), ``bool``
-    :returns: dict: 
-      * 'files': list of files that \a file depends on
-      * 'deps': list of dependencies by type
-      * 'spec': Msgs/Srvs instance. 
-      * 'uniquedeps': list of dependencies with duplicates removed,
-      * 'package': package that dependencies were generated relative to.
-    """
-
-    # #518: as a performance optimization, we're going to manually control the loading
-    # of msgs instead of doing package-wide loads.
-    
-    #we're going to manipulate internal apis of msgs, so have to
-    #manually init
-    msgs._init()
-
-    deps = []
-    try:
-        if isinstance(spec, MsgSpec):
-            _add_msgs_depends(spec, deps, package)
-        elif isinstance(spec, SrvSpec):
-            _add_msgs_depends(spec.request, deps, package)
-            _add_msgs_depends(spec.response, deps, package)                
-        else:
-            raise InvalidMsgSpec("spec does not appear to be a message or service")
-    except KeyError as e:
-        raise InvalidMsgSpec("Cannot load type %s.  Perhaps the package is missing a dependency."%(str(e)))
-
-    # convert from type names to file names
-    
-    if compute_files:
-        files = {}
-        for d in set(deps):
-            d_pkg, t = names.package_resource_name(d)
-            d_pkg = d_pkg or package # convert '' -> local package 
-            files[d] = msgs.msg_file(d_pkg, t)
-    else:
-        files = None
-
-    # create unique dependency list
-    uniquedeps = []
-    for d in deps:
-        if not d in uniquedeps:
-            uniquedeps.append(d)
-
-    if compute_files:
-        return { 'files': files, 'deps': deps, 'spec': spec, 'package': package, 'uniquedeps': uniquedeps }
-    else:
-        return { 'deps': deps, 'spec': spec, 'package': package, 'uniquedeps': uniquedeps }        
-
-
 

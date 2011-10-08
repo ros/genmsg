@@ -59,8 +59,5 @@ else:
     def log(*args): pass
     def plog(*args): pass
 
-class MsgNotFound(Exception):
-    pass
-
 class InvalidMsgSpec(Exception):
     pass
