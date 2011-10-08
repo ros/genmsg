@@ -80,7 +80,7 @@ def get_msg_file(package, base_type, search_path):
         else:
             raise MsgNotFound("Cannot locate message [%s] in package [%s]"%(base_type, package))
 
-def load_by_type(msg_context, msg_type, search_path, package_context=''):
+def load_by_type(msg_context, msg_type, search_path):
     """
     Load message specification for specified type.
 
@@ -89,19 +89,15 @@ def load_by_type(msg_context, msg_type, search_path, package_context=''):
     :param msg_context: :class:`MsgContext` for finding loaded dependencies
     :param msg_type: relative or full message type.
     :param search_path: dictionary mapping message namespaces to a directory locations
-    :param package_context: (optional) package name to resolve
-      relative type names.
 
     :returns: :class:`MsgSpec` instance, ``(str, MsgSpec)``
     :raises: :exc:`MsgNotFound` If message cannot be located.
     """
-    log("load_by_type(%s, %s, %s)" % (msg_type, str(search_path), package_context))
+    log("load_by_type(%s, %s)" % (msg_type, str(search_path)))
     if not isinstance(search_path, dict):
         raise ValueError("search_path must be a dictionary of {namespace: dirpath}")
-
-    msg_type = resolve_type(msg_type, package_context)
-    log("msg_type", msg_type)
-
+    if msg_type == HEADER:
+        msg_type = HEADER_FULL_NAME
     package_name, base_type = package_resource_name(msg_type)
     file_path = get_msg_file(package_name, base_type, search_path)
     log("file_path", file_path)
@@ -201,7 +197,7 @@ def _load_field_line(orig_line, package_context):
 def _strip_comments(line):
     return line.split(COMMENTCHAR)[0].strip() #strip comments
     
-def load_msg_from_string(msg_context, text, full_name, package_name='', short_name=''):
+def load_msg_from_string(msg_context, text, full_name):
     """
     Load message specification from a string.
 
@@ -209,13 +205,11 @@ def load_msg_from_string(msg_context, text, full_name, package_name='', short_na
     
     :param msg_context: :class:`MsgContext` for finding loaded dependencies
     :param text: .msg text , ``str``
-    :param package_name: package name to use for the type name or
-        '' to use the local (relative) naming convention., ``str``
     :returns: :class:`MsgSpec` specification
     :raises: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
-    log("load_msg_from_string", text, package_name, full_name, short_name)
-    package_name = normalize_package_context(package_name)
+    log("load_msg_from_string", full_name)
+    package_name, short_name = package_resource_name(full_name)
     types = []
     names = []
     constants = []
@@ -229,35 +223,29 @@ def load_msg_from_string(msg_context, text, full_name, package_name='', short_na
             field_type, name = _load_field_line(orig_line, package_name)
             types.append(field_type)
             names.append(name)
-    spec = MsgSpec(types, names, constants, text, full_name, package_name, short_name)
+    spec = MsgSpec(types, names, constants, text, full_name, package_name)
     msg_context.register(full_name, spec)
     return spec
 
-def load_msg_from_file(msg_context, file_path, full_name, package_name='', short_name=''):
+def load_msg_from_file(msg_context, file_path, full_name):
     """
     Convert the .msg representation in the file to a :class:`MsgSpec` instance.
 
     NOTE: this will register the message in the *msg_context*.
     
     :param file_path: path of file to load from, ``str``
-    :param package_context: package name to prepend to type name or
-        '' to use local (relative) naming convention, ``str``
     :returns: :class:`MsgSpec` instance
     :raises: :exc:`InvalidMsgSpec`: if syntax errors or other problems are detected in file
     """
-    if package_name:
-        log("Load spec from", file_path, "into package [%s]"%package_name)
-    else:
-        log("Load spec from", file_path)
-
+    log("Load spec from", file_path)
     with open(file_path, 'r') as f:
         text = f.read()
     try:
-        return load_msg_from_string(msg_context, text, full_name, package_name, short_name)
+        return load_msg_from_string(msg_context, text, full_name)
     except InvalidMsgSpec as e:
         raise InvalidMsgSpec('%s: %s'%(file_path, e))
 
-def load_msg_depends(msg_context, spec, package_context, search_path):
+def load_msg_depends(msg_context, spec, search_path):
     """
     Add the list of message types that spec depends on to depends.
 
@@ -267,13 +255,9 @@ def load_msg_depends(msg_context, spec, package_context, search_path):
     :param search_path: dictionary mapping message namespaces to a directory locations
     :param deps: for recursion use only, do not set
     """
+    package_context = spec.package
+    log("load_msg_depends <spec>", package_context, search_path)
     depends = []
-    # TODO: just store in msg_context
-    files = {}
-    { 'files': files, 'deps': deps}
-
-    log("load_msg_depends <spec>", deps, package_context)
-
     # Iterate over each field, loading as necessary
     for unresolved_type in spec.types:
         bare_type = bare_msg_type(unresolved_type)
@@ -286,21 +270,20 @@ def load_msg_depends(msg_context, spec, package_context, search_path):
             depspec = msg_context.get_registered(resolved_type)
         else:
             # load and register on demand
-            depspec = load_by_type(msg_context, resolved_type, search_path, package_context)
+            depspec = load_by_type(msg_context, resolved_type, search_path)
             msg_context.register(resolved_type, depspec)
 
         # Update dependencies
         depends.append(resolved_type)
         #  - check to see if we have compute dependencies of field
-        dep_dependencies = msg_context.get_dependencies(resolved_type)
+        dep_dependencies = msg_context.get_depends(resolved_type)
         if dep_dependencies is None:
-            depends.extend(load_msg_depends(depspec, package_context, search_path))
+            depends.extend(load_msg_depends(msg_context, depspec, search_path))
         else:
             depends.extend(dep_dependencies)
 
-    if not spec.full_name:
-        raise ValueError("MsgSpec must have a properly set full name")
-    msg_context.set_dependencies(spec.full_name, deps)
+    assert spec.full_name, "MsgSpec must have a properly set full name"
+    msg_context.set_depends(spec.full_name, depends)
     return depends
             
 def load_dependencies(msg_context, spec, package, search_path):
@@ -331,16 +314,34 @@ class MsgContext(object):
     def __init__(self):
         self._registered_packages = {}
         self._files = {}
+        self._dependencies = {}
 
     def set_file(self, full_msg_type, file_path):
         self._files[full_msg_type] = file_path
         
+    def get_file(self, full_msg_type):
+        return self._files.get(full_msg_type, None)
+
+    def set_depends(self, full_msg_type, dependencies):
+        """
+        :param dependencies: full list of dependencies for
+          *full_msg_type*, including recursive dependencies
+        """
+        self._dependencies[full_msg_type] = dependencies
+        
+    def get_depends(self, full_msg_type):
+        """
+        :returns: Full list of dependencies for *full_msg_type*,
+          including implicit/recursive dependencies
+        """
+        return self._dependencies.get(full_msg_type, None)
+
     @staticmethod
     def create_default():
         msg_context = MsgContext()
         # register builtins (needed for serialization).  builtins have no package.
-        load_msg_from_string(msg_context, TIME_MSG, TIME, package_name='')
-        load_msg_from_string(msg_context, DURATION_MSG, DURATION, package_name='')
+        load_msg_from_string(msg_context, TIME_MSG, TIME)
+        load_msg_from_string(msg_context, DURATION_MSG, DURATION)
         return msg_context
         
     def register(self, full_msg_type, msgspec):
@@ -379,7 +380,7 @@ class MsgContext(object):
     def __str__(self):
         return str(self._registered_packages)
 
-def load_srv_from_string(msg_context, text, full_name, package_name='', short_name=''):
+def load_srv_from_string(msg_context, text, full_name):
     """
     NOTE: this will *not* register the message in the *msg_context*.
     
@@ -390,8 +391,6 @@ def load_srv_from_string(msg_context, text, full_name, package_name='', short_na
     :returns: :class:`SrvSpec` instance
     :raises :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
-    package_name = normalize_package_context(package_name)
-    
     text_in  = StringIO()
     text_out = StringIO()
     accum = text_in
@@ -403,11 +402,11 @@ def load_srv_from_string(msg_context, text, full_name, package_name='', short_na
             accum.write(l+'\n')
 
     # create separate MsgSpec objects for each half of file
-    msg_in = load_msg_from_string(msg_context, text_in.getvalue(), '%sRequest'%(full_name), package_name, '%sRequest'%(short_name))
-    msg_out = load_msg_from_string(msg_context, text_out.getvalue(), '%sResponse'%(full_name), package_name, '%sResponse'%(short_name))
-    return SrvSpec(msg_in, msg_out, text, full_name, short_name, package_name)
+    msg_in = load_msg_from_string(msg_context, text_in.getvalue(), '%sRequest'%(full_name))
+    msg_out = load_msg_from_string(msg_context, text_out.getvalue(), '%sResponse'%(full_name))
+    return SrvSpec(msg_in, msg_out, text, full_name)
 
-def load_srv_from_file(msg_context, file_path, full_name, package_name='', short_name=''):
+def load_srv_from_file(msg_context, file_path, full_name):
     """
     Convert the .srv representation in the file to a :class:`SrvSpec` instance.
 
@@ -415,19 +414,10 @@ def load_srv_from_file(msg_context, file_path, full_name, package_name='', short
     
     :param msg_context: :class:`MsgContext` for finding loaded dependencies
     :param file_name: name of file to load from, ``str``
-    :param package_name: context to use for type name, i.e. the package name,
-      or '' to use local naming convention, ``str``
     :returns: :class:`SrvSpec` instance
     :raise: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
     """
-    if package_name:
-        log("Load spec from %s into namespace [%s]\n"%(file_path, package_name))
-    else:
-        log("Load spec from %s\n"%(file_path))
+    log("Load spec from %s %s\n"%(file_path, full_name))
     with open(file_path, 'r') as f:
         text = f.read()
-    return load_srv_from_string(msg_context, text, full_name, package_name, short_name)
-
-
-
-
+    return load_srv_from_string(msg_context, text, full_name)

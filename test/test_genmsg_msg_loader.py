@@ -154,7 +154,7 @@ def test_load_msg_from_string():
     from genmsg.msgs import Constant
     from genmsg.msg_loader import load_msg_from_string, MsgContext
     context = MsgContext.create_default()
-    msgspec = load_msg_from_string(context, "Header header", 'test_pkg/HeaderTest', 'test_pkg', short_name='HeaderTest')
+    msgspec = load_msg_from_string(context, "Header header", 'test_pkg/HeaderTest')
     print msgspec
     assert msgspec.has_header()
     assert msgspec.types == ['std_msgs/Header']
@@ -164,7 +164,7 @@ def test_load_msg_from_string():
     assert msgspec.package == 'test_pkg'
     assert msgspec.full_name == 'test_pkg/HeaderTest'
     
-    msgspec = load_msg_from_string(context, "int8 c=1\nHeader header\nint64 data", 'test_pkg/HeaderValsTest', 'test_pkg', short_name='HeaderValsTest')    
+    msgspec = load_msg_from_string(context, "int8 c=1\nHeader header\nint64 data", 'test_pkg/HeaderValsTest')
     assert msgspec.has_header()
     assert msgspec.types == ['std_msgs/Header', 'int64']
     assert msgspec.names == ['header', 'data']
@@ -173,13 +173,12 @@ def test_load_msg_from_string():
     assert msgspec.package == 'test_pkg'
     assert msgspec.full_name == 'test_pkg/HeaderValsTest'
     
-    msgspec = load_msg_from_string(context, "string data\nint64 data2", 'test_pkg/ValsTest', 'test_pkg_alt', short_name='ValsTest')    
+    msgspec = load_msg_from_string(context, "string data\nint64 data2", 'test_pkg/ValsTest')
     assert not msgspec.has_header()
     assert msgspec.types == ['string', 'int64']
     assert msgspec.names == ['data', 'data2']
     assert msgspec.constants == []
     assert msgspec.short_name == 'ValsTest'
-    assert msgspec.package == 'test_pkg_alt'
 
     assert msgspec.full_name == 'test_pkg/ValsTest'
 
@@ -195,23 +194,13 @@ def test_load_msg_from_file():
     test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
 
     msg_context = MsgContext.create_default()
-    spec = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString', 'test_ros', short_name='TestString')
+    spec = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString')
     assert spec.full_name == 'test_ros/TestString'
     assert spec.package == 'test_ros'
     assert spec.short_name == 'TestString'
     _validate_TestString(spec)
-    
-    spec_a = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString', 'test_ros/', short_name='TestString')
-    assert spec_a.package == 'test_ros'
 
-    spec_b = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString', 'test_ros//', short_name='TestString')
-    assert spec_b.package == 'test_ros'    
-
-    # test normalization
-    assert spec == spec_a
-    assert spec == spec_b    
-
-    # test w/o package_context
+    # test repeat
     spec_2 = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString')
     assert spec == spec_2
     assert spec.package == spec_2.package
@@ -238,7 +227,7 @@ def test_load_msg_from_string_TestString():
         text = f.read()
 
     msg_context = MsgContext.create_default()
-    _validate_TestString(load_msg_from_string(msg_context, text, 'test_ros/TestString', 'test_ros', 'TestString'))
+    _validate_TestString(load_msg_from_string(msg_context, text, 'test_ros/TestString'))
     # supposed to register
     assert msg_context.is_registered('test_ros/TestString'), msg_context
 
@@ -322,8 +311,7 @@ def test_MsgContext():
     test_d = get_test_dir()
     test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
     test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
-    spec = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString', 
-                              'test_ros', short_name='TestString')
+    spec = load_msg_from_file(msg_context, test_string_path, 'test_ros/TestString')
     msg_context.register('test_ros/TestString', spec)
     assert msg_context.get_registered('test_ros/TestString') == spec
     try:
@@ -353,23 +341,53 @@ def test_load_srv_from_file():
         
     full_name = 'test_ros/AddTwoInts'
     spec = load_srv_from_file(msg_context, filename, full_name)
+    assert spec == load_srv_from_file(msg_context, filename, full_name)
     assert ['int64', 'int64'] == spec.request.types, spec.request.types
     assert ['a', 'b'] == spec.request.names
     assert text == spec.text
     assert full_name == spec.full_name
-    
-    # test that package_context gets normalized
-    spec2 = load_srv_from_file(msg_context, filename, full_name, 'foo')
-    assert full_name == spec2.full_name
-    assert 'foo' == spec2.package
-    spec2b = load_srv_from_file(msg_context, filename, full_name, 'foo/')
-    assert full_name == spec2b.full_name
-    assert 'foo' == spec2.package    
-    spec2c = load_srv_from_file(msg_context, filename, full_name, 'foo//')
-    assert full_name == spec2c.full_name
-    assert 'foo' == spec2.package    
-    
-    assert spec2 == spec2b
-    assert spec2 == spec2c    
 
+def test_load_msg_depends():
+    #TODO: should there just be a 'load_msg, implicit=True?'
+    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends
+    test_d = get_test_dir()
+    search_path = {
+        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
+        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
+        'geometry_msgs': os.path.join(test_d, 'geometry_msg', 'msg'),
+        }
+    
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'std_msgs/Int32', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Int32.msg')
+    assert file_p == msg_context.get_file('std_msgs/Int32')
+    assert [] == msg_context.get_depends('std_msgs/Int32')
 
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'std_msgs/Header', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Header.msg')
+    assert file_p == msg_context.get_file('std_msgs/Header')
+    assert [] == msg_context.get_depends('std_msgs/Header')
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'Header', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Header.msg')
+    assert file_p == msg_context.get_file('std_msgs/Header')
+    assert [] == msg_context.get_depends('std_msgs/Header')
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'std_msgs/Int32MultiArray', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Int32MultiArray.msg')
+    assert file_p == msg_context.get_file('std_msgs/Int32MultiArray')
+    val = msg_context.get_depends('std_msgs/Int32MultiArray')
+    assert 2 == len(val)
+    assert set(['std_msgs/MultiArrayLayout', 'std_msgs/MultiArrayDimension']) == set(val), val
+    for s in ['MultiArrayLayout', 'MultiArrayDimension']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+
+    assert False, "need to test with geometry_msgs and Stamped types"
