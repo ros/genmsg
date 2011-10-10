@@ -235,10 +235,13 @@ def test_load_by_type():
     from genmsg.msg_loader import load_by_type, MsgContext, MsgNotFound
     
     test_d = get_test_dir()
+    geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
+
     test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
     test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
     search_path = {
         'test_ros': test_ros_dir,
+        'geometry_msgs': geometry_d,
         }
     msg_context = MsgContext.create_default()
     msgspec = load_by_type(msg_context, 'test_ros/TestString', search_path)
@@ -258,6 +261,23 @@ def test_load_by_type():
         assert False, "should have raised"
     except MsgNotFound:
         pass
+
+    # test all the known geometry msgs
+    test_d = get_test_dir()
+    for f in os.listdir(geometry_d):
+        if f.endswith('.msg'):
+            short = f[:-4]
+            msg_type = 'geometry_msgs/%s'%short
+            spec = load_by_type(msg_context, msg_type, search_path)
+            assert spec is not None
+            assert spec.package == 'geometry_msgs'
+            assert spec.full_name == msg_type
+            assert spec.short_name == short
+            with open(os.path.join(geometry_d, f)) as file_h:
+                assert spec.text == file_h.read()
+            # all types with 'Stamped' in name have headers
+            if 'Stamped' in f:
+                assert spec.has_header(), msg_type
     
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
@@ -354,7 +374,8 @@ def test_load_msg_depends():
     search_path = {
         'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
         'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
-        'geometry_msgs': os.path.join(test_d, 'geometry_msg', 'msg'),
+        'geometry_msgs': os.path.join(test_d, 'geometry_msgs', 'msg'),
+        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
         }
     
     msg_context = MsgContext.create_default()
@@ -390,4 +411,59 @@ def test_load_msg_depends():
         file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
         assert file_p == msg_context.get_file('std_msgs/%s'%s)
 
-    assert False, "need to test with geometry_msgs and Stamped types"
+def test_load_msg_depends_stamped():
+    #TODO: should there just be a 'load_msg, implicit=True?'
+    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends
+    test_d = get_test_dir()
+    geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
+    search_path = {
+        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
+        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
+        'geometry_msgs': geometry_d,
+        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
+        }
+
+    # Test with Stamped and deeper hierarchies, Header
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
+    assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
+    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']) == set(val), val
+    for s in ['Header']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+    for s in ['Pose', 'Point', 'Quaternion']:
+        file_p = os.path.join(geometry_d, '%s.msg'%s)
+        assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'geometry_msgs/TwistWithCovarianceStamped', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'TwistWithCovarianceStamped.msg')
+    assert file_p == msg_context.get_file('geometry_msgs/TwistWithCovarianceStamped')
+    val = msg_context.get_depends('geometry_msgs/TwistWithCovarianceStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/TwistWithCovariance', 'geometry_msgs/Twist', 'geometry_msgs/Vector3']) == set(val), val
+    for s in ['Header']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+    for s in ['TwistWithCovariance', 'Twist', 'Vector3']:
+        file_p = os.path.join(geometry_d, '%s.msg'%s)
+        assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'sensor_msgs/Imu', search_path)
+    load_msg_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
+    assert file_p == msg_context.get_file('sensor_msgs/Imu')
+    val = msg_context.get_depends('sensor_msgs/Imu')
+    assert set(['std_msgs/Header', 'geometry_msgs/Quaternion', 'geometry_msgs/Vector3']) == set(val), val
+    for s in ['Header']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+    for s in ['Quaternion', 'Vector3']:
+        file_p = os.path.join(geometry_d, '%s.msg'%s)
+        assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
+

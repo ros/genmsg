@@ -175,7 +175,7 @@ def _load_field_line(orig_line, package_context):
     :returns: (field_type, name) tuple, ``(str, str)``
     :raises: :exc:`InvalidMsgSpec`
     """
-    log("_load_field_line", orig_line, package_context)
+    #log("_load_field_line", orig_line, package_context)
     clean_line = _strip_comments(orig_line)
     line_splits = [s for s in [x.strip() for x in clean_line.split(" ")] if s] #split type/name, filter out empties
     if len(line_splits) != 2:
