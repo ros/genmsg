@@ -54,7 +54,7 @@ from .msg_loader import load_depends
 from .srvs import SrvSpec
 from . import names
 
-def compute_md5_text(msg_context, get_deps_dict, spec):
+def compute_md5_text(msg_context, spec):
     """
     Compute the text used for md5 calculation. MD5 spec states that we
     removes comments and non-meaningful whitespace. We also strip
@@ -64,7 +64,6 @@ def compute_md5_text(msg_context, get_deps_dict, spec):
 
     :returns: text for ROS MD5-processing, ``str``
     """
-    set(get_deps_dict['deps'])
     package = spec.package
 
     buff = StringIO()    
@@ -83,7 +82,8 @@ def compute_md5_text(msg_context, get_deps_dict, spec):
             sub_pkg, _ = names.package_resource_name(base_msg_type)
             sub_pkg = sub_pkg or package
             sub_spec = msg_context.get_registered(base_msg_type, package)
-            sub_deps = load_depends(msg_context, sub_spec, sub_pkg)
+            sub_deps = load_depends(msg_context, sub_spec, search_path)
+            sub_deps = msg_context.get_depends(sub_spec.full_name)
             sub_md5 = compute_md5(sub_deps)
             buff.write("%s %s\n"%(sub_md5, name))
     
@@ -129,7 +129,7 @@ def compute_md5(msg_context, get_deps_dict):
 ## alias
 compute_md5_v2 = compute_md5
 
-def compute_full_text(msg_context, get_deps_dict):
+def compute_full_text(msg_context, spec):
     """
     Compute full text of message/service, including text of embedded
     types.  The text of the main msg/srv is listed first. Embedded
@@ -137,8 +137,6 @@ def compute_full_text(msg_context, get_deps_dict):
     followed by a type declaration line,'MSG: pkg/type', followed by
     the text of the embedded type.
 
-    @param get_deps_dict dict: dictionary returned by load_depends call
-    @type  get_deps_dict: dict
     @return: concatenated text for msg/srv file and embedded msg/srv types.
     @rtype:  str
     """
@@ -146,13 +144,13 @@ def compute_full_text(msg_context, get_deps_dict):
     sep = '='*80+'\n'
 
     # write the text of the top-level type
-    buff.write(get_deps_dict['spec'].text)
+    buff.write(spec.text)
     buff.write('\n')    
     # append the text of the dependencies (embedded types)
-    for d in set(get_deps_dict['deps']):
+    for d in set(msg_context.get_depends(spec.full_name)):
         buff.write(sep)
         buff.write("MSG: %s\n"%d)
-        buff.write(msgs.get_registered(d).text)
+        buff.write(msg_context.get_registered(d).text)
         buff.write('\n')
     # #1168: remove the trailing \n separator that is added by the concatenation logic
     return buff.getvalue()[:-1]

@@ -290,10 +290,11 @@ def load_msg_depends(msg_context, spec, search_path):
     :param search_path: dictionary mapping message namespaces to a directory locations
     :param deps: for recursion use only, do not set
 
+    :returns: list of dependency names, ``[str]``
     :raises: :exc:`MsgNotFound` If dependency cannot be located.
     """
     package_context = spec.package
-    log("load_msg_depends <spec>", package_context, search_path)
+    log("load_msg_depends <spec>", spec.full_name, package_context)
     depends = []
     # Iterate over each field, loading as necessary
     for unresolved_type in spec.types:
@@ -321,7 +322,8 @@ def load_msg_depends(msg_context, spec, search_path):
 
     assert spec.full_name, "MsgSpec must have a properly set full name"
     msg_context.set_depends(spec.full_name, depends)
-    return depends
+    # have to copy array in order to prevent inadvertent mutation (we've stored this list in set_dependencies)
+    return depends[:]
             
 def load_depends(msg_context, spec, msg_search_path):
     """
@@ -339,10 +341,11 @@ def load_depends(msg_context, spec, msg_search_path):
     :raises: :exc:`MsgNotFound` If dependency cannot be located.
     """
     if isinstance(spec, MsgSpec):
-        load_msg_depends(msg_context, spec, msg_search_path)
+        return load_msg_depends(msg_context, spec, msg_search_path)
     elif isinstance(spec, SrvSpec):
-        load_msg_depends(msg_context, spec.request, msg_search_path)
-        load_msg_depends(msg_context, spec.response, msg_search_path)
+        depends = load_msg_depends(msg_context, spec.request, msg_search_path)
+        depends.extend(load_msg_depends(msg_context, spec.response, msg_search_path))
+        return depends
     else:
         raise ValueError("spec does not appear to be a message or service")
 
@@ -373,6 +376,7 @@ class MsgContext(object):
         :param dependencies: full list of dependencies for
           *full_msg_type*, including recursive dependencies
         """
+        log("set_depends", full_msg_type, dependencies)
         self._dependencies[full_msg_type] = dependencies
         
     def get_depends(self, full_msg_type):

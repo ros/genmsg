@@ -514,7 +514,7 @@ def test_load_msg_depends_stamped():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
 
-def test_load_depends():
+def test_load_depends_msg():
     from genmsg.msg_loader import MsgContext, load_msg_by_type, load_depends, MsgNotFound, load_srv_by_type
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
@@ -570,6 +570,19 @@ def test_load_depends():
         file_p = os.path.join(geometry_d, '%s.msg'%s)
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
+
+def test_load_depends_srv():
+    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_depends, MsgNotFound, load_srv_by_type
+    test_d = get_test_dir()
+    geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
+    msg_search_path = {
+        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
+        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
+        'geometry_msgs': geometry_d,
+        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
+        'invalid': os.path.join(test_d, 'invalid', 'msg'),
+        }
+
     # Test with srvs
     srv_search_path = {
         'test_ros': os.path.join(test_d, 'test_ros', 'srv'),
@@ -586,12 +599,14 @@ def test_load_depends():
 
     # test with srv that has depends
     msg_context = MsgContext.create_default()
+    response_deps = ['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/PoseStamped', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']
     root_spec = load_srv_by_type(msg_context, 'test_ros/GetPoseStamped', srv_search_path)
-    load_depends(msg_context, root_spec, msg_search_path)
+    val = load_depends(msg_context, root_spec, msg_search_path)
+    assert set(val) == set(response_deps)
     val = msg_context.get_depends('test_ros/GetPoseStampedRequest')
     assert val == [], val
     val = msg_context.get_depends('test_ros/GetPoseStampedResponse')    
-    assert set(val) == set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/PoseStamped', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']), val
+    assert set(val) == set(response_deps), val
     
     # Test with nonsense
     class Foo(object): pass
