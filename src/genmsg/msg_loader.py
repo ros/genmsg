@@ -249,11 +249,12 @@ def load_msg_depends(msg_context, spec, search_path):
     """
     Add the list of message types that spec depends on to depends.
 
+    :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
     :param spec: message to compute dependencies for, :class:`MsgSpec`/:class:`SrvSpec`
-    :param deps [str]: list of dependencies. This list will be updated
-      with the dependencies of spec when the method completes, ``[str]``
     :param search_path: dictionary mapping message namespaces to a directory locations
     :param deps: for recursion use only, do not set
+
+    :raises: :exc:`MsgNotFound` If dependency cannot be located.
     """
     package_context = spec.package
     log("load_msg_depends <spec>", package_context, search_path)
@@ -286,30 +287,32 @@ def load_msg_depends(msg_context, spec, search_path):
     msg_context.set_depends(spec.full_name, depends)
     return depends
             
-def load_dependencies(msg_context, spec, package, search_path):
+def load_depends(msg_context, spec, search_path):
     """
-    Compute dependencies of the specified Msgs/Srvs
+    Compute dependencies of *spec* and load their MsgSpec dependencies
+    into *msg_context*.
 
-    :param spec: :class:`MsgSpec` or :class:`SrvSpec` instance
-    :param package: package name, ``str``
+    :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
+    :param spec: :class:`MsgSpec` or :class:`SrvSpec` instance to load dependencies for.
     :param search_path: dictionary mapping message namespaces to a directory locations
-    :returns: dict: 
-      * 'files': list of files that \a file depends on
-      * 'deps': list of dependencies by type
+    :raises: :exc:`MsgNotFound` If dependency cannot be located.
     """
     try:
         if isinstance(spec, MsgSpec):
-            load_msg_depends(msg_context, spec, package)
+            load_msg_depends(msg_context, spec, search_path)
         elif isinstance(spec, SrvSpec):
-            load_msg_depends(msg_context, spec.request, package)
-            load_msg_depends(msg_context, spec.response, package) 
+            load_msg_depends(msg_context, spec.request, search_path)
+            load_msg_depends(msg_context, spec.response, search_path)
         else:
-            raise InvalidMsgSpec("spec does not appear to be a message or service")
+            raise ValueError("spec does not appear to be a message or service")
     except KeyError as e:
         raise InvalidMsgSpec("Cannot load type %s.  Perhaps the package is missing a dependency."%(str(e)))
 
-
 class MsgContext(object):
+    """
+    Context object for storing :class:`MsgSpec` instances and related
+    metadata.
+    """
 
     def __init__(self):
         self._registered_packages = {}

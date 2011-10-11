@@ -50,7 +50,7 @@ except ImportError:
 from . import msgs
 
 from .msgs import InvalidMsgSpec, MsgSpec
-from .msg_loader import load_dependencies
+from .msg_loader import load_depends
 from .srvs import SrvSpec
 from . import names
 
@@ -83,7 +83,7 @@ def compute_md5_text(msg_context, get_deps_dict, spec):
             sub_pkg, _ = names.package_resource_name(base_msg_type)
             sub_pkg = sub_pkg or package
             sub_spec = msg_context.get_registered(base_msg_type, package)
-            sub_deps = load_dependencies(msg_context, sub_spec, sub_pkg)
+            sub_deps = load_depends(msg_context, sub_spec, sub_pkg)
             sub_md5 = compute_md5(sub_deps)
             buff.write("%s %s\n"%(sub_md5, name))
     
@@ -92,7 +92,7 @@ def compute_md5_text(msg_context, get_deps_dict, spec):
 def _compute_hash(msg_context, get_deps_dict, hash):
     """
     subroutine of compute_md5()
-    @param get_deps_dict: dictionary returned by load_dependencies call
+    @param get_deps_dict: dictionary returned by load_depends call
     @type  get_deps_dict: dict
     @param hash: hash instance            
     @type  hash: hash instance            
@@ -112,7 +112,7 @@ def _compute_hash(msg_context, get_deps_dict, hash):
 def compute_md5(msg_context, get_deps_dict):
     """
     Compute md5 hash for message/service
-    @param get_deps_dict dict: dictionary returned by load_dependencies call
+    @param get_deps_dict dict: dictionary returned by load_depends call
     @type  get_deps_dict: dict
     @return: md5 hash
     @rtype: str
@@ -137,7 +137,7 @@ def compute_full_text(msg_context, get_deps_dict):
     followed by a type declaration line,'MSG: pkg/type', followed by
     the text of the embedded type.
 
-    @param get_deps_dict dict: dictionary returned by load_dependencies call
+    @param get_deps_dict dict: dictionary returned by load_depends call
     @type  get_deps_dict: dict
     @return: concatenated text for msg/srv file and embedded msg/srv types.
     @rtype:  str

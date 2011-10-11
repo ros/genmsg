@@ -369,15 +369,31 @@ def test_load_srv_from_file():
 
 def test_load_msg_depends():
     #TODO: should there just be a 'load_msg, implicit=True?'
-    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends
+    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends, MsgNotFound
     test_d = get_test_dir()
     search_path = {
         'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
         'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
         'geometry_msgs': os.path.join(test_d, 'geometry_msgs', 'msg'),
         'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
+        'invalid': os.path.join(test_d, 'invalid', 'msg'),
         }
     
+    # Test not found
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'invalid/BadDepend', search_path)
+    try:
+        load_msg_depends(msg_context, root_spec, search_path)
+        assert False, "should have raised MsgNotFound"
+    except MsgNotFound:
+        pass
+    root_spec = load_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
+    try:
+        load_msg_depends(msg_context, root_spec, search_path)
+        assert False, "should have raised MsgNotFound"
+    except MsgNotFound:
+        pass
+
     msg_context = MsgContext.create_default()
     root_spec = load_by_type(msg_context, 'std_msgs/Int32', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
@@ -467,3 +483,61 @@ def test_load_msg_depends_stamped():
         file_p = os.path.join(geometry_d, '%s.msg'%s)
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
+
+def test_load_depends():
+    from genmsg.msg_loader import MsgContext, load_by_type, load_depends, MsgNotFound
+    test_d = get_test_dir()
+    geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
+    search_path = {
+        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
+        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
+        'geometry_msgs': geometry_d,
+        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
+        'invalid': os.path.join(test_d, 'invalid', 'msg'),
+        }
+
+    # Test not found
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'invalid/BadDepend', search_path)
+    try:
+        load_depends(msg_context, root_spec, search_path)
+        assert False, "should have raised MsgNotFound"
+    except MsgNotFound:
+        pass
+    root_spec = load_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
+    try:
+        load_depends(msg_context, root_spec, search_path)
+        assert False, "should have raised MsgNotFound"
+    except MsgNotFound:
+        pass
+    
+    # Test with msgs
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
+    load_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
+    assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
+    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']) == set(val), val
+    for s in ['Header']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+    for s in ['Pose', 'Point', 'Quaternion']:
+        file_p = os.path.join(geometry_d, '%s.msg'%s)
+        assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
+
+    msg_context = MsgContext.create_default()
+    root_spec = load_by_type(msg_context, 'sensor_msgs/Imu', search_path)
+    load_depends(msg_context, root_spec, search_path)
+    file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
+    assert file_p == msg_context.get_file('sensor_msgs/Imu')
+    val = msg_context.get_depends('sensor_msgs/Imu')
+    assert set(['std_msgs/Header', 'geometry_msgs/Quaternion', 'geometry_msgs/Vector3']) == set(val), val
+    for s in ['Header']:
+        file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
+        assert file_p == msg_context.get_file('std_msgs/%s'%s)
+    for s in ['Quaternion', 'Vector3']:
+        file_p = os.path.join(geometry_d, '%s.msg'%s)
+        assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
+
+    # Test with srvs
