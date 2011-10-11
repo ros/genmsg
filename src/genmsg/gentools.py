@@ -41,6 +41,7 @@ md5sums and message definitions of classes.
 # generator library is rospy.genpy.
 
 import sys
+import hashlib
 
 try:
     from cStringIO import StringIO # Python 2.x
@@ -89,42 +90,34 @@ def compute_md5_text(msg_context, spec):
     
     return buff.getvalue().strip() # remove trailing new line
 
-def _compute_hash(msg_context, get_deps_dict, hash):
+def _compute_hash(msg_context, spec, hash):
     """
     subroutine of compute_md5()
-    @param get_deps_dict: dictionary returned by load_depends call
-    @type  get_deps_dict: dict
-    @param hash: hash instance            
-    @type  hash: hash instance            
+
+    :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
+    :param spec: :class:`MsgSpec` to compute hash for.
+    :param hash: hash instance  
     """
     # accumulate the hash
     # - root file
-    spec = get_deps_dict['spec']
     if isinstance(spec, MsgSpec):
-        hash.update(compute_md5_text(msg_context, get_deps_dict, spec))
+        hash.update(compute_md5_text(msg_context, spec))
     elif isinstance(spec, SrvSpec):
-        hash.update(compute_md5_text(msg_context, get_deps_dict, spec.request))
-        hash.update(compute_md5_text(msg_context, get_deps_dict, spec.response))        
+        hash.update(compute_md5_text(msg_context, spec.request))
+        hash.update(compute_md5_text(msg_context, spec.response))        
     else:
         raise Exception("[%s] is not a message or service"%spec)   
     return hash.hexdigest()
 
-def compute_md5(msg_context, get_deps_dict):
+def compute_md5(msg_context, spec):
     """
     Compute md5 hash for message/service
-    @param get_deps_dict dict: dictionary returned by load_depends call
-    @type  get_deps_dict: dict
-    @return: md5 hash
-    @rtype: str
+
+    :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
+    :param spec: :class:`MsgSpec` to compute md5 for.
+    :returns: md5 hash, ``str``
     """
-    try:
-        # md5 is deprecated in Python 2.6 in favor of hashlib, but hashlib is
-        # unavailable in Python 2.4
-        import hashlib
-        return _compute_hash(msg_context, get_deps_dict, hashlib.md5())
-    except ImportError:
-        import md5
-        return _compute_hash(msg_context, get_deps_dict, md5.new())
+    return _compute_hash(msg_context, spec, hashlib.md5())
 
 ## alias
 compute_md5_v2 = compute_md5
@@ -137,8 +130,9 @@ def compute_full_text(msg_context, spec):
     followed by a type declaration line,'MSG: pkg/type', followed by
     the text of the embedded type.
 
-    @return: concatenated text for msg/srv file and embedded msg/srv types.
-    @rtype:  str
+    :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
+    :param spec: :class:`MsgSpec` to compute full text for.
+    :returns: concatenated text for msg/srv file and embedded msg/srv types, ``str``
     """
     buff = StringIO()
     sep = '='*80+'\n'
