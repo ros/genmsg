@@ -323,31 +323,38 @@ def load_msg_depends(msg_context, spec, search_path):
     msg_context.set_depends(spec.full_name, depends)
     return depends
             
-def load_depends(msg_context, spec, search_path):
+def load_depends(msg_context, spec, msg_search_path):
     """
     Compute dependencies of *spec* and load their MsgSpec dependencies
     into *msg_context*.
 
+    NOTE: *msg_search_path* is only for finding .msg files.  ``.srv``
+    files have a separate and distinct search path.  As services
+    cannot depend on other services, it is not necessary to provide
+    the srv search path here.
+
     :param msg_context: :class:`MsgContext` instance to load dependencies into/from.
     :param spec: :class:`MsgSpec` or :class:`SrvSpec` instance to load dependencies for.
-    :param search_path: dictionary mapping message namespaces to a directory locations
+    :param msg_search_path: dictionary mapping message namespaces to a directory locations.
     :raises: :exc:`MsgNotFound` If dependency cannot be located.
     """
-    try:
-        if isinstance(spec, MsgSpec):
-            load_msg_depends(msg_context, spec, search_path)
-        elif isinstance(spec, SrvSpec):
-            load_msg_depends(msg_context, spec.request, search_path)
-            load_msg_depends(msg_context, spec.response, search_path)
-        else:
-            raise ValueError("spec does not appear to be a message or service")
-    except KeyError as e:
-        raise InvalidMsgSpec("Cannot load type %s.  Perhaps the package is missing a dependency."%(str(e)))
+    if isinstance(spec, MsgSpec):
+        load_msg_depends(msg_context, spec, msg_search_path)
+    elif isinstance(spec, SrvSpec):
+        load_msg_depends(msg_context, spec.request, msg_search_path)
+        load_msg_depends(msg_context, spec.response, msg_search_path)
+    else:
+        raise ValueError("spec does not appear to be a message or service")
 
 class MsgContext(object):
     """
     Context object for storing :class:`MsgSpec` instances and related
     metadata.
+
+    NOTE: All APIs work on :class:`MsgSpec` instance information.
+    Thus, for services, there is information for the request and
+    response messages, but there is no direct information about the
+    :class:`SrvSpec` instance.
     """
 
     def __init__(self):

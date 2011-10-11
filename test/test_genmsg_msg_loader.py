@@ -515,10 +515,10 @@ def test_load_msg_depends_stamped():
 
 
 def test_load_depends():
-    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_depends, MsgNotFound
+    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_depends, MsgNotFound, load_srv_by_type
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
-    search_path = {
+    msg_search_path = {
         'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
         'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
         'geometry_msgs': geometry_d,
@@ -528,23 +528,23 @@ def test_load_depends():
 
     # Test not found
     msg_context = MsgContext.create_default()
-    root_spec = load_msg_by_type(msg_context, 'invalid/BadDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadDepend', msg_search_path)
     try:
-        load_depends(msg_context, root_spec, search_path)
+        load_depends(msg_context, root_spec, msg_search_path)
         assert False, "should have raised MsgNotFound"
     except MsgNotFound:
         pass
-    root_spec = load_msg_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadLocalDepend', msg_search_path)
     try:
-        load_depends(msg_context, root_spec, search_path)
+        load_depends(msg_context, root_spec, msg_search_path)
         assert False, "should have raised MsgNotFound"
     except MsgNotFound:
         pass
     
     # Test with msgs
     msg_context = MsgContext.create_default()
-    root_spec = load_msg_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
-    load_depends(msg_context, root_spec, search_path)
+    root_spec = load_msg_by_type(msg_context, 'geometry_msgs/PoseStamped', msg_search_path)
+    load_depends(msg_context, root_spec, msg_search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
     val = msg_context.get_depends('geometry_msgs/PoseStamped')
@@ -557,8 +557,8 @@ def test_load_depends():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     msg_context = MsgContext.create_default()
-    root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
-    load_depends(msg_context, root_spec, search_path)
+    root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', msg_search_path)
+    load_depends(msg_context, root_spec, msg_search_path)
     file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
     assert file_p == msg_context.get_file('sensor_msgs/Imu')
     val = msg_context.get_depends('sensor_msgs/Imu')
@@ -571,15 +571,36 @@ def test_load_depends():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     # Test with srvs
-    if 0:
-        msg_context = MsgContext.create_default()
-        root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
-        load_depends(msg_context, root_spec, search_path)
-        file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
+    srv_search_path = {
+        'test_ros': os.path.join(test_d, 'test_ros', 'srv'),
+        'std_srvs': os.path.join(test_d, 'std_srvs', 'srv'),
+        }
 
+    msg_context = MsgContext.create_default()
+    root_spec = load_srv_by_type(msg_context, 'test_ros/AddTwoInts', srv_search_path)
+    load_depends(msg_context, root_spec, msg_search_path)
+    val = msg_context.get_depends('test_ros/AddTwoIntsRequest')
+    assert val == [], val
+    val = msg_context.get_depends('test_ros/AddTwoIntsResponse')    
+    assert val == [], val
 
-
-
+    # test with srv that has depends
+    msg_context = MsgContext.create_default()
+    root_spec = load_srv_by_type(msg_context, 'test_ros/GetPoseStamped', srv_search_path)
+    load_depends(msg_context, root_spec, msg_search_path)
+    val = msg_context.get_depends('test_ros/GetPoseStampedRequest')
+    assert val == [], val
+    val = msg_context.get_depends('test_ros/GetPoseStampedResponse')    
+    assert set(val) == set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/PoseStamped', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']), val
+    
+    # Test with nonsense
+    class Foo(object): pass
+    try:
+        load_depends(msg_context, Foo(), msg_search_path)
+        assert False, "should have raised"
+    except ValueError:
+        pass
+    
 def test_load_srv_by_type():
     from genmsg.msg_loader import load_srv_by_type, MsgContext, MsgNotFound
     
