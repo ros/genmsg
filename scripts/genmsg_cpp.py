@@ -451,7 +451,7 @@ def is_fixed_length(spec, includepath):
     types = set(types)
     for type in types:
         type = genmsg.msgs.resolve_type(type, spec.package)
-        (_, new_spec) = genmsg.msg_loader.load_by_type(msg_context, type, includepath, spec.package)
+        (_, new_spec) = genmsg.msg_loader.load_msg_by_type(msg_context, type, includepath, spec.package)
         if (not is_fixed_length(new_spec, includepath)):
             return False
         

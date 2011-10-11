@@ -80,7 +80,7 @@ def get_msg_file(package, base_type, search_path):
         else:
             raise MsgNotFound("Cannot locate message [%s] in package [%s]"%(base_type, package))
 
-def load_by_type(msg_context, msg_type, search_path):
+def load_msg_by_type(msg_context, msg_type, search_path):
     """
     Load message specification for specified type.
 
@@ -93,7 +93,7 @@ def load_by_type(msg_context, msg_type, search_path):
     :returns: :class:`MsgSpec` instance, ``(str, MsgSpec)``
     :raises: :exc:`MsgNotFound` If message cannot be located.
     """
-    log("load_by_type(%s, %s)" % (msg_type, str(search_path)))
+    log("load_msg_by_type(%s, %s)" % (msg_type, str(search_path)))
     if not isinstance(search_path, dict):
         raise ValueError("search_path must be a dictionary of {namespace: dirpath}")
     if msg_type == HEADER:
@@ -271,7 +271,7 @@ def load_msg_depends(msg_context, spec, search_path):
             depspec = msg_context.get_registered(resolved_type)
         else:
             # load and register on demand
-            depspec = load_by_type(msg_context, resolved_type, search_path)
+            depspec = load_msg_by_type(msg_context, resolved_type, search_path)
             msg_context.register(resolved_type, depspec)
 
         # Update dependencies

@@ -231,8 +231,8 @@ def test_load_msg_from_string_TestString():
     # supposed to register
     assert msg_context.is_registered('test_ros/TestString'), msg_context
 
-def test_load_by_type():
-    from genmsg.msg_loader import load_by_type, MsgContext, MsgNotFound
+def test_load_msg_by_type():
+    from genmsg.msg_loader import load_msg_by_type, MsgContext, MsgNotFound
     
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
@@ -244,20 +244,20 @@ def test_load_by_type():
         'geometry_msgs': geometry_d,
         }
     msg_context = MsgContext.create_default()
-    msgspec = load_by_type(msg_context, 'test_ros/TestString', search_path)
+    msgspec = load_msg_by_type(msg_context, 'test_ros/TestString', search_path)
     _validate_TestString(msgspec)
     # supposed to register
     assert msg_context.is_registered('test_ros/TestString'), msg_context
 
     # test invalid search path
     try:
-        load_by_type(msg_context, 'test_ros/TestString', [test_string_path])
+        load_msg_by_type(msg_context, 'test_ros/TestString', [test_string_path])
         assert False, "should have raised"
     except ValueError:
         pass
     # test not found
     try:
-        load_by_type(msg_context, 'test_ros/Fake', search_path)
+        load_msg_by_type(msg_context, 'test_ros/Fake', search_path)
         assert False, "should have raised"
     except MsgNotFound:
         pass
@@ -268,7 +268,7 @@ def test_load_by_type():
         if f.endswith('.msg'):
             short = f[:-4]
             msg_type = 'geometry_msgs/%s'%short
-            spec = load_by_type(msg_context, msg_type, search_path)
+            spec = load_msg_by_type(msg_context, msg_type, search_path)
             assert spec is not None
             assert spec.package == 'geometry_msgs'
             assert spec.full_name == msg_type
@@ -369,7 +369,7 @@ def test_load_srv_from_file():
 
 def test_load_msg_depends():
     #TODO: should there just be a 'load_msg, implicit=True?'
-    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends, MsgNotFound
+    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_msg_depends, MsgNotFound
     test_d = get_test_dir()
     search_path = {
         'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
@@ -381,13 +381,13 @@ def test_load_msg_depends():
     
     # Test not found
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'invalid/BadDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadDepend', search_path)
     try:
         load_msg_depends(msg_context, root_spec, search_path)
         assert False, "should have raised MsgNotFound"
     except MsgNotFound:
         pass
-    root_spec = load_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
     try:
         load_msg_depends(msg_context, root_spec, search_path)
         assert False, "should have raised MsgNotFound"
@@ -395,28 +395,28 @@ def test_load_msg_depends():
         pass
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'std_msgs/Int32', search_path)
+    root_spec = load_msg_by_type(msg_context, 'std_msgs/Int32', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Int32.msg')
     assert file_p == msg_context.get_file('std_msgs/Int32')
     assert [] == msg_context.get_depends('std_msgs/Int32')
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'std_msgs/Header', search_path)
+    root_spec = load_msg_by_type(msg_context, 'std_msgs/Header', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Header.msg')
     assert file_p == msg_context.get_file('std_msgs/Header')
     assert [] == msg_context.get_depends('std_msgs/Header')
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'Header', search_path)
+    root_spec = load_msg_by_type(msg_context, 'Header', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Header.msg')
     assert file_p == msg_context.get_file('std_msgs/Header')
     assert [] == msg_context.get_depends('std_msgs/Header')
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'std_msgs/Int32MultiArray', search_path)
+    root_spec = load_msg_by_type(msg_context, 'std_msgs/Int32MultiArray', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Int32MultiArray.msg')
     assert file_p == msg_context.get_file('std_msgs/Int32MultiArray')
@@ -429,7 +429,7 @@ def test_load_msg_depends():
 
 def test_load_msg_depends_stamped():
     #TODO: should there just be a 'load_msg, implicit=True?'
-    from genmsg.msg_loader import MsgContext, load_by_type, load_msg_depends
+    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_msg_depends
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
     search_path = {
@@ -442,7 +442,7 @@ def test_load_msg_depends_stamped():
     # Test with Stamped and deeper hierarchies, Header
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
+    root_spec = load_msg_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
@@ -456,7 +456,7 @@ def test_load_msg_depends_stamped():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'geometry_msgs/TwistWithCovarianceStamped', search_path)
+    root_spec = load_msg_by_type(msg_context, 'geometry_msgs/TwistWithCovarianceStamped', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'TwistWithCovarianceStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/TwistWithCovarianceStamped')
@@ -470,7 +470,7 @@ def test_load_msg_depends_stamped():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'sensor_msgs/Imu', search_path)
+    root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
     assert file_p == msg_context.get_file('sensor_msgs/Imu')
@@ -485,7 +485,7 @@ def test_load_msg_depends_stamped():
 
 
 def test_load_depends():
-    from genmsg.msg_loader import MsgContext, load_by_type, load_depends, MsgNotFound
+    from genmsg.msg_loader import MsgContext, load_msg_by_type, load_depends, MsgNotFound
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
     search_path = {
@@ -498,13 +498,13 @@ def test_load_depends():
 
     # Test not found
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'invalid/BadDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadDepend', search_path)
     try:
         load_depends(msg_context, root_spec, search_path)
         assert False, "should have raised MsgNotFound"
     except MsgNotFound:
         pass
-    root_spec = load_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
+    root_spec = load_msg_by_type(msg_context, 'invalid/BadLocalDepend', search_path)
     try:
         load_depends(msg_context, root_spec, search_path)
         assert False, "should have raised MsgNotFound"
@@ -513,7 +513,7 @@ def test_load_depends():
     
     # Test with msgs
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
+    root_spec = load_msg_by_type(msg_context, 'geometry_msgs/PoseStamped', search_path)
     load_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
@@ -527,7 +527,7 @@ def test_load_depends():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     msg_context = MsgContext.create_default()
-    root_spec = load_by_type(msg_context, 'sensor_msgs/Imu', search_path)
+    root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
     load_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
     assert file_p == msg_context.get_file('sensor_msgs/Imu')
@@ -541,3 +541,8 @@ def test_load_depends():
         assert file_p == msg_context.get_file('geometry_msgs/%s'%s)
 
     # Test with srvs
+    if 0:
+        msg_context = MsgContext.create_default()
+        root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
+        load_depends(msg_context, root_spec, search_path)
+        file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
