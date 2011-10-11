@@ -50,7 +50,7 @@ except ImportError:
 
 from . import msgs
 
-from .msgs import InvalidMsgSpec, MsgSpec
+from .msgs import InvalidMsgSpec, MsgSpec, bare_msg_type, is_builtin
 from .msg_loader import load_depends
 from .srvs import SrvSpec
 from . import names
@@ -72,20 +72,18 @@ def compute_md5_text(msg_context, spec):
     for c in spec.constants:
         buff.write("%s %s=%s\n"%(c.type, c.name, c.val_text))
     for type_, name in zip(spec.types, spec.names):
-        base_msg_type = msgs.base_msg_type(type_)
+        msg_type = bare_msg_type(type_)
         # md5 spec strips package names
-        if msgs.is_builtin(base_msg_type):
+        if is_builtin(msg_type):
             buff.write("%s %s\n"%(type_, name))
         else:
             # recursively generate md5 for subtype.  have to build up
             # dependency representation for subtype in order to
             # generate md5
-            sub_pkg, _ = names.package_resource_name(base_msg_type)
+            sub_pkg, _ = names.package_resource_name(msg_type)
             sub_pkg = sub_pkg or package
-            sub_spec = msg_context.get_registered(base_msg_type, package)
-            sub_deps = load_depends(msg_context, sub_spec, search_path)
-            sub_deps = msg_context.get_depends(sub_spec.full_name)
-            sub_md5 = compute_md5(sub_deps)
+            sub_spec = msg_context.get_registered(msg_type)
+            sub_md5 = compute_md5(msg_context, sub_spec)
             buff.write("%s %s\n"%(sub_md5, name))
     
     return buff.getvalue().strip() # remove trailing new line
