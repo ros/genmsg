@@ -310,6 +310,36 @@ def test_get_msg_file():
     except ValueError:
         pass
 
+def test_get_srv_file():
+    from genmsg import MsgNotFound
+    from genmsg.msg_loader import get_srv_file
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'srv')
+    std_srvs_dir = os.path.join(test_d, 'std_srvs', 'srv')
+    empty_path = os.path.join(std_srvs_dir, 'Empty.srv')
+    search_path = {
+        'test_ros': test_ros_dir,
+        'std_srvs': std_srvs_dir,
+        }
+    assert empty_path == get_srv_file('std_srvs', 'Empty', search_path)
+    try:
+        get_srv_file('test_ros', 'DNE', search_path)
+        assert False, "should have raised"
+    except MsgNotFound:
+        pass
+    try:
+        get_srv_file('bad_pkg', 'TestString', search_path)
+        assert False, "should have raised"
+    except MsgNotFound:
+        pass
+
+    # test with invalid search path
+    try:
+        get_srv_file('std_srvs', 'Empty', [std_srvs_dir])
+        assert False, "should have raised"
+    except ValueError:
+        pass
+
 def test_MsgContext():
     from genmsg.msg_loader import MsgContext, load_msg_from_file
     msg_context = MsgContext()
@@ -546,3 +576,59 @@ def test_load_depends():
         root_spec = load_msg_by_type(msg_context, 'sensor_msgs/Imu', search_path)
         load_depends(msg_context, root_spec, search_path)
         file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
+
+
+
+
+def test_load_srv_by_type():
+    from genmsg.msg_loader import load_srv_by_type, MsgContext, MsgNotFound
+    
+    test_d = get_test_dir()
+    test_ros_dir = os.path.join(test_d, 'test_ros', 'srv')
+    std_srvs_dir = os.path.join(test_d, 'std_srvs', 'srv')
+    empty_path = os.path.join(std_srvs_dir, 'Empty.srv')
+    a2i_path = os.path.join(std_srvs_dir, 'AddTwoInts.srv')
+    search_path = {
+        'test_ros': test_ros_dir,
+        'std_srvs': std_srvs_dir,
+        }
+    msg_context = MsgContext.create_default()
+    spec = load_srv_by_type(msg_context, 'std_srvs/Empty', search_path)
+    assert msg_context.is_registered('std_srvs/EmptyRequest')
+    assert msg_context.is_registered('std_srvs/EmptyResponse')
+    assert msg_context.get_registered('std_srvs/EmptyRequest') == spec.request
+    assert msg_context.get_registered('std_srvs/EmptyResponse') == spec.response
+    assert msg_context.get_file('std_srvs/EmptyRequest') == empty_path, msg_context.get_file('std_srvs/EmptyRequest')
+    assert msg_context.get_file('std_srvs/EmptyResponse') == empty_path,msg_context.get_file('std_srvs/EmptyResponse')
+    assert spec.request.full_name == 'std_srvs/EmptyRequest'
+    assert spec.response.full_name == 'std_srvs/EmptyResponse'
+    assert spec.request.short_name == 'EmptyRequest'
+    assert spec.response.short_name == 'EmptyResponse'
+    assert spec.request.package == 'std_srvs'
+    assert spec.response.package == 'std_srvs'
+    for f in [spec.request.names, spec.request.types, spec.response.names, spec.response.types]:
+        assert [] == f
+
+    spec = load_srv_by_type(msg_context, 'test_ros/AddTwoInts', search_path)
+    assert msg_context.is_registered('test_ros/AddTwoIntsRequest')
+    assert msg_context.is_registered('test_ros/AddTwoIntsResponse')
+    assert msg_context.get_registered('test_ros/AddTwoIntsRequest') == spec.request
+    assert msg_context.get_registered('test_ros/AddTwoIntsResponse') == spec.response
+    assert spec.request.types == ['int64', 'int64'], spec.request.types
+    assert spec.request.names == ['a', 'b'], spec.request.names
+    assert spec.response.types == ['int64'], spec.response.types
+    assert spec.response.names == ['sum'], spec.response.names
+
+    # test invalid search path
+    try:
+        load_srv_by_type(msg_context, 'test_ros/AddTwoInts', [std_srvs_dir])
+        assert False, "should have raised"
+    except ValueError:
+        pass
+    # test not found
+    try:
+        load_srv_by_type(msg_context, 'test_ros/Fake', search_path)
+        assert False, "should have raised"
+    except MsgNotFound:
+        pass
+

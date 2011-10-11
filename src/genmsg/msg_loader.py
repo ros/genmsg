@@ -47,7 +47,7 @@ try:
 except ImportError:
     from io import StringIO # Python 3.x
 
-from . base import InvalidMsgSpec, log, SEP, COMMENTCHAR, CONSTCHAR, IODELIM
+from . base import InvalidMsgSpec, log, SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_MSG, EXT_SRV
 from . msgs import MsgSpec, TIME, TIME_MSG, DURATION, DURATION_MSG, HEADER, HEADER_FULL_NAME, \
      is_builtin, is_valid_msg_field_name, is_valid_msg_type, bare_msg_type, is_valid_constant_type, \
      Field, Constant, resolve_type
@@ -57,15 +57,17 @@ from . srvs import SrvSpec
 class MsgNotFound(Exception):
     pass
 
-def get_msg_file(package, base_type, search_path):
+def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
     """
-    Determine the file system path for the specified .msg on path.
+    Determine the file system path for the specified ``.msg`` on
+    *search_path*.
 
-    :param package: name of package .msg file is in, ``str``
+    :param package: name of package file is in, ``str``
     :param base_type: type name of message, e.g. 'Point2DFloat32', ``str``
     :param search_path: dictionary mapping message namespaces to a directory locations
+    :param ext: msg file extension.  Override with EXT_SRV to search for services instead.
 
-    :returns: file path of .msg file in specified package, ``str``
+    :returns: filesystem path of requested file, ``str``
     :raises: :exc:`MsgNotFound` If message cannot be located.
     """
     log("msg_file(%s, %s, %s)" % (package, base_type, str(search_path)))
@@ -74,11 +76,24 @@ def get_msg_file(package, base_type, search_path):
     if not package in search_path:
         raise MsgNotFound("Cannot locate message [%s]: unknown package [%s]"%(base_type, package))
     else:
-        path = os.path.join(search_path[package], "%s.msg"%(base_type))
+        path = os.path.join(search_path[package], "%s%s"%(base_type, ext))
         if os.path.isfile(path):
             return path
         else:
             raise MsgNotFound("Cannot locate message [%s] in package [%s]"%(base_type, package))
+
+def get_srv_file(package, base_type, search_path):
+    """
+    Determine the file system path for the specified .msg on path.
+
+    :param package: name of package ``.srv`` file is in, ``str`` 
+    :param base_type: type name of service, e.g. 'Empty', ``str``
+    :param search_path: dictionary mapping message namespaces to a directory locations
+
+    :returns: file path of ``.srv`` file in specified package, ``str``
+    :raises: :exc:`MsgNotFound` If service file cannot be located.
+    """
+    return get_msg_file(package, base_type, search_path, ext=EXT_SRV)
 
 def load_msg_by_type(msg_context, msg_type, search_path):
     """
@@ -105,6 +120,27 @@ def load_msg_by_type(msg_context, msg_type, search_path):
     spec = load_msg_from_file(msg_context, file_path, msg_type)
     msg_context.set_file(msg_type, file_path)
     return spec
+
+def load_srv_by_type(msg_context, srv_type, search_path):
+    """
+    Load service specification for specified type.
+
+    NOTE: services are *never* registered in a :class:`MsgContext`.
+    
+    :param msg_context: :class:`MsgContext` for finding loaded dependencies
+    :param srv_type: relative or full message type.
+    :param search_path: dictionary mapping message namespaces to a directory locations
+
+    :returns: :class:`MsgSpec` instance, ``(str, MsgSpec)``
+    :raises: :exc:`MsgNotFound` If message cannot be located.
+    """
+    log("load_srv_by_type(%s, %s)" % (srv_type, str(search_path)))
+    if not isinstance(search_path, dict):
+        raise ValueError("search_path must be a dictionary of {namespace: dirpath}")
+    package_name, base_type = package_resource_name(srv_type)
+    file_path = get_srv_file(package_name, base_type, search_path)
+    log("file_path", file_path)
+    return load_srv_from_file(msg_context, file_path, srv_type)
 
 def convert_constant_value(field_type, val):
     """
@@ -385,9 +421,9 @@ class MsgContext(object):
 
 def load_srv_from_string(msg_context, text, full_name):
     """
-    NOTE: this will *not* register the message in the *msg_context*.
+    Load :class:`SrvSpec` from the .srv file.
     
-    :param msg_context: :class:`MsgContext` for finding loaded dependencies
+    :param msg_context: :class:`MsgContext` instance to load request/response messages into.
     :param text: .msg text , ``str``
     :param package_name: context to use for msg type name, i.e. the package name,
       or '' to use local naming convention. ``str``
@@ -413,9 +449,7 @@ def load_srv_from_file(msg_context, file_path, full_name):
     """
     Convert the .srv representation in the file to a :class:`SrvSpec` instance.
 
-    NOTE: this will *not* register the message in the *msg_context*.
-    
-    :param msg_context: :class:`MsgContext` for finding loaded dependencies
+    :param msg_context: :class:`MsgContext` instance to load request/response messages into.
     :param file_name: name of file to load from, ``str``
     :returns: :class:`SrvSpec` instance
     :raise: :exc:`InvalidMsgSpec` If syntax errors or other problems are detected in file
@@ -423,4 +457,7 @@ def load_srv_from_file(msg_context, file_path, full_name):
     log("Load spec from %s %s\n"%(file_path, full_name))
     with open(file_path, 'r') as f:
         text = f.read()
-    return load_srv_from_string(msg_context, text, full_name)
+    spec = load_srv_from_string(msg_context, text, full_name)
+    msg_context.set_file('%sRequest'%(full_name), file_path)
+    msg_context.set_file('%sResponse'%(full_name), file_path)
+    return spec
