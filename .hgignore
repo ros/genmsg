@@ -5,6 +5,7 @@ syntax: glob
 *.DS_Store
 *~
 *.log
+MANIFEST
 .coverage
 nosetests.xml
 syntax: regexp

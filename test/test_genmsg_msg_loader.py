@@ -35,6 +35,9 @@ import sys
 
 import random
 
+def get_test_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
+
 def test_exceptions():
     from genmsg import MsgNotFound
     try:
@@ -279,9 +282,6 @@ def test_load_msg_by_type():
             if 'Stamped' in f:
                 assert spec.has_header(), msg_type
     
-def get_test_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
-
 def test_get_msg_file():
     from genmsg import MsgNotFound
     from genmsg.msg_loader import get_msg_file

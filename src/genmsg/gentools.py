@@ -120,6 +120,13 @@ def compute_md5(msg_context, spec):
 ## alias
 compute_md5_v2 = compute_md5
 
+def _unique_deps(dep_list):
+    uniques = []
+    for d in dep_list:
+        if d not in uniques:
+            uniques.append(d)
+    return uniques
+        
 def compute_full_text(msg_context, spec):
     """
     Compute full text of message/service, including text of embedded
@@ -138,8 +145,8 @@ def compute_full_text(msg_context, spec):
     # write the text of the top-level type
     buff.write(spec.text)
     buff.write('\n')    
-    # append the text of the dependencies (embedded types)
-    for d in set(msg_context.get_depends(spec.full_name)):
+    # append the text of the dependencies (embedded types).  Can't use set() as we have to preserve order.
+    for d in _unique_deps(msg_context.get_depends(spec.full_name)):
         buff.write(sep)
         buff.write("MSG: %s\n"%d)
         buff.write(msg_context.get_registered(d).text)
