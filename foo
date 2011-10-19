@@ -1,0 +1,9 @@
+doc/
+foo
+Makefile
+manifest.xml
+rosdoc.yaml
+setup.py*
+src/
+test/
+TODO
