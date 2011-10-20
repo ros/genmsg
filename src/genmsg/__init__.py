@@ -32,7 +32,7 @@
 
 __version__ = '0.1.4'
 
-from . base import EXT_MSG, EXT_SRV, SEP, log, plog, InvalidMsgSpec, log_verbose
+from . base import EXT_MSG, EXT_SRV, SEP, log, plog, InvalidMsgSpec, log_verbose, MsgGenerationException
 from . gentools import compute_md5, compute_full_text, compute_md5_text
 from . names import resource_name_base, package_resource_name, is_legal_resource_base_name, \
      resource_name_package, resource_name, is_legal_resource_name
