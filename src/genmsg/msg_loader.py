@@ -316,9 +316,7 @@ def load_msg_depends(msg_context, spec, search_path):
         #  - check to see if we have compute dependencies of field
         dep_dependencies = msg_context.get_depends(resolved_type)
         if dep_dependencies is None:
-            depends.extend(load_msg_depends(msg_context, depspec, search_path))
-        else:
-            depends.extend(dep_dependencies)
+            load_msg_depends(msg_context, depspec, search_path)
 
     assert spec.full_name, "MsgSpec must have a properly set full name"
     msg_context.set_depends(spec.full_name, depends)
@@ -373,18 +371,25 @@ class MsgContext(object):
 
     def set_depends(self, full_msg_type, dependencies):
         """
-        :param dependencies: full list of dependencies for
-          *full_msg_type*, including recursive dependencies
+        :param dependencies: direct first order
+        dependencies for  *full_msg_type*
         """
         log("set_depends", full_msg_type, dependencies)
         self._dependencies[full_msg_type] = dependencies
-        
+    
     def get_depends(self, full_msg_type):
         """
-        :returns: Full list of dependencies for *full_msg_type*,
-          including implicit/recursive dependencies
+        :returns: List of dependencies for *full_msg_type*,
+          only first order dependencies
         """
         return self._dependencies.get(full_msg_type, None)
+
+    def get_all_depends(self, full_msg_type):
+        all_deps = []
+        for d in self.get_depends(full_msg_type):
+            all_deps.extend([d])
+            all_deps.extend(self.get_all_depends(d))
+        return all_deps
 
     @staticmethod
     def create_default():

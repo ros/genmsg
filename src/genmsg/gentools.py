@@ -147,7 +147,7 @@ def compute_full_text(msg_context, spec):
     buff.write(spec.text)
     buff.write('\n')    
     # append the text of the dependencies (embedded types).  Can't use set() as we have to preserve order.
-    for d in _unique_deps(msg_context.get_depends(spec.full_name)):
+    for d in _unique_deps(msg_context.get_all_depends(spec.full_name)):
         buff.write(sep)
         buff.write("MSG: %s\n"%d)
         buff.write(msg_context.get_registered(d).text)
