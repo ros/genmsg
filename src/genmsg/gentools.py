@@ -54,6 +54,7 @@ from .msgs import InvalidMsgSpec, MsgSpec, bare_msg_type, is_builtin
 from .msg_loader import load_depends
 from .srvs import SrvSpec
 from . import names
+from . import base
 
 def compute_md5_text(msg_context, spec):
     """
@@ -153,4 +154,22 @@ def compute_full_text(msg_context, spec):
         buff.write('\n')
     # #1168: remove the trailing \n separator that is added by the concatenation logic
     return buff.getvalue()[:-1]
+
+def compute_full_type_name(package_name, file_name):
+    """
+    Compute the full type name of message/service 'pkg/type'.
+
+    :param package_name: name of package file is in, ``str``
+    :file_name: name of the msg og srv file, ``str``
+    :returns: typename in format 'pkg/type'
+    :raises: :exc:`MsgGenerationException` if file_name ends with an unknown file extension
+    """
+    # strip extension
+    for ext in (base.EXT_MSG, base.EXT_SRV):
+        if file_name.endswith(ext):
+            short_name = file_name[:-len(ext)]
+            break
+    else:
+        raise MsgGenerationException("unknown file extension: %s"%f)
+    return "%s/%s"%(package_name, short_name)
 
