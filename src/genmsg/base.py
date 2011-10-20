@@ -61,3 +61,7 @@ else:
 
 class InvalidMsgSpec(Exception):
     pass
+
+class MsgGenerationException(Exception):
+    pass
+
