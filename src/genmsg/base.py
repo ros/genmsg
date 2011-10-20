@@ -45,19 +45,22 @@ IODELIM   = '---'
 
 verbose = True
 
-if verbose:
-    import inspect, pprint
-    def log(*args):
+import inspect, pprint
+
+def log_verbose(value):
+    global verbose
+    verbose = value
+
+def log(*args):
+    if verbose:
         print "%s:%d" % inspect.stack()[1][1:3],
         print ' '.join([str(x) for x in args])
 
-    def plog(msg, obj):
+def plog(msg, obj):
+    if verbose:
         print "%s:%d" % inspect.stack()[1][1:3],
         print msg, " ",
         pprint.pprint(obj)
-else:
-    def log(*args): pass
-    def plog(*args): pass
 
 class InvalidMsgSpec(Exception):
     pass
