@@ -1,0 +1,73 @@
+# How To Find These???
+
+find_program( GENMSG_BIN,
+  genmsg_cpp.py
+)
+message(STATUS "GENMSG_BIN found at ${GENMSG_BIN}")
+
+macro(pre_generate_msg MSG)
+
+endmacro()
+
+macro(generate_msg PKG)
+  parse_arguments(PKG "MESSAGES;DEPENDENCIES" "" ${ARGN})
+  
+  message(">> generate_msg << PKG: ${PKG} MSGS: ${PKG_MESSAGES}  DEPNDS: ${PKG_DEPENDENCIES}")
+  set(ALL_OUTPUTS "")
+  foreach(msg ${PKG_MESSAGES})
+
+    get_filename_component(MSG_SHORT ${msg} NAME_WE)
+
+    #configure_file(${TOP}/${PKG}/msg/${MSGPATH}
+    #  ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/${MSGPATH}.stamp
+    #  )
+
+    set(GENERATED_NAME ${PKG}/${MSG_SHORT}.h)
+    list(APPEND GENERATED_ALL ${GENERATED_NAME})
+
+    set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/gen_msgs/include/${PKG})
+    set(OUTPUT_FILE ${OUTPUT_DIR}/${MSG_SHORT}.h)
+    message(STATUS "OutputFile=${OUTPUT_FILE}")
+
+    set(IFLAGS "")
+    set(DEP_TARGETS "")
+
+#     foreach(dep ${PKG_DEPENDENCIES})
+#       set(IFLAGS -I${dep}:${TOP}/${dep}/msg ${IFLAGS})
+#       list(APPEND DEP_TARGETS ${dep}_gencpp)
+#     endforeach()
+
+     set(INPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${msg})
+     message(STATUS "InputFile=${INPUT_FILE}")
+#     set(THESEDEPS "")
+#     execute_process(COMMAND
+#       ${GENCPP_EXE} ${INPUT_FULLPATH} -d ${IFLAGS}
+#       OUTPUT_VARIABLE THESEDEPS
+#       OUTPUT_STRIP_TRAILING_WHITESPACE
+#       )
+#     separate_arguments(THESEDEPS UNIX_COMMAND ${THESEDEPS})
+#     show(THESEDEPS)
+
+     add_custom_command(OUTPUT ${OUTPUT_FILE}
+       DEPENDS ${GENCPP_EXE} ${INPUT_FILE}# ${THESEDEPS} ${GENCPP_EXE}
+       COMMAND ${GENCPP_EXE} ${INPUT_FILE}
+       -p ${PKG}
+       -o ${OUTPUT_DIR}
+       ${IFLAGS}
+       COMMENT "Generating C++ code from ${PKG}/${SHORTNAME}"
+       )
+     list(APPEND ALL_OUTPUT_FILES ${OUTPUT_FILE})
+
+  endforeach()
+  message(STATUS "All Outputs: ${ALL_OUTPUT_FILES}")
+
+  add_custom_target(${PKG}_gencpp
+    DEPENDS ${ALL_OUTPUT_FILES}
+    )
+#
+#  show(DEP_TARGETS)
+#  if(DEP_TARGETS)
+#    add_dependencies(${PKG}_gencpp ${DEP_TARGETS})
+#  endif(DEP_TARGETS)
+
+endmacro()
