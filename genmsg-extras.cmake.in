@@ -18,7 +18,7 @@ macro(generate_msgs PKG)
   foreach(msg ${ARG_MESSAGES})
     # common stuff
     get_filename_component(MSG_SHORT_NAME ${msg} NAME_WE)
-    set(MSG_INPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${msg})
+    set(MSG_INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${msg})
     message(STATUS "InputFile=${MSG_INPUT_FILE}")
 
     # Common, build deps
