@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-find_package(ros_cmake)
+find_package(rosbuild)
 
 add_subdirectory(src)
 
