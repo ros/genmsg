@@ -8,13 +8,13 @@ message(STATUS "GENMSG_BIN found at ${GENMSG_BIN}")
 
 
 macro(generate_msgs PKG)
-#  _file_msg_Iflags ${PKG} ${ARGS}. 
+#  _file_msg_Iflags ${PKG} ${ARGS}.
   parse_arguments(ARG "MESSAGES;DEPENDENCIES;LANGS" "" ${ARGN})
 
   install(FILES
     ${ARG_MESSAGES}
     DESTINATION share/msg/${PKG})
-  
+
   foreach(msg ${ARG_MESSAGES})
     # common stuff
     get_filename_component(MSG_SHORT_NAME ${msg} NAME_WE)
@@ -52,7 +52,7 @@ macro(generate_msgs PKG)
       message(STATUS "Searching for package gen${lang}")
       find_package(gen${lang})
     endif()
-    
+
     if(gen${lang}_FOUND)
       set(GEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/gen_msgs/${lang}/${PKG})
 
@@ -68,7 +68,7 @@ macro(generate_msgs PKG)
       foreach(dep ${PKG_DEPENDENCIES})
 	list(APPEND DEP_TARGETS ${dep}_gen${lang})
       endforeach()
-      
+
       install(
 	FILES
 	${ALL_GEN_OUTPUT_FILES_${lang}}
@@ -77,12 +77,12 @@ macro(generate_msgs PKG)
       add_custom_target(${PKG}_gencpp ALL
 	DEPENDS ${ALL_GEN_OUTPUT_FILES_${lang}}
 	)
-      
+
       message(STATUS "DEP_TARGETS: ${DEP_TARGETS}")
       if(DEP_TARGETS)
 	add_dependencies(${PKG}_gencpp ${DEP_TARGETS})
       endif(DEP_TARGETS)
-      
+
     else()
       message(SEND_ERROR "Generator package 'gen${lang}' for language '${lang} not found")
     endif()
