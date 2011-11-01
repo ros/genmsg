@@ -1,4 +1,5 @@
-find_program(GENMSG_BIN genmsg_cpp.py)
+find_program(GENMSG_BIN genmsg_cpp.py
+  PATHS @PKG_BIN_DIRS@)
 
 message(STATUS "GENMSG_BIN found at ${GENMSG_BIN}")
 
@@ -56,16 +57,22 @@ macro(generate_msgs PKG)
     if(gen${lang}_FOUND)
       set(GEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/gen_msgs/${lang}/${PKG})
 
-      execute_code_string(
-	"_generate_msgs_${lang}( ${PKG}
-	\"${IFLAGS}\"
-	\"${MSG_DEPS}\"
+	_generate_msgs_cpp( ${PKG}
+	"${IFLAGS}"
+	"${MSG_DEPS}"
 	${ARG_MESSAGES}
-	\"${GEN_OUTPUT_DIR}\")")
+	"${GEN_OUTPUT_DIR}")
+
+#      execute_code_string(
+#	"_generate_msgs_${lang}( ${PKG}
+#	\"${IFLAGS}\"
+#	\"\"
+#	${ARG_MESSAGES}
+#	\"${GEN_OUTPUT_DIR}\")")
 
       #Make list of targets _genXXX targets this package depends on
       set(DEP_TARGETS "")
-      foreach(dep ${PKG_DEPENDENCIES})
+      foreach(dep ${ARG_DEPENDENCIES})
 	list(APPEND DEP_TARGETS ${dep}_gen${lang})
       endforeach()
 
