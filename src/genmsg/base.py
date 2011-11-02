@@ -43,7 +43,7 @@ CONSTCHAR   = '='
 COMMENTCHAR = '#'
 IODELIM   = '---'
 
-verbose = True
+verbose = False
 
 import inspect, pprint
 

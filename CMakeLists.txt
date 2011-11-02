@@ -4,8 +4,8 @@ find_package(rosbuild)
 
 add_subdirectory(src)
 
-set(THINGS "HEHEHHEHHEHEHEE")
-em_expand(em_context.py.in doit.em)
+#set(THINGS "HEHEHHEHHEHEHEE")
+#em_expand(em_context.py.in doit.em)
 
 install_cmake_infrastructure(genmsg 
   VERSION 0.0.1 
