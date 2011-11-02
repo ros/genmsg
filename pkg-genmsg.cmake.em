@@ -12,9 +12,7 @@ print "# %s"%msg_deps
 }
 
 install(FILES
-@[for m in messages]@
-  @m
-@[end for]@
+  @(' '.join(messages))
   DESTINATION share/msg/@pkg_name)
 
 set(MSG_I_FLAGS "@
