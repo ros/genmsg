@@ -3,7 +3,6 @@ find_program(GENMSG_BIN genmsg_cpp.py
 
 message(STATUS "GENMSG_BIN found at ${GENMSG_BIN}")
 
-
 #macro(_find_msg_Iflags PKG ARGS)
 #  parse_arguments(ARG "MESSAGES;DEPENDENCIES;LANGS" "" ${ARGN})
 
@@ -47,6 +46,12 @@ macro(generate_msgs PKG)
     message(STATUS "MSG_DEPS: ${MSG_DEPS}")
   endforeach()
 
+  list(APPEND ARG_LANGS ${ROS_LANGS})
+  list(SORT ARG_LANGS)
+  list(REMOVE_DUPLICATES ARG_LANGS)
+
+  em_expand(${genmsg_SOURCE_DIR}/execcode_context.in ${genmsg_SOURCE_DIR}/execcode.em)
+
   # generate msgs files for the specified languages
   foreach(lang ${ARG_LANGS})
     if(NOT gen${lang}_FOUND)
@@ -55,20 +60,14 @@ macro(generate_msgs PKG)
     endif()
 
     if(gen${lang}_FOUND)
-      set(GEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/gen_msgs/${lang}/${PKG})
-
-	_generate_msgs_cpp( ${PKG}
-	"${IFLAGS}"
-	"${MSG_DEPS}"
+      set(GEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/gen/${lang}/${PKG})
+      
+      execute_code_string(
+	"_generate_msgs_${lang}( ${PKG}
+	\"${IFLAGS}\"
+	\"\"
 	${ARG_MESSAGES}
-	"${GEN_OUTPUT_DIR}")
-
-#      execute_code_string(
-#	"_generate_msgs_${lang}( ${PKG}
-#	\"${IFLAGS}\"
-#	\"\"
-#	${ARG_MESSAGES}
-#	\"${GEN_OUTPUT_DIR}\")")
+	\"${GEN_OUTPUT_DIR}\")")
 
       #Make list of targets _genXXX targets this package depends on
       set(DEP_TARGETS "")
