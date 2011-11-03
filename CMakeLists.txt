@@ -13,9 +13,9 @@ install(
   cmake/pkg-genmsg.context.in
   DESTINATION share/cmake/${PROJECT_NAME})
 
-install_cmake_infrastructure(genmsg 
-  VERSION 0.0.1 
+install_cmake_infrastructure(genmsg
+  VERSION 0.0.1
   INCLUDE_DIRS include
   CFG_EXTRAS genmsg-extras.cmake
-  PYTHON_PATH src
+  PYTHONPATH src
 )

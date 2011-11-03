@@ -19,6 +19,7 @@ macro(generate_msgs)
   em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
     @PKG_CMAKE_SRC_DIR@/pkg-genmsg.cmake.em
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake
+    )
 
 endmacro()

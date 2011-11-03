@@ -4,6 +4,6 @@ pkg_name = "@PROJECT_NAME@"
 dependencies_str = "@ARG_DEPENDENCIES@"
 dependencies = aslist(dependencies_str)
 langs = "@ROS_LANGS@"
-genmsg_python_path = "@genmsg_PYTHON_PATH@"
+genmsg_python_path = "@genmsg_PYTHONPATH@"
 dep_search_paths = asdict("@MSG_SEARCH_DIRS@")
 source_path ="@CMAKE_CURRENT_SOURCE_DIR@"
