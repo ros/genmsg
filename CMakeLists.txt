@@ -10,6 +10,6 @@ install(DIRECTORY src/genmsg
 install_cmake_infrastructure(genmsg 
   VERSION 0.0.1 
   INCLUDE_DIRS include
-  CFG_EXTRAS cmake/genmsg-extras.cmake
+  CFG_EXTRAS genmsg-extras.cmake
   PYTHON_PATH src
 )
