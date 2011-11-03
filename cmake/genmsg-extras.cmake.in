@@ -28,9 +28,9 @@ macro(generate_msgs)
     list(APPEND GEN_PYTHON_PATH ${gen${l}_PYTHON_PATH})
   endforeach()
 
-  em_expand(${genmsg_SOURCE_DIR}/pkg-genmsg.context.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-genmsg-context.py
-    ${genmsg_SOURCE_DIR}/pkg-genmsg.cmake.em
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-genmsg.cmake)
+  em_expand(${genmsg_SOURCE_DIR}/cmake/pkg-genmsg.context.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
+    ${genmsg_SOURCE_DIR}/cmake/pkg-genmsg.cmake.em
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
 
 endmacro()
