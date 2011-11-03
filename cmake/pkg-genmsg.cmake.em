@@ -47,3 +47,7 @@ add_custom_target(@(pkg_name)_gencpp ALL
 @[for d in dependencies]
 add_dependencies(@(pkg_name)_gencpp @(d)_gencpp)
 @[end for]
+
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen/cpp/@pkg_name
+  DESTINATION include
+)
