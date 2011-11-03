@@ -7,6 +7,11 @@ install(DIRECTORY src/genmsg
   FILES_MATCHING PATTERN *.py
   )
 
+install(
+  FILES
+  pkg-genmsg.cmake.em pkg-genmsg.context.in
+  DESTINATION share/cmake/${PROJECT_NAME})
+
 install_cmake_infrastructure(genmsg 
   VERSION 0.0.1 
   INCLUDE_DIRS include
