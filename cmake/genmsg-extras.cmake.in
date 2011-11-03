@@ -1,8 +1,3 @@
-find_program(GENMSG_BIN genmsg_cpp.py
-  PATHS @PKG_BIN_DIRS@)
-
-message(STATUS "GENMSG_BIN found at ${GENMSG_BIN}")
-
 macro(generate_msgs)
   parse_arguments(ARG "MESSAGES;DEPENDENCIES;LANGS" "" ${ARGN})
 
@@ -17,15 +12,8 @@ macro(generate_msgs)
         list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
       endforeach()
     else()
-      message(WARNING "Please add find_package() for ${dep}")
+      message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
     endif()
-  endforeach()
-
-  find_package(gencpp)
-
-  set(GEN_PYTHON_PATH "")
-  foreach(l ${ROS_LANGS})
-    list(APPEND GEN_PYTHON_PATH ${gen${l}_PYTHON_PATH})
   endforeach()
 
   em_expand(${genmsg_SOURCE_DIR}/cmake/pkg-genmsg.context.in

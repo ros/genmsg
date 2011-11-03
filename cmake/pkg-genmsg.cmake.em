@@ -37,8 +37,8 @@ _generate_msg_cpp(@pkg_name
 )
 @[end for]
 
-message(STATUS ">>>>>>>>> IFlags: ${MSG_I_FLAGS}")
-message(STATUS ">>>>>>>>> OUTPUT FILES: ${ALL_GEN_OUTPUT_FILES_cpp}")
+log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
+log(1 "@pkg_name: Output Files=${ALL_GEN_OUTPUT_FILES_cpp}")
 
 add_custom_target(@(pkg_name)_gencpp ALL
   DEPENDS ${ALL_GEN_OUTPUT_FILES_cpp}
