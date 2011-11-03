@@ -9,7 +9,8 @@ install(DIRECTORY src/genmsg
 
 install(
   FILES
-  pkg-genmsg.cmake.em pkg-genmsg.context.in
+  cmake/pkg-genmsg.cmake.em
+  cmake/pkg-genmsg.context.in
   DESTINATION share/cmake/${PROJECT_NAME})
 
 install_cmake_infrastructure(genmsg 
