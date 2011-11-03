@@ -16,9 +16,9 @@ macro(generate_msgs)
     endif()
   endforeach()
 
-  em_expand(${genmsg_SOURCE_DIR}/cmake/pkg-genmsg.context.in
+  em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
-    ${genmsg_SOURCE_DIR}/cmake/pkg-genmsg.cmake.em
+    @PKG_CMAKE_SRC_DIR@/pkg-genmsg.cmake.em
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
 
 endmacro()
