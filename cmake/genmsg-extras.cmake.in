@@ -1,11 +1,11 @@
 macro(generate_msgs)
-  parse_arguments(ARG "MESSAGES;DEPENDENCIES;LANGS" "" ${ARGN})
+  parse_arguments(ARG "MESSAGES;DEPENDENCIES;LANGS;PATH" "" ${ARGN})
 
   set(ARG_MESSAGES ${ARG_MESSAGES})
   set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
   set(ARG_LANGS ${ARG_LANGS})
 
-  set(MSG_SEARCH_DIRS "")
+  set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PATH}")
   foreach(dep ${ARG_DEPENDENCIES})
     if(${dep}_FOUND)
       foreach(i ${${dep}_MSG_INCLUDE_DIRS})
@@ -15,6 +15,7 @@ macro(generate_msgs)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
     endif()
   endforeach()
+  message(" >!>!>!> MSG_SEARCH_DIRS == ${MSG_SEARCH_DIRS}")
 
   em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py

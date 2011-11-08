@@ -74,7 +74,8 @@ def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
     if not isinstance(search_path, dict):
         raise ValueError("search_path must be a dictionary of {namespace: dirpath}")
     if not package in search_path:
-        raise MsgNotFound("Cannot locate message [%s]: unknown package [%s]"%(base_type, package))
+        raise MsgNotFound("Cannot locate message [%s]: unknown package [%s] on search path [%s]" \
+                          % (base_type, package, search_path))
     else:
         path = os.path.join(search_path[package], "%s%s"%(base_type, ext))
         if os.path.isfile(path):

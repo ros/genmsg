@@ -15,11 +15,7 @@ install(FILES
   @(' '.join(messages))
   DESTINATION share/msg/@pkg_name)
 
-set(MSG_I_FLAGS "@
-@[for dep,dir in dep_search_paths.items()]@
--I@dep:@dir@
-@[end for]@
-")
+set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths.items()]))")
 
 #for each lang....
 

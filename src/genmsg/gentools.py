@@ -170,6 +170,6 @@ def compute_full_type_name(package_name, file_name):
             short_name = file_name[:-len(ext)]
             break
     else:
-        raise MsgGenerationException("unknown file extension: %s"%f)
+        raise base.MsgGenerationException("Processing %s: unknown file extension: %s"% (file_name, ext))
     return "%s/%s"%(package_name, short_name)
 
