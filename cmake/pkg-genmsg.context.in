@@ -1,5 +1,7 @@
 messages_str = "@ARG_MESSAGES@"
 messages = aslist(messages_str)
+services_str = "@ARG_SERVICES@"
+services = aslist(services_str)
 pkg_name = "@PROJECT_NAME@"
 dependencies_str = "@ARG_DEPENDENCIES@"
 dependencies = aslist(dependencies_str)

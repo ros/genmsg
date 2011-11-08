@@ -9,11 +9,22 @@ for m in messages:
 
 print "# %s"%msg_deps
 
+srv_deps = {}
+for s in services:
+  srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, source_path+"/"+s, dep_search_paths)
+
+print "\n# %s"%srv_deps
+
+
 }
 
 install(FILES
   @(' '.join(messages))
   DESTINATION share/msg/@pkg_name)
+
+install(FILES
+  @(' '.join(services))
+  DESTINATION share/srv/@pkg_name)
 
 set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths.items()]))")
 
@@ -27,6 +38,15 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 @[for m in messages]
 _generate_msg_cpp(@pkg_name
   @m
+  "${MSG_I_FLAGS}"
+  "@(';'.join(msg_deps[m]))"
+  ${CMAKE_CURRENT_BINARY_DIR}/gen/cpp/@pkg_name
+)
+@[end for]
+
+@[for s in services]
+_generate_srv_cpp(@pkg_name
+  @s
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]))"
   ${CMAKE_CURRENT_BINARY_DIR}/gen/cpp/@pkg_name
