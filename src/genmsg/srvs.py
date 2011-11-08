@@ -38,15 +38,25 @@ Implements http://ros.org/wiki/srv
 import os
 import sys
 
+from . names import is_legal_resource_name, is_legal_resource_base_name, package_resource_name, resource_name
+
 class SrvSpec(object):
     
     def __init__(self, request, response, text, full_name = '', short_name = '', package = ''):
+
+        alt_package, alt_short_name = package_resource_name(full_name)
+        if not package:
+            package = alt_package
+        if not short_name:
+            short_name = alt_short_name
+
         self.request = request
         self.response = response
         self.text = text
         self.full_name = full_name
         self.short_name = short_name
         self.package = package
+
         
     def __eq__(self, other):
         if not other or not isinstance(other, SrvSpec):
