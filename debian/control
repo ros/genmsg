@@ -10,7 +10,6 @@ Architecture: all
 Depends: ${misc:Depends}
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
-
 X-ROS-Pkg-Name: genmsg
 X-ROS-Pkg-Depends: rosbuild
-X-ROS-System-Depends:
+
