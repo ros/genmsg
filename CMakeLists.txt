@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(genmsg)
-find_package(rosbuild)
+find_package(catkin)
 
 install(DIRECTORY src/genmsg
   DESTINATION lib/python
