@@ -19,7 +19,7 @@ def find_msg_dependencies(pkg_name, msg_file, search_paths):
         raise genmsg.MsgGenerationException("Cannot read .msg for %s: %s"%(full_type_name, str(e)))
 
     deps = set()
-    for dep_type_name in msg_context.get_depends(full_type_name):
+    for dep_type_name in msg_context.get_all_depends(full_type_name):
         deps.add( msg_context.get_file(dep_type_name) )
 
     return list(deps)
@@ -40,10 +40,10 @@ def find_srv_dependencies(pkg_name, msg_file, search_paths):
 
     deps = set()
 
-    for dep_type_name in msg_context.get_depends(spec.request.full_name):
+    for dep_type_name in msg_context.get_all_depends(spec.request.full_name):
         deps.add( msg_context.get_file(dep_type_name) )
 
-    for dep_type_name in msg_context.get_depends(spec.response.full_name):
+    for dep_type_name in msg_context.get_all_depends(spec.response.full_name):
         deps.add( msg_context.get_file(dep_type_name) )
 
     return list(deps)
