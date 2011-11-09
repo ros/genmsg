@@ -16,7 +16,6 @@ macro(generate_msgs)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
     endif()
   endforeach()
-  message(" >!>!>!> MSG_SEARCH_DIRS == ${MSG_SEARCH_DIRS}")
 
   em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
