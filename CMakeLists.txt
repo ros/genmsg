@@ -18,3 +18,5 @@ install_cmake_infrastructure(genmsg
   CFG_EXTRAS genmsg-extras.cmake
   PYTHONPATH src
 )
+
+catkin_package(genmsg)
