@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(genmsg)
-find_package(catkin)
+find_package(catkin REQUIRED)
 
 install(DIRECTORY src/genmsg
   DESTINATION lib/python

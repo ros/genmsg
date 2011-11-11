@@ -1,6 +1,7 @@
 @{
 import sys
-sys.path.append(genmsg_python_path)
+# put this path at the beginning
+sys.path.insert(0, genmsg_python_path)
 import genmsg.deps
 
 msg_deps = {}
