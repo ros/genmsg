@@ -31,7 +31,6 @@ set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_p
 
 #for each lang....
 
-message("LANGS BE @(langs)")
 @[for l in langs.split(';')]
 find_package(@l)
 @[end for]
@@ -42,7 +41,6 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 @[for l in langs.split(';')]
 
 @[for m in messages]
-@{print >>sys.stderr, "langsuffix=", l[3:]}
 _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
@@ -69,14 +67,14 @@ add_custom_target(@(pkg_name)_@(l) ALL
   DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
 )
 
-@[for d in dependencies]
-
-add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
-
 install(
   DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen/@(l[3:])/@pkg_name
   DESTINATION ${@(l)_INSTALL_DIR}
 )
+
+@[for d in dependencies]
+
+add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 
 @[end for]
 @[end for]
