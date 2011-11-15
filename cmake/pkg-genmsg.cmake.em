@@ -73,7 +73,6 @@ install(
 
 @[for d in dependencies]
 
-message("add_dependencies(@(pkg_name)_@(l) @(d)_@(l))")
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 
 @[end for]
