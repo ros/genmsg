@@ -67,7 +67,7 @@ add_custom_target(@(pkg_name)_@(l) ALL
 )
 
 install(
-  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  DIRECTORY ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
   DESTINATION ${@(l)_INSTALL_DIR}
 )
 
