@@ -45,7 +45,7 @@ _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]))"
-  ${CMAKE_CURRENT_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
 @[end for]
 
@@ -54,12 +54,11 @@ _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]))"
-  ${CMAKE_CURRENT_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
 @[end for]
 @[end for]
 log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
-log(1 "@pkg_name: Output Files=${ALL_GEN_OUTPUT_FILES_cpp}")
 
 @[for l in langs.split(';')]
 
@@ -74,6 +73,7 @@ install(
 
 @[for d in dependencies]
 
+message("add_dependencies(@(pkg_name)_@(l) @(d)_@(l))")
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 
 @[end for]
