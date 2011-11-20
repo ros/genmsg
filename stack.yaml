@@ -1,0 +1,15 @@
+Package: genmsg
+Version: 3.4.5
+Section: misc
+Priority: extra
+Architecture: all
+Depends: ${misc:Depends} python-empy, cmake, make
+Build-Depends: debhelper (>= 7), cmake, gcc, make, python, python-empy, @(CATKIN_PACKAGE_PREFIX)catkin
+Description: Willow Garage low level build system macros and infrastructure
+Author: Troy Straszheim <straszheim@willowgarage.com>, Morten Kjaergaard, Ken Conley
+Maintainer: Troy Straszheim <straszheim@willowgarage.com>
+Homepage: http://www.ros.org
+Catkin-DebRulesType: python_distutils
+Catkin-CopyrightType:  willowgarage
+Catkin-Depends: catkin
+Catkin-ProjectName: genmsg
