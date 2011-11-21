@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 project(genmsg)
 find_package(catkin REQUIRED)
 
-install(DIRECTORY src/genmsg
-  DESTINATION lib/python
-  FILES_MATCHING PATTERN *.py
-  )
-
 install(
   FILES
   cmake/pkg-genmsg.cmake.em
