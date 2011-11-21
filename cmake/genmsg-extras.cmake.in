@@ -24,3 +24,10 @@ macro(generate_msgs)
     )
 
 endmacro()
+
+assert(PYTHON_EXECUTABLE)
+assert(CATKIN_ENV)
+
+safe_execute_process(COMMAND ${CATKIN_ENV}
+  ${PYTHON_EXECUTABLE}
+  @PKG_CMAKE_SRC_DIR@/import_check.py)

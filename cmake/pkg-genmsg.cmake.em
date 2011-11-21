@@ -76,4 +76,3 @@ install(
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 @[end for]@# dependencies
 @[end for]@# langs
-

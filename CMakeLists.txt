@@ -15,3 +15,4 @@ install_cmake_infrastructure(genmsg
 )
 
 catkin_package(genmsg)
+enable_python(genmsg)
