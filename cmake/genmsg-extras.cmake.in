@@ -6,9 +6,11 @@ macro(generate_msgs)
   set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
   set(ARG_LANGS ${ARG_LANGS})
 
+  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PATH}
+    CACHE INTERNAL "dir containing msgs")
   set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PATH}")
   foreach(dep ${ARG_DEPENDENCIES})
-    if(${dep}_FOUND)
+    if(${dep}_FOUND OR ${dep}_SOURCE_DIR)
       foreach(i ${${dep}_MSG_INCLUDE_DIRS})
         list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
       endforeach()

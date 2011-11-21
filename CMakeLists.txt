@@ -6,6 +6,7 @@ install(
   FILES
   cmake/pkg-genmsg.cmake.em
   cmake/pkg-genmsg.context.in
+  cmake/import_check.py
   DESTINATION share/cmake/${PROJECT_NAME})
 
 install_cmake_infrastructure(genmsg
