@@ -13,6 +13,7 @@ for s in services:
   srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, source_path+"/"+s, dep_search_paths)
 
 }@
+message(STATUS "@(pkg_name): @(len(messages)) messages")
 install(FILES
   @(' '.join(messages))
   DESTINATION share/msg/@pkg_name)
