@@ -34,12 +34,15 @@
 ## 
 ## 
 
-msg_template_map = { 'msg.h.template':'@NAME@.h' }
-srv_template_map = { 'srv.h.template':'@NAME@.h' }
+import sys
+import os
+import em
+import genmsg.command_line
+import genmsg.msgs
 
 # generate msg or srv files from a template file
 # template_map of the form { 'template_file':'output_file'} output_file can contail @NAME@ which will be replaced by the message/service name
-def _generate_from_spec(input_file, msg_context, spec, output_dir, template_dir, template_map):
+def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map):
 
     md5sum = genmsg.compute_md5(msg_context, spec)
 
@@ -64,7 +67,7 @@ def _generate_from_spec(input_file, msg_context, spec, output_dir, template_dir,
         interpreter.file(open(template_file)) #todo try
         interpreter.shutdown()
 
-def _generate_msg_from_file(input_file, output_dir, template_dir, package_name, msg_template_dict):
+def _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict):
     # Read MsgSpec from .msg file
     msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(package_name, os.path.basename(input_file))
@@ -72,14 +75,14 @@ def _generate_msg_from_file(input_file, output_dir, template_dir, package_name, 
     # Load the dependencies
     genmsg.msg_loader.load_depends(msg_context, spec, search_path)
     # Generate the language dependent msg file
-    generate_from_templates(input_file,
+    _generate_from_spec(input_file,
+                            output_dir,
+                            template_dir,
                             msg_context,
                             spec,
-                            options.outdir,
-                            options.emdir,
                             msg_template_dict)
 
-def _generate_srv_from_file(input_file, output_dir, template_dir, package_name, srv_template_dict, msg_template_dict):
+def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict):
     # Read MsgSpec from .srv.file
     msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(package_name, os.path.basename(input_file))
@@ -87,25 +90,25 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, package_name, 
     # Load the dependencies
     genmsg.msg_loader.load_depends(msg_context, spec, search_path)
     # Generate the language dependent srv file
-    generate_from_templates(input_file,
+    _generate_from_spec(input_file,
+                            output_dir,
+                            template_dir,
                             msg_context,
                             spec,
-                            output_dir,
-                            template_dir,
                             srv_template_dict)
     # Generate the language dependent msg file for the srv request
-    generate_from_templates(input_file,
+    _generate_from_spec(input_file,
+                            output_dir,
+                            template_dir,
                             msg_context,
                             spec.request,
-                            output_dir,
-                            template_dir,
                             msg_template_dict)
     # Generate the language dependent msg file for the srv response
-    generate_from_templates(input_file,
-                            msg_context,
-                            spec.response,
+    _generate_from_spec(input_file,
                             output_dir,
                             template_dir,
+                            msg_context,
+                            spec.response,
                             msg_template_dict)
 
 # uniform interface for genering either srv or msg files
@@ -129,9 +132,9 @@ def generate_from_file(input_file, package_name, output_dir, template_dir, inclu
 
     # Generate the file(s)
     if input_file.endswith(".msg"):
-        _generate_msg_from_file(input_file, output_dir, template_dir, package_name, msg_template_dict)
+        _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict)
     elif input_file.endswith(".srv"):
-        _generate_srv_from_file(input_file, output_dir, template_dir, package_name, srv_template_dict, msg_template_dict)
+        _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict)
     else:
         assert False, "Uknown file extension for %s"%input_file
 
@@ -152,7 +155,7 @@ def generate_from_command_line_options(argv, msg_template_dict, srv_template_dic
 
     (options, argv) = parser.parse_args(argv)
 
-    if( not options.package or not options.outdir or not options.emdir):
+    if( not options.package or not options.outdir):
         parser.print_help()
         exit(-1)
 
