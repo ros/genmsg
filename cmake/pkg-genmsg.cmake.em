@@ -60,13 +60,14 @@ _generate_module_@(l[3:])(@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
+add_custom_target(@(pkg_name)_@(l) ALL
+  DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
+)
+
 @[end for]@
 log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
 @[for l in langs.split(';')]@
-add_custom_target(@(pkg_name)_@(l) ALL
-  DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
-)
 
 install(
   DIRECTORY ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
