@@ -138,8 +138,30 @@ def generate_from_file(input_file, package_name, output_dir, template_dir, inclu
     else:
         assert False, "Uknown file extension for %s"%input_file
 
+def generate_module(package_name, output_dir, template_dir, template_dict):
+    # Locate generate msg files
+    files = os.listdir(output_dir)
+
+    # Set dictionary for the generator intepreter
+    g = { "files":files }
+
+    # Loop over all files to generate
+    for template_file_name, output_file_name in template_dict.items():
+        template_file = os.path.join(template_dir, template_file_name)
+        output_file = os.path.join(output_dir, output_file_name)
+
+        ofile = open(output_file, 'w') #todo try
+        
+        # todo, reuse interpreter
+        interpreter = em.Interpreter(output=ofile, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
+        interpreter.updateGlobals(g)
+        if not os.path.isfile(template_file):
+            raise RuntimeError, "Template file %s not found in template dir %s" % (template_file_name, template_dir)
+        interpreter.file(open(template_file)) #todo try
+        interpreter.shutdown()
+
 # Uniform interface to support the standard command line options
-def generate_from_command_line_options(argv, msg_template_dict, srv_template_dict):
+def generate_from_command_line_options(argv, msg_template_dict, srv_template_dict, module_template_dict = {}):
     from optparse import OptionParser
     parser = OptionParser("[options] <srv file>")
     parser.add_option("-p", dest='package',
@@ -149,14 +171,20 @@ def generate_from_command_line_options(argv, msg_template_dict, srv_template_dic
     parser.add_option("-I", dest='includepath',
                       help="include path to search for messages",
                       action="append")
+    parser.add_option("-m", dest='module',
+                      help="write the module file",
+                      action='store_true', default=False)
     parser.add_option("-e", dest='emdir',
                       help="directory containing template files",
                       default=sys.path[0])
 
     (options, argv) = parser.parse_args(argv)
 
-    if( not options.package or not options.outdir):
+    if( not options.package or not options.outdir or not options.emdir):
         parser.print_help()
         exit(-1)
 
-    generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict)
+    if( options.module ):
+        generate_module(options.package, options.outdir, options.emdir, module_template_dict)
+    else:
+        generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict)
