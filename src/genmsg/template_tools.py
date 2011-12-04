@@ -143,7 +143,8 @@ def generate_module(package_name, output_dir, template_dir, template_dict):
     files = os.listdir(output_dir)
 
     # Set dictionary for the generator intepreter
-    g = { "files":files }
+    g = dict(files=files,
+             package=package_name)
 
     # Loop over all files to generate
     for template_file_name, output_file_name in template_dict.items():
