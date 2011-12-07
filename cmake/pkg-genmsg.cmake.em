@@ -6,21 +6,14 @@ import genmsg.deps
 
 msg_deps = {}
 for m in messages:
-  msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, source_path+"/"+m, dep_search_paths)
+  msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, message_files_dir+"/"+m, dep_search_paths)
 
 srv_deps = {}
 for s in services:
-  srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, source_path+"/"+s, dep_search_paths)
+  srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, service_files_dir+"/"+s, dep_search_paths)
 
 }@
 message(STATUS "@(pkg_name): @(len(messages)) messages")
-install(FILES
-  @(' '.join(messages))
-  DESTINATION share/msg/@pkg_name)
-
-install(FILES
-  @(' '.join(services))
-  DESTINATION share/srv/@pkg_name)
 
 set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths.items()]))")
 
@@ -37,7 +30,7 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 ### Generating Messages
 @[for m in messages]@
 _generate_msg_@(l[3:])(@pkg_name
-  @m
+  @(message_files_dir)/@m
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
@@ -47,7 +40,7 @@ _generate_msg_@(l[3:])(@pkg_name
 ### Generating Services
 @[for s in services]
 _generate_srv_@(l[3:])(@pkg_name
-  @s
+  @(service_files_dir)/@s
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name

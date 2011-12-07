@@ -188,4 +188,9 @@ def generate_from_command_line_options(argv, msg_template_dict, srv_template_dic
     if( options.module ):
         generate_module(options.package, options.outdir, options.emdir, module_template_dict)
     else:
-        generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict)
+        if len(argv) > 1:
+            generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict)
+        else:
+            parser.print_help()
+            exit(-1)
+

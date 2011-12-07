@@ -1,14 +1,76 @@
-macro(generate_msgs)
-  parse_arguments(ARG "MESSAGES;SERVICES;DEPENDENCIES;LANGS;PATH" "" ${ARGN})
+macro(_add_stuff_common)
+endmacro()
 
-  set(ARG_MESSAGES ${ARG_MESSAGES})
-  set(ARG_SERVICES ${ARG_SERVICES})
-  set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
-  set(ARG_LANGS ${ARG_LANGS})
+macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
+  # todo, check for proper path, slasheds, etc
+  set(${ARG_OUTPUT_VAR} "")
+  foreach(file ${ARG_FILES})
+    list(APPEND ${ARG_OUTPUT_VAR} ${ARG_PATH}/${file})
+  endforeach()
+endmacro()
 
-  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PATH}
+macro(add_message_files)
+  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})  
+
+  if(NOT ARG_PACKAGE)
+    set(ARG_PACKAGE ${PROJECT_NAME})
+  endif()
+
+  #todo, hack: handle this elsewhere when fixing the install stuff
+  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY}
     CACHE INTERNAL "dir containing msgs")
-  set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PATH}")
+
+  if(${PROJECT_NAME}_MESSAGE_FILES_DIR)
+    message(FATAL_ERROR "Only one message folder per package name is currently allowed (${PROJECT_NAME})")
+  endif()
+
+  list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${ARG_FILES})
+  set(${PROJECT_NAME}_MESSAGE_FILES_DIR ${ARG_DIRECTORY})
+
+  if(NOT ARG_NOINSTALL)
+    _prepend_path(${ARG_DIRECTORY} "${ARG_FILES}" FILES_TO_INSTALL)
+    #todo only allow install for files in relative dir
+    install(FILES ${FILES_TO_INSTALL} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
+  endif()
+endmacro()
+
+macro(add_service_files)
+  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})  
+
+  if(NOT ARG_PACKAGE)
+    set(ARG_PACKAGE ${PROJECT_NAME})
+  endif()
+  
+  if(${PROJECT_NAME}_SERVICE_FILES_DIR)
+    message(FATAL_ERROR "Only one service folder per package name is currently allowed (${PROJECT_NAME})")
+  endif()
+
+  list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${ARG_FILES})
+  set(${PROJECT_NAME}_SERVICE_FILES_DIR ${ARG_DIRECTORY})
+
+  if(NOT ARG_NOINSTALL)
+    _prepend_path(${ARG_DIRECTORY} "${ARG_FILES}" FILES_TO_INSTALL)
+    #todo only allow install for files in relative dir
+    install(FILES ${FILES_TO_INSTALL} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
+  endif()
+endmacro()
+
+macro(generate_messages)
+  parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})  
+
+  set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
+  set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
+  set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
+  set(MESSAGE_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${${PROJECT_NAME}_MESSAGE_FILES_DIR})
+  set(SERVICE_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${${PROJECT_NAME}_SERVICE_FILES_DIR})
+
+  if(ARG_LANGS)
+    set(GEN_LANGS ${ARG_LANGS})
+  else()
+    set(GEN_LANGS ${CATKIN_GENLANGS})
+  endif()
+
+  set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${MESSAGE_FILES_DIR}")
   foreach(dep ${ARG_DEPENDENCIES})
     if(${dep}_FOUND OR ${dep}_SOURCE_DIR)
       foreach(i ${${dep}_MSG_INCLUDE_DIRS})
@@ -26,10 +88,3 @@ macro(generate_msgs)
     )
 
 endmacro()
-
-assert(PYTHON_EXECUTABLE)
-assert(CATKIN_ENV)
-
-safe_execute_process(COMMAND ${CATKIN_ENV}
-  ${PYTHON_EXECUTABLE}
-  @PKG_CMAKE_SRC_DIR@/import_check.py)
