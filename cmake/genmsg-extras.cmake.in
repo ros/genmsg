@@ -30,7 +30,7 @@ macro(add_message_files)
   if(NOT ARG_NOINSTALL)
     _prepend_path(${ARG_DIRECTORY} "${ARG_FILES}" FILES_TO_INSTALL)
     #todo only allow install for files in relative dir
-    install(FILES ${FILES_TO_INSTALL} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
+    install(FILES ${FILES_TO_INSTALL} DESTINATION share/msg/${PROJECT_NAME})
   endif()
 endmacro()
 
