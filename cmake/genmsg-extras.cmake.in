@@ -10,27 +10,33 @@ macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
 endmacro()
 
 macro(add_message_files)
-  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})  
+  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL;PRIVATE" ${ARGN})  
 
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
   endif()
 
-  #todo, hack: handle this elsewhere when fixing the install stuff
-  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY}
-    CACHE INTERNAL "dir containing msgs")
+  string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
 
-  if(${PROJECT_NAME}_MESSAGE_FILES_DIR)
-    message(FATAL_ERROR "Only one message folder per package name is currently allowed (${PROJECT_NAME})")
+  if(IS_FULL_PATH)
+    set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
+  else()
+    set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  endif()  
+
+  #todo, hack: handle this elsewhere when fixing the install stuff
+  if(NOT ARG_PRIVATE)
+    set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${DIRECTORY_FULL_PATH}
+      CACHE INTERNAL "dir containing msgs")
   endif()
 
-  list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${ARG_FILES})
-  set(${PROJECT_NAME}_MESSAGE_FILES_DIR ${ARG_DIRECTORY})
+  _prepend_path(${DIRECTORY_FULL_PATH} "${ARG_FILES}" FILES_W_PATH)
+
+  list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${FILES_W_PATH})
+  list(APPEND ${PROJECT_NAME}_MESSAGE_FILES_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
 
   if(NOT ARG_NOINSTALL)
-    _prepend_path(${ARG_DIRECTORY} "${ARG_FILES}" FILES_TO_INSTALL)
-    #todo only allow install for files in relative dir
-    install(FILES ${FILES_TO_INSTALL} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
+    install(FILES ${FILES_W_PATH} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
   endif()
 endmacro()
 
@@ -40,18 +46,13 @@ macro(add_service_files)
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
   endif()
-  
-  if(${PROJECT_NAME}_SERVICE_FILES_DIR)
-    message(FATAL_ERROR "Only one service folder per package name is currently allowed (${PROJECT_NAME})")
-  endif()
 
-  list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${ARG_FILES})
-  set(${PROJECT_NAME}_SERVICE_FILES_DIR ${ARG_DIRECTORY})
+  _prepend_path(${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY} "${ARG_FILES}" FILES_W_PATH)
+
+  list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
 
   if(NOT ARG_NOINSTALL)
-    _prepend_path(${ARG_DIRECTORY} "${ARG_FILES}" FILES_TO_INSTALL)
-    #todo only allow install for files in relative dir
-    install(FILES ${FILES_TO_INSTALL} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
+    install(FILES ${FILES_W_PATH} DESTINATION share/${PROJECT_NAME}$/${ARG_DIRECTORY})
   endif()
 endmacro()
 
@@ -61,8 +62,6 @@ macro(generate_messages)
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
   set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
   set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
-  set(MESSAGE_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${${PROJECT_NAME}_MESSAGE_FILES_DIR})
-  set(SERVICE_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${${PROJECT_NAME}_SERVICE_FILES_DIR})
 
   if(ARG_LANGS)
     set(GEN_LANGS ${ARG_LANGS})
@@ -71,7 +70,7 @@ macro(generate_messages)
   endif()
 
   set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${MESSAGE_FILES_DIR}")
-  foreach(dep ${ARG_DEPENDENCIES})
+  foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
     if(${dep}_FOUND OR ${dep}_SOURCE_DIR)
       foreach(i ${${dep}_MSG_INCLUDE_DIRS})
         list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
