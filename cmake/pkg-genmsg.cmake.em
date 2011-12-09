@@ -42,7 +42,7 @@ _generate_msg_@(l[3:])(@pkg_name
 _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
-  "@(';'.join(msg_deps[m]))"
+  "@(';'.join(srv_deps[s]))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
 @[end for]@
