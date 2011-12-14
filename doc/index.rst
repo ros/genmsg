@@ -63,8 +63,9 @@ Hooking in to the build system
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Generator packages define several macros (below), an use catkin
-mechanisms to make the definitions of these macros available.  catkin
-will generate calls to them for
+mechanisms to make the definitions of these macros available, see
+:cmake:macro:`install_cmake_infrastructure`.  catkin will generate
+calls to them for
 
 * each message
 * each service
