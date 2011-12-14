@@ -1,10 +1,10 @@
 Package: genmsg
-Version: 3.4.5
+Version: 0.1.0
 Section: misc
 Priority: extra
 Architecture: all
-Depends: ${misc:Depends} python-empy, cmake, make
-Build-Depends: debhelper (>= 7), cmake, gcc, make, python, python-empy, @(CATKIN_PACKAGE_PREFIX)catkin
+Depends: ${misc:Depends}, python-empy, cmake, make
+Build-Depends: debhelper (>= 7), cmake, gcc, make, python, python-empy, @(PackagePrefix)catkin
 Description: Willow Garage low level build system macros and infrastructure
 Author: Troy Straszheim <straszheim@willowgarage.com>, Morten Kjaergaard, Ken Conley
 Maintainer: Troy Straszheim <straszheim@willowgarage.com>
