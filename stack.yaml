@@ -1,8 +1,8 @@
 Package: genmsg
-Version: 0.1.2
+Version: 0.1.3
 Section: misc
 Priority: extra
-Architecture: all
+Architecture: any
 Depends: python-empy, cmake, make
 Build-Depends: cmake, python, python-empy, @(PackagePrefix)catkin
 Description: Willow Garage low level build system macros and infrastructure
@@ -13,3 +13,6 @@ Catkin-DebRulesType: python_distutils
 Catkin-CopyrightType:  willowgarage
 Catkin-Depends: catkin
 Catkin-ProjectName: genmsg
+
+Release-Pull: git://github.com/wg-debs/genmsg.git
+Release-Push: git@github.com:wg-debs/genmsg.git
