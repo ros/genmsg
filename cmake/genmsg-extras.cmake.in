@@ -10,7 +10,7 @@ macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
 endmacro()
 
 macro(add_message_files)
-  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL;PRIVATE" ${ARGN})  
+  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL;PRIVATE" ${ARGN})
 
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
@@ -22,7 +22,7 @@ macro(add_message_files)
     set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
   else()
     set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
-  endif()  
+  endif()
 
   #todo, hack: handle this elsewhere when fixing the install stuff
   if(NOT ARG_PRIVATE)
@@ -41,7 +41,7 @@ macro(add_message_files)
 endmacro()
 
 macro(add_service_files)
-  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})  
+  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})
 
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
@@ -57,7 +57,7 @@ macro(add_service_files)
 endmacro()
 
 macro(generate_messages)
-  parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})  
+  parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})
 
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
   set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
@@ -85,5 +85,23 @@ macro(generate_messages)
     @PKG_CMAKE_SRC_DIR@/pkg-genmsg.cmake.em
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake
     )
+endmacro()
 
+#
+#  GENERATOR_TAG is lowercase alpha, like cpp, py, pybindings, typelibxml
+#  GENERATOR_INSTALL_DIR is relative to CMAKE_INSTALL_PREFIX
+#
+macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR)
+  if (genmsg_SOURCE_DIR)
+    set(template ${genmsg_SOURCE_DIR}/cmake/generator.cmake.in)
+  else()
+    set(template @CMAKE_INSTALL_PREFIX@/share/genmsg/cmake/generator.cmake.in)
+  endif()
+
+  set(GENERATOR ${GENERATOR_TAG})
+  set(expanded ${CMAKE_CURRENT_BINARY_DIR}/cmake/${GENERATOR}.cmake)
+
+  configure_file(${template} ${expanded} @ONLY)
+
+  include(${expanded})
 endmacro()

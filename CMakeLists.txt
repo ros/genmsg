@@ -15,6 +15,8 @@ install_cmake_infrastructure(genmsg
   PYTHONPATH src
 )
 
+install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
+
 catkin_package(genmsg)
 enable_python(genmsg)
 
