@@ -91,7 +91,9 @@ endmacro()
 #  GENERATOR_TAG is lowercase alpha, like cpp, py, pybindings, typelibxml
 #  GENERATOR_INSTALL_DIR is relative to CMAKE_INSTALL_PREFIX
 #
-macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR)
+macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR GENERATOR_PRETTY GENERATOR_FILEEXT)
+  set(GENERATOR_PRETTY ${GENERATOR_PRETTY})
+  set(GENERATOR_FILEEXT ${GENERATOR_FILEEXT})
   if (genmsg_SOURCE_DIR)
     set(template ${genmsg_SOURCE_DIR}/cmake/generator.cmake.in)
   else()

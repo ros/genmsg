@@ -9,15 +9,15 @@ else()
   set(gen@GENERATOR@_TEMPLATE_DIR ${CMAKE_INSTALL_PREFIX}/share/gen@GENERATOR@ CACHE PATH "template dir")
 endif()
 
-# Generate .msg->.h for @GENERATOR@
-# The generated .h files should be added ALL_GEN_OUTPUT_FILES_@GENERATOR@
+# Generate .msg->${GENERATOR_FILEEXT} for @GENERATOR@
+# The generated ${GENERATOR_FILEEXT} files should be added ALL_GEN_OUTPUT_FILES_@GENERATOR@
 macro(_generate_msg_@GENERATOR@ ARG_PKG ARG_MSG ARG_IFLAGS ARG_MSG_DEPS ARG_GEN_OUTPUT_DIR)
 
   #Create input and output filenames
   get_filename_component(MSG_NAME ${ARG_MSG} NAME)
   get_filename_component(MSG_SHORT_NAME ${ARG_MSG} NAME_WE)
 
-  set(MSG_GENERATED_NAME ${MSG_SHORT_NAME}.h)
+  set(MSG_GENERATED_NAME ${MSG_SHORT_NAME}@GENERATOR_FILEEXT@)
   set(GEN_OUTPUT_FILE ${ARG_GEN_OUTPUT_DIR}/${MSG_GENERATED_NAME})
 
   assert(CATKIN_ENV)
@@ -28,7 +28,7 @@ macro(_generate_msg_@GENERATOR@ ARG_PKG ARG_MSG ARG_IFLAGS ARG_MSG_DEPS ARG_GEN_
     -p ${ARG_PKG}
     -o ${ARG_GEN_OUTPUT_DIR}
     -e ${gen@GENERATOR@_TEMPLATE_DIR}
-    COMMENT "Generating C++ code from ${ARG_PKG}/${MSG_NAME}"
+    COMMENT "Generating @GENERATOR_PRETTY@ code from ${ARG_PKG}/${MSG_NAME}"
     )
 
   list(APPEND ALL_GEN_OUTPUT_FILES_@GENERATOR@ ${GEN_OUTPUT_FILE})
