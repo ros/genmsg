@@ -23,6 +23,8 @@ macro(_generate_msg_@GENERATOR@ ARG_PKG ARG_MSG ARG_IFLAGS ARG_MSG_DEPS ARG_GEN_
   assert(CATKIN_ENV)
   add_custom_command(OUTPUT ${GEN_OUTPUT_FILE}
     DEPENDS ${gen@GENERATOR@_BIN} ${ARG_MSG} ${ARG_MSG_DEPS}
+    ${gen@GENERATOR@_TEMPLATE_DIR}/msg@GENERATOR_FILEEXT@.template
+    ${gen@GENERATOR@_TEMPLATE_DIR}/srv@GENERATOR_FILEEXT@.template
     COMMAND ${CATKIN_ENV} ${gen@GENERATOR@_BIN} ${ARG_MSG}
     ${ARG_IFLAGS}
     -p ${ARG_PKG}
@@ -32,7 +34,7 @@ macro(_generate_msg_@GENERATOR@ ARG_PKG ARG_MSG ARG_IFLAGS ARG_MSG_DEPS ARG_GEN_
     )
 
   list(APPEND ALL_GEN_OUTPUT_FILES_@GENERATOR@ ${GEN_OUTPUT_FILE})
-
+  install(FILES ${GEN_OUTPUT_FILE} DESTINATION share/typelibxml/${ARG_PKG})
 endmacro()
 
 #gen@GENERATOR@ uses the same program to generate srv and msg files, so call the same macro
