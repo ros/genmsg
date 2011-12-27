@@ -1,5 +1,5 @@
 Catkin-ProjectName: genmsg
-Version: 0.1.7
+Version: 0.1.8
 Description: Willow Garage low level build system macros and infrastructure
 Author: Troy Straszheim <straszheim@willowgarage.com>, Morten Kjaergaard, Ken Conley
 Maintainer: Troy Straszheim <straszheim@willowgarage.com>
