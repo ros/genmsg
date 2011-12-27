@@ -1,3 +1,6 @@
+#
+#  Generated from genmsg/cmake/generator.cmake.in
+#
 #Make sure we can find buildspace generated messages
 include_directories(${CMAKE_BINARY_DIR}/gen/@GENERATOR@)
 
@@ -6,7 +9,7 @@ if(gen@GENERATOR@_SOURCE_DIR)
   set(gen@GENERATOR@_TEMPLATE_DIR ${gen@GENERATOR@_SOURCE_DIR}/scripts CACHE PATH "template dir")
 else()
   find_program_required(gen@GENERATOR@_BIN gen_@GENERATOR@.py)
-  set(gen@GENERATOR@_TEMPLATE_DIR ${CMAKE_INSTALL_PREFIX}/share/gen@GENERATOR@ CACHE PATH "template dir")
+  set(gen@GENERATOR@_TEMPLATE_DIR @CMAKE_INSTALL_PREFIX@/share/gen@GENERATOR@ CACHE PATH "template dir")
 endif()
 
 # Generate .msg->${GENERATOR_FILEEXT} for @GENERATOR@

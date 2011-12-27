@@ -1,3 +1,6 @@
+#
+#  generated from genmsg/cmake/pkg-genmsg.context.in
+#
 messages_str = "@ARG_MESSAGES@"
 messages = aslist(messages_str)
 services_str = "@ARG_SERVICES@"

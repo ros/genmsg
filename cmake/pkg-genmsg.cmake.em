@@ -1,3 +1,6 @@
+#
+#  Generated from genmsg/cmake/pkg-genmsg.cmake.em
+#
 @{
 import sys
 # put this path at the beginning
@@ -24,6 +27,10 @@ find_package(@l)
 
 #better way to handle this?
 set (ALL_GEN_OUTPUT_FILES_cpp "")
+
+#
+#  langs = @langs
+#
 
 @[for l in langs.split(';')]@
 ### Section generating for lang: @l

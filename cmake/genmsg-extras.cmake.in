@@ -1,5 +1,19 @@
+#
+#  Generated from genmsg/cmake/genmsg-extras.cmake.in
+#
 macro(_add_stuff_common)
 endmacro()
+
+if (NOT genmsg_SOURCE_DIR)
+  file(GLOB CATKIN_GENLANGS
+    RELATIVE @CMAKE_INSTALL_PREFIX@/etc/langs
+    @CMAKE_INSTALL_PREFIX@/etc/langs/gen*)
+  message(STATUS "Using these generator languages from the installation: ${CATKIN_GENLANGS}")
+  foreach(lang ${CATKIN_GENLANGS})
+    find_package(${lang})
+  endforeach()
+
+endif()
 
 macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
   # todo, check for proper path, slasheds, etc
@@ -101,10 +115,10 @@ macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR GENERATOR_PRETTY GE
   endif()
 
   set(GENERATOR ${GENERATOR_TAG})
-  set(expanded ${CMAKE_CURRENT_BINARY_DIR}/cmake/${GENERATOR}.cmake)
+  set(expanded ${CMAKE_CURRENT_BINARY_DIR}/cmake/gen${GENERATOR}.cmake)
 
   configure_file(${template} ${expanded} @ONLY)
 
   include(${expanded})
-  install(FILES ${expanded} DESTINATION share/${PROJECT_NAME}/cmake/${GENERATOR}.cmake)
+  install(FILES ${expanded} DESTINATION share/${PROJECT_NAME}/cmake)
 endmacro()
