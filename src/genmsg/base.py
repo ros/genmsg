@@ -30,6 +30,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+import os, sys
+
 SEP = '/'
 
 MSG_DIR = 'msg'
@@ -43,6 +46,7 @@ CONSTCHAR   = '='
 COMMENTCHAR = '#'
 IODELIM   = '---'
 
+
 verbose = False
 
 import inspect, pprint
@@ -52,15 +56,16 @@ def log_verbose(value):
     verbose = value
 
 def log(*args):
+    global verbose
     if verbose:
-        print "%s:%d" % inspect.stack()[1][1:3],
-        print ' '.join([str(x) for x in args])
+        print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
+        print(' '.join([str(x) for x in args]), file=sys.stderr)
 
 def plog(msg, obj):
     if verbose:
-        print "%s:%d" % inspect.stack()[1][1:3],
-        print msg, " ",
-        pprint.pprint(obj)
+        print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
+        print(msg, " ", file=sys.stderr)
+        pprint.pprint(obj, file=sys.stderr)
 
 class InvalidMsgSpec(Exception):
     pass

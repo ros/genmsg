@@ -2,7 +2,8 @@
 #  Generated from genmsg/cmake/pkg-genmsg.cmake.em
 #
 @{
-import sys
+import sys, genmsg, os
+genmsg.base.log_verbose('VERBOSE' in os.environ)
 # put this path at the beginning
 sys.path.insert(0, genmsg_python_path)
 import genmsg.deps
