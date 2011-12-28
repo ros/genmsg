@@ -37,7 +37,7 @@ macro(_generate_msg_@GENERATOR@ ARG_PKG ARG_MSG ARG_IFLAGS ARG_MSG_DEPS ARG_GEN_
     )
 
   list(APPEND ALL_GEN_OUTPUT_FILES_@GENERATOR@ ${GEN_OUTPUT_FILE})
-  install(FILES ${GEN_OUTPUT_FILE} DESTINATION share/typelibxml/${ARG_PKG})
+  install(FILES ${GEN_OUTPUT_FILE} DESTINATION share/@GENERATOR@/${ARG_PKG})
 endmacro()
 
 #gen@GENERATOR@ uses the same program to generate srv and msg files, so call the same macro
