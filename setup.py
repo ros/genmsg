@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-import sys
+import sys, os
 sys.path.insert(0, 'src')
 
 from genmsg import __version__
@@ -12,15 +12,15 @@ setup(name='genmsg',
       packages=['genmsg'],
       package_dir = {'':'src'},
       scripts = [],
-      author = "Ken Conley, Josh Faust, Troy Straszheim", 
+      author = "Ken Conley, Josh Faust, Troy Straszheim",
       author_email = "kwc@willowgarage.com",
       url = "http://www.ros.org/wiki/genmsg",
-      download_url = "http://pr.willowgarage.com/downloads/genmsg/", 
+      download_url = "http://pr.willowgarage.com/downloads/genmsg/",
       keywords = ["ROS"],
       classifiers = [
-        "Programming Language :: Python", 
+        "Programming Language :: Python",
         "License :: OSI Approved :: BSD License" ],
-      description = "ROS msg/srv generation", 
+      description = "ROS msg/srv generation",
       long_description = """\
 Library and scripts for generating ROS message data structures in Python, C++, and Lisp.
 """,

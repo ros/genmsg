@@ -17,7 +17,6 @@ catkin_project(genmsg
 
 install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 
-catkin_package(genmsg)
 enable_python(genmsg)
 
 sphinx(${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_BINARY_DIR}/doc)
