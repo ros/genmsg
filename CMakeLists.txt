@@ -12,11 +12,10 @@ install(
 catkin_project(genmsg
   VERSION 0.0.1
   CFG_EXTRAS genmsg-extras.cmake
-  PYTHONPATH src
 )
 
 install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 
-enable_python(genmsg)
+export_python_dirs(src)
 
 sphinx(${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_BINARY_DIR}/doc)
