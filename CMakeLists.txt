@@ -16,6 +16,6 @@ catkin_project(genmsg
 
 install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 
-export_python_dirs(src)
+catkin_export_python(src)
 
 sphinx(${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_BINARY_DIR}/doc)
