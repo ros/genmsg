@@ -1,9 +1,8 @@
-
 genmsg:  generating code from ros .msg format
 =============================================
 
 Project ``genmsg`` exists in order to decouple code generation from
-.msg format files from the parsing of these files and from
+.msg & .srv format files from the parsing of these files and from
 impementation details of the build system (project directory layout,
 existence or nonexistence of utilities like ``rospack``, values of
 environment variables such as ``ROS_PACKAGE_PATH``): i.e. none of
@@ -48,16 +47,58 @@ provided on the commandline.
 
 
 Writing the generator
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-Code generators depend on ``genmsg`` to parse the .msg file itself.
-They then use the parse tree to generate code in whatever language or
-format they prefer.
+A seperate project must exists for each language you wish to generate for.
+Such a project contains:
 
-So far, we believe the most straightforward way to write code
-generators is to use the wonderful python templating library `empy
-<http://www.alcyone.com/software/empy/>`_.
+* An entry of Catkin-ROS-Message-Generator in the stack.yaml file
+* Executable scripts for generating the code based on .msg/.srv files
+* Definitions of certain CMake macros to make the generator accessible by the build system.
 
+stack.yaml
+~~~~~~~~~~
+Each language is identified by a name which must be specified in the stack.yaml file.
+The example entry for the generator for C++ is:
+
+``Catkin-ROS-Message-Generator: cpp``
+
+This language identified will be defined as {lang} in the rest of this document.
+The project name for the generator should be ``gen{lang}``.
+
+Generator Scripts
+~~~~~~~~~~~~~~~~~~
+The recommended way of implementing the generator is by using empy template files. See: http://www.alcyone.com/software/empy
+A empy template is a text file part of which can contain python code that is evaluated during code generation.
+``genmsg`` includes python methods for parsing the command line arguments and performing the code generation very easily if the template model is used.
+
+The script for generating cpp files looks as::
+
+  import sys
+  import genmsg.template_tools
+
+  msg_template_map = { 'msg.h.template':'@NAME@.h' }
+  srv_template_map = { 'srv.h.template':'@NAME@.h' }
+
+  if __name__ == "__main__":
+    genmsg.template_tools.generate_from_command_line_options(sys.argv, msg_template_map, srv_template_map)
+
+``msg_template_map`` and ``srv_template_map`` defines the template files used for generating from .msg and .srv files respectively.
+The format is ``<type>_template_map = { '<template_filename>':'<output_file_name>' }``.
+The entry ``@NAME@`` will be replaced by the short name of the message such as ``String`` for ``String.msg`` etc.
+The call to ``generate_from_command_line_options`` will use the correct map depending on the file gives as command line argument.
+When a service is generated, two messages are also generated, namely the ``<SrvName>Request`` and ``<SrvName>Response``.
+
+``genmsg`` will parse the respective .msg and .srv file and expose the information in three python variables awailable in the empy template.
+These are:
+* file_name_in (String) Source file
+* spec (msggen.MsgSpec) Parsed specification of the .msg file
+* md5sum (String) MD5Sum
+
+See https://github.com/ros/gencpp/blob/master/scripts/msg.h.template and https://github.com/ros/gencpp/blob/master/scripts/srv.h.template for example template files.
+
+If the language requires a common file to exists for all the generated source code files (Such as __init__.py for python) it is possible to specify a ``module_tempalte_map``.
+See https://github.com/ros/genpybindings/blob/master/scripts/gen_pybindings.py and https://github.com/ros/genpybindings/blob/master/scripts/module.cpp.template for example of this.
 
 Hooking in to the build system
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
