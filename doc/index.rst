@@ -63,8 +63,7 @@ The example entry for the generator for C++ is:
 
 ``Catkin-ROS-Message-Generator: cpp``
 
-This language identified will be defined as {lang} in the rest of this document.
-The project name for the generator should be ``gen{lang}``.
+The project name for the generator with identifier ``X`` should be ``genX``.
 
 Generator Scripts
 ~~~~~~~~~~~~~~~~~~
@@ -91,17 +90,18 @@ When a service is generated, two messages are also generated, namely the ``<SrvN
 
 ``genmsg`` will parse the respective .msg and .srv file and expose the information in three python variables awailable in the empy template.
 These are:
-* file_name_in (String) Source file
-* spec (msggen.MsgSpec) Parsed specification of the .msg file
-* md5sum (String) MD5Sum
+
+* ``file_name_in`` (String) Filename of the source .msg /.srv file
+* ``spec`` (msggen.MsgSpec) Parsed specification of the .msg/.srv file
+* ``md5sum`` (String) MD5Sum of the msg/srv
 
 See https://github.com/ros/gencpp/blob/master/scripts/msg.h.template and https://github.com/ros/gencpp/blob/master/scripts/srv.h.template for example template files.
 
 If the language requires a common file to exists for all the generated source code files (Such as __init__.py for python) it is possible to specify a ``module_tempalte_map``.
 See https://github.com/ros/genpybindings/blob/master/scripts/gen_pybindings.py and https://github.com/ros/genpybindings/blob/master/scripts/module.cpp.template for example of this.
 
-Hooking in to the build system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CMake macros
+~~~~~~~~~~~~
 
 Generator packages define several macros (below), an use catkin
 mechanisms to make the definitions of these macros available, see
