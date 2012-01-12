@@ -85,13 +85,17 @@ macro(generate_messages)
 
   set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${MESSAGE_FILES_DIR}")
   foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
-    if(${dep}_FOUND OR ${dep}_SOURCE_DIR)
-      foreach(i ${${dep}_MSG_INCLUDE_DIRS})
-        list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
-      endforeach()
-    else()
+    if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
     endif()
+
+    if(NOT ${dep}_SOURCE_DIR)
+        set(${dep}_MSG_INCLUDE_DIRS ${${dep}_DIR}/../msg)
+    endif()
+
+    foreach(i ${${dep}_MSG_INCLUDE_DIRS})
+      list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
+    endforeach()
   endforeach()
 
   em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
