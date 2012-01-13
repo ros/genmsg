@@ -37,6 +37,6 @@ from . gentools import compute_md5, compute_full_text, compute_md5_text
 from . names import resource_name_base, package_resource_name, is_legal_resource_base_name, \
      resource_name_package, resource_name, is_legal_resource_name
 from . msgs import HEADER, TIME, DURATION, MsgSpec, Constant
-from . msg_loader import MsgNotFound, MsgContext, load_depends, load_msg_by_type
+from . msg_loader import MsgNotFound, MsgContext, load_depends, load_msg_by_type, load_srv_by_type
 from . srvs import SrvSpec
 

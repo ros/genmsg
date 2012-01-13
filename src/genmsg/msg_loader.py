@@ -85,7 +85,7 @@ def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
 
 def get_srv_file(package, base_type, search_path):
     """
-    Determine the file system path for the specified .msg on path.
+    Determine the file system path for the specified .srv on path.
 
     :param package: name of package ``.srv`` file is in, ``str`` 
     :param base_type: type name of service, e.g. 'Empty', ``str``
