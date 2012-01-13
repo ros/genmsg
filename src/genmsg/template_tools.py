@@ -31,8 +31,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 ## ROS Message generatation
-## 
-## 
+##
+##
 
 import sys
 import os
@@ -42,24 +42,26 @@ import genmsg.msgs
 
 # generate msg or srv files from a template file
 # template_map of the form { 'template_file':'output_file'} output_file can contail @NAME@ which will be replaced by the message/service name
-def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map):
+def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path):
 
     md5sum = genmsg.compute_md5(msg_context, spec)
 
     # Set dictionary for the generator intepreter
     g = { "file_name_in":input_file,
           "spec":spec,
-          "md5sum":md5sum}
+          "md5sum":md5sum,
+          "search_path":search_path,
+          "msg_context" : msg_context }
 
     # Loop over all files to generate
     for template_file_name, output_file_name in template_map.items():
         template_file = os.path.join(template_dir, template_file_name)
         output_file = os.path.join(output_dir, output_file_name.replace("@NAME@", spec.short_name))
 
-        #print "generate_from_template %s %s %s" % (input_file, template_file, output_file) 
+        #print "generate_from_template %s %s %s" % (input_file, template_file, output_file)
 
         ofile = open(output_file, 'w') #todo try
-        
+
         # todo, reuse interpreter
         interpreter = em.Interpreter(output=ofile, globals=g, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
         if not os.path.isfile(template_file):
@@ -80,13 +82,14 @@ def _generate_msg_from_file(input_file, output_dir, template_dir, search_path, p
                             template_dir,
                             msg_context,
                             spec,
-                            msg_template_dict)
+                            msg_template_dict,
+                            search_path)
 
 def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict):
     # Read MsgSpec from .srv.file
     msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(package_name, os.path.basename(input_file))
-    spec = genmsg.msg_loader.load_srv_from_file(msg_context, input_file, full_type_name)        
+    spec = genmsg.msg_loader.load_srv_from_file(msg_context, input_file, full_type_name)
     # Load the dependencies
     genmsg.msg_loader.load_depends(msg_context, spec, search_path)
     # Generate the language dependent srv file
@@ -95,21 +98,24 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, p
                             template_dir,
                             msg_context,
                             spec,
-                            srv_template_dict)
+                            srv_template_dict,
+                            search_path)
     # Generate the language dependent msg file for the srv request
     _generate_from_spec(input_file,
                             output_dir,
                             template_dir,
                             msg_context,
                             spec.request,
-                            msg_template_dict)
+                            msg_template_dict,
+                            search_path)
     # Generate the language dependent msg file for the srv response
     _generate_from_spec(input_file,
                             output_dir,
                             template_dir,
                             msg_context,
                             spec.response,
-                            msg_template_dict)
+                            msg_template_dict,
+                            search_path)
 
 # uniform interface for genering either srv or msg files
 def generate_from_file(input_file, package_name, output_dir, template_dir, include_path, msg_template_dict, srv_template_dict):
@@ -152,7 +158,7 @@ def generate_module(package_name, output_dir, template_dir, template_dict):
         output_file = os.path.join(output_dir, output_file_name)
 
         ofile = open(output_file, 'w') #todo try
-        
+
         # todo, reuse interpreter
         interpreter = em.Interpreter(output=ofile, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
         interpreter.updateGlobals(g)
