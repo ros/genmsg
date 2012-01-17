@@ -6,7 +6,7 @@ Homepage: http://www.ros.org
 
 Depends: catkin
 
-Version: 0.2.1
+Version: 0.3.0
 
 Catkin-CopyrightType:  willowgarage
 Catkin-DebRulesType: python_distutils
