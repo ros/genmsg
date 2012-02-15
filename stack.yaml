@@ -6,10 +6,8 @@ Homepage: http://www.ros.org
 
 Depends: catkin
 
-Version: 0.1.10
+Version: 0.3.0
 
 Catkin-CopyrightType:  willowgarage
 Catkin-DebRulesType: python_distutils
 
-Release-Pull: git://github.com/wg-debs/genmsg.git
-Release-Push: git@github.com:wg-debs/genmsg.git
