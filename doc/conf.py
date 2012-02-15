@@ -251,4 +251,10 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {
+    'genmsg': ('http://ros.org/doc/api/genmsg/html', None),
+    'vcstools': ('http://ros.org/doc/api/vcstools/html', None),
+    'rosinstall': ('http://ros.org/doc/api/rosinstall/html', None),
+    'rospkg': ('http://ros.org/doc/api/rosinstall/html', None),
+    'rosdep2': ('http://ros.org/doc/api/rosdep2/html', None),
+    }
