@@ -158,6 +158,13 @@ def is_valid_msg_field_name(x):
 class Constant(object):
     """
     Container class for holding a Constant declaration
+
+    Attributes:
+
+    - ``type``
+    - ``name``
+    - ``val``    
+    - ``val_text`` 
     """
     __slots__ = ['type', 'name', 'val', 'val_text']
     
@@ -190,14 +197,15 @@ class Field(object):
     """
     Container class for storing information about a single field in a MsgSpec
     
-    Contains:
-    name
-    type
-    base_type
-    is_array
-    array_len
-    is_builtin
-    is_header
+    Attributes:
+    
+    - ``name``
+    - ``type``
+    - ``base_type``
+    - ``is_array``
+    - ``array_len``
+    - ``is_builtin``
+    - ``is_header``
     """
     
     def __init__(self, name, type):

@@ -106,8 +106,6 @@ for example template files.
 If the language requires a common file to exists for all the generated
 source code files (Such as __init__.py for python) it is possible to
 specify a ``module_tempalte_map``.  See
-https://github.com/ros/genpybindings/blob/master/scripts/gen_pybindings.py
-and
 https://github.com/ros/genpybindings/blob/master/scripts/module.cpp.template
 for example of this.
 

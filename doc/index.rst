@@ -13,6 +13,7 @@ i.e. none of these are required to be set in any particular way.
 .. toctree::
 
    usermacros
+   python_api
    developer
 
 Code generators may not use any information other than what is
