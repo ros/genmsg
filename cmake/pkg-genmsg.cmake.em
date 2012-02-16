@@ -40,7 +40,7 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
-  "@(';'.join(msg_deps[m]))"
+  "@(';'.join(msg_deps[m]).replace("\\","/"))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
 @[end for]@
@@ -50,7 +50,7 @@ _generate_msg_@(l[3:])(@pkg_name
 _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
-  "@(';'.join(srv_deps[s]))"
+  "@(';'.join(srv_deps[s]).replace("\\","/"))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
 @[end for]@
