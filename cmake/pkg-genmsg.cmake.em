@@ -2,11 +2,11 @@
 #  Generated from genmsg/cmake/pkg-genmsg.cmake.em
 #
 @{
-import sys, genmsg, os
+import sys, genmsg, os, genmsg.base
 genmsg.base.log_verbose('GENMSG_VERBOSE' in os.environ)
 # put this path at the beginning
 sys.path.insert(0, genmsg_python_path)
-import genmsg.deps
+import genmsg.deps, genmsg.gentools
 
 msg_deps = {}
 for m in messages:
