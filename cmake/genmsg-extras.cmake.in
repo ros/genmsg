@@ -83,7 +83,7 @@ macro(generate_messages)
     set(GEN_LANGS ${CATKIN_GENLANGS})
   endif()
 
-  set(MSG_SEARCH_DIRS "${PROJECT_NAME}:${MESSAGE_FILES_DIR}")
+  set(MSG_SEARCH_DIRS "${PROJECT_NAME}@${MESSAGE_FILES_DIR}")
   foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
@@ -94,7 +94,7 @@ macro(generate_messages)
     endif()
 
     foreach(i ${${dep}_MSG_INCLUDE_DIRS})
-      list(APPEND MSG_SEARCH_DIRS "${dep}:${i}")
+      list(APPEND MSG_SEARCH_DIRS "${dep}@${i}")
     endforeach()
   endforeach()
 
