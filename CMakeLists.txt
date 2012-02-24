@@ -18,4 +18,4 @@ catkin_project(genmsg
 install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 install(FILES stack.yaml DESTINATION share/${PROJECT_NAME})
 
-catkin_export_python(src)
+catkin_python_setup()
