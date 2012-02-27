@@ -11,7 +11,6 @@ install(
 
 catkin_stack()
 catkin_project(genmsg
-  VERSION 0.0.1
   CFG_EXTRAS genmsg-extras.cmake
 )
 
