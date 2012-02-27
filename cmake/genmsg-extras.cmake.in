@@ -1,9 +1,6 @@
 #
 #  Generated from genmsg/cmake/genmsg-extras.cmake.in
 #
-macro(_add_stuff_common)
-endmacro()
-
 if (NOT genmsg_SOURCE_DIR)
   file(GLOB CATKIN_GENLANGS
     RELATIVE @CMAKE_INSTALL_PREFIX@/etc/langs
@@ -25,6 +22,7 @@ endmacro()
 
 macro(add_message_files)
   parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL;PRIVATE" ${ARGN})
+  check_unused_arguments("add_message_files" "${ARG_DEFAULT_ARGS}")
 
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
@@ -56,6 +54,7 @@ endmacro()
 
 macro(add_service_files)
   parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})
+  check_unused_arguments("add_service_files" "${ARG_DEFAULT_ARGS}")
 
   if(NOT ARG_PACKAGE)
     set(ARG_PACKAGE ${PROJECT_NAME})
@@ -72,6 +71,7 @@ endmacro()
 
 macro(generate_messages)
   parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})
+  check_unused_arguments("generate_messages" "${ARG_DEFAULT_ARGS}")
 
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
   set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
