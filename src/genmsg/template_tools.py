@@ -45,11 +45,13 @@ import genmsg.msgs
 def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path):
 
     md5sum = genmsg.compute_md5(msg_context, spec)
+    msg_definition = genmsg.compute_full_text(msg_context, spec)
 
-    # Set dictionary for the generator intepreter
+    # Set dictionary for the generator interpreter
     g = { "file_name_in":input_file,
           "spec":spec,
           "md5sum":md5sum,
+          "msg_definition": msg_definition,
           "search_path":search_path,
           "msg_context" : msg_context }
 
