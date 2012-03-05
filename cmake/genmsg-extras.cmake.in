@@ -38,8 +38,7 @@ macro(add_message_files)
 
   #todo, hack: handle this elsewhere when fixing the install stuff
   if(NOT ARG_PRIVATE)
-    set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${DIRECTORY_FULL_PATH}
-      CACHE INTERNAL "dir containing msgs")
+    list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS ${DIRECTORY_FULL_PATH})
   endif()
 
   _prepend_path(${DIRECTORY_FULL_PATH} "${ARG_FILES}" FILES_W_PATH)
@@ -83,7 +82,8 @@ macro(generate_messages)
     set(GEN_LANGS ${CATKIN_GENLANGS})
   endif()
 
-  set(MSG_SEARCH_DIRS "${PROJECT_NAME}@${MESSAGE_FILES_DIR}")
+  set(MSG_SEARCH_DIRS "${PROJECT_NAME}")
+  list(APPEND MSG_SEARCH_DIRS "${MESSAGE_FILES_DIR}")
   foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
@@ -94,7 +94,8 @@ macro(generate_messages)
     endif()
 
     foreach(i ${${dep}_MSG_INCLUDE_DIRS})
-      list(APPEND MSG_SEARCH_DIRS "${dep}@${i}")
+      list(APPEND MSG_SEARCH_DIRS "${dep}")
+      list(APPEND MSG_SEARCH_DIRS "${i}")
     endforeach()
   endforeach()
 

@@ -10,4 +10,4 @@ dependencies_str = "@ARG_DEPENDENCIES@"
 dependencies = aslist(dependencies_str)
 langs = "@GEN_LANGS@"
 genmsg_python_path = "@genmsg_PYTHONPATH@"
-dep_search_paths = asdict("@MSG_SEARCH_DIRS@")
+dep_search_paths = aslist("@MSG_SEARCH_DIRS@")

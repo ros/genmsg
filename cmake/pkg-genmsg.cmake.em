@@ -8,6 +8,20 @@ genmsg.base.log_verbose('GENMSG_VERBOSE' in os.environ)
 sys.path.insert(0, genmsg_python_path)
 import genmsg.deps, genmsg.gentools
 
+dep_search_paths_dict = {}
+dep_search_paths_tuple_list = []
+is_even = True
+for val in dep_search_paths:
+    if is_even:
+        dep_search_paths_dict.setdefault(val, [])
+        val_prev = val
+        is_even = False
+    else:
+        dep_search_paths_dict[val_prev].append(val)
+        dep_search_paths_tuple_list.append((val_prev, val))
+        is_even = True
+dep_search_paths = dep_search_paths_dict
+
 msg_deps = {}
 for m in messages:
   msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, m, dep_search_paths)
@@ -19,7 +33,7 @@ for s in services:
 }@
 message(STATUS "@(pkg_name): @(len(messages)) messages")
 
-set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths.items()]))")
+set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths_tuple_list]))")
 
 # Find all generators
 @[for l in langs.split(';')]@
