@@ -70,12 +70,14 @@ log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
 @[for l in langs.split(';')]@
 
+@[if l != 'genpy' or not skip_install_gen_py]@
 if(@(l)_INSTALL_DIR)
-install(
-  DIRECTORY ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
-  DESTINATION ${@(l)_INSTALL_DIR}
-)
+  install(
+    DIRECTORY ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+    DESTINATION ${@(l)_INSTALL_DIR}
+  )
 endif()
+@[end if]@
 @[for d in dependencies]@
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 @[end for]@# dependencies

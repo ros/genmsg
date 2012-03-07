@@ -46,12 +46,14 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
 
     md5sum = genmsg.compute_md5(msg_context, spec)
 
-    # Set dictionary for the generator intepreter
+    # Set dictionary for the generator interpreter
     g = { "file_name_in":input_file,
           "spec":spec,
           "md5sum":md5sum,
           "search_path":search_path,
           "msg_context" : msg_context }
+    if isinstance(spec, genmsg.MsgSpec):
+        g['msg_definition'] = genmsg.compute_full_text(msg_context, spec)
 
     # Loop over all files to generate
     for template_file_name, output_file_name in template_map.items():
@@ -94,28 +96,28 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, p
     genmsg.msg_loader.load_depends(msg_context, spec, search_path)
     # Generate the language dependent srv file
     _generate_from_spec(input_file,
-                            output_dir,
-                            template_dir,
-                            msg_context,
-                            spec,
-                            srv_template_dict,
-                            search_path)
+                        output_dir,
+                        template_dir,
+                        msg_context,
+                        spec,
+                        srv_template_dict,
+                        search_path)
     # Generate the language dependent msg file for the srv request
     _generate_from_spec(input_file,
-                            output_dir,
-                            template_dir,
-                            msg_context,
-                            spec.request,
-                            msg_template_dict,
-                            search_path)
+                        output_dir,
+                        template_dir,
+                        msg_context,
+                        spec.request,
+                        msg_template_dict,
+                        search_path)
     # Generate the language dependent msg file for the srv response
     _generate_from_spec(input_file,
-                            output_dir,
-                            template_dir,
-                            msg_context,
-                            spec.response,
-                            msg_template_dict,
-                            search_path)
+                        output_dir,
+                        template_dir,
+                        msg_context,
+                        spec.response,
+                        msg_template_dict,
+                        search_path)
 
 # uniform interface for genering either srv or msg files
 def generate_from_file(input_file, package_name, output_dir, template_dir, include_path, msg_template_dict, srv_template_dict):

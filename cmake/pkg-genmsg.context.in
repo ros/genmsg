@@ -11,3 +11,4 @@ dependencies = aslist(dependencies_str)
 langs = "@GEN_LANGS@"
 genmsg_python_path = "@genmsg_PYTHONPATH@"
 dep_search_paths = asdict("@MSG_SEARCH_DIRS@")
+skip_install_gen_py = "@SKIP_INSTALL_GEN_PY@"
