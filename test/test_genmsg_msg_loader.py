@@ -450,9 +450,12 @@ def test_load_msg_depends():
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'std_msgs', 'msg', 'Int32MultiArray.msg')
     assert file_p == msg_context.get_file('std_msgs/Int32MultiArray')
-    val = msg_context.get_depends('std_msgs/Int32MultiArray')
-    assert 2 == len(val)
+    val = msg_context.get_all_depends('std_msgs/Int32MultiArray')
     assert set(['std_msgs/MultiArrayLayout', 'std_msgs/MultiArrayDimension']) == set(val), val
+    assert 2 == len(val), val
+
+    val = msg_context.get_depends('std_msgs/Int32MultiArray')
+    assert set(['std_msgs/MultiArrayLayout']) == set(val), val
     for s in ['MultiArrayLayout', 'MultiArrayDimension']:
         file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
         assert file_p == msg_context.get_file('std_msgs/%s'%s)
@@ -476,8 +479,10 @@ def test_load_msg_depends_stamped():
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
-    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    val = msg_context.get_all_depends('geometry_msgs/PoseStamped')
     assert set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']) == set(val), val
+    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/Pose']) == set(val), val
     for s in ['Header']:
         file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
         assert file_p == msg_context.get_file('std_msgs/%s'%s)
@@ -490,8 +495,11 @@ def test_load_msg_depends_stamped():
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'TwistWithCovarianceStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/TwistWithCovarianceStamped')
-    val = msg_context.get_depends('geometry_msgs/TwistWithCovarianceStamped')
+    val = msg_context.get_all_depends('geometry_msgs/TwistWithCovarianceStamped')
     assert set(['std_msgs/Header', 'geometry_msgs/TwistWithCovariance', 'geometry_msgs/Twist', 'geometry_msgs/Vector3']) == set(val), val
+    val = msg_context.get_depends('geometry_msgs/TwistWithCovarianceStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/TwistWithCovariance']) == set(val), val
+
     for s in ['Header']:
         file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
         assert file_p == msg_context.get_file('std_msgs/%s'%s)
@@ -504,6 +512,8 @@ def test_load_msg_depends_stamped():
     load_msg_depends(msg_context, root_spec, search_path)
     file_p = os.path.join(test_d, 'sensor_msgs', 'msg', 'Imu.msg')
     assert file_p == msg_context.get_file('sensor_msgs/Imu')
+    val = msg_context.get_all_depends('sensor_msgs/Imu')
+    assert set(['std_msgs/Header', 'geometry_msgs/Quaternion', 'geometry_msgs/Vector3']) == set(val), val
     val = msg_context.get_depends('sensor_msgs/Imu')
     assert set(['std_msgs/Header', 'geometry_msgs/Quaternion', 'geometry_msgs/Vector3']) == set(val), val
     for s in ['Header']:
@@ -547,8 +557,11 @@ def test_load_depends_msg():
     load_depends(msg_context, root_spec, msg_search_path)
     file_p = os.path.join(test_d, 'geometry_msgs', 'msg', 'PoseStamped.msg')
     assert file_p == msg_context.get_file('geometry_msgs/PoseStamped')
-    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    val = msg_context.get_all_depends('geometry_msgs/PoseStamped')
     assert set(['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']) == set(val), val
+    val = msg_context.get_depends('geometry_msgs/PoseStamped')
+    assert set(['std_msgs/Header', 'geometry_msgs/Pose']) == set(val), val
+
     for s in ['Header']:
         file_p = os.path.join(test_d, 'std_msgs', 'msg', '%s.msg'%s)
         assert file_p == msg_context.get_file('std_msgs/%s'%s)
@@ -601,12 +614,13 @@ def test_load_depends_srv():
     msg_context = MsgContext.create_default()
     response_deps = ['std_msgs/Header', 'geometry_msgs/Pose', 'geometry_msgs/PoseStamped', 'geometry_msgs/Point', 'geometry_msgs/Quaternion']
     root_spec = load_srv_by_type(msg_context, 'test_ros/GetPoseStamped', srv_search_path)
-    val = load_depends(msg_context, root_spec, msg_search_path)
-    assert set(val) == set(response_deps)
+    load_depends(msg_context, root_spec, msg_search_path)
+    for d in response_deps:
+        assert msg_context.is_registered(d)
     val = msg_context.get_depends('test_ros/GetPoseStampedRequest')
     assert val == [], val
     val = msg_context.get_depends('test_ros/GetPoseStampedResponse')    
-    assert set(val) == set(response_deps), val
+    assert val == ['geometry_msgs/PoseStamped']
     
     # Test with nonsense
     class Foo(object): pass
