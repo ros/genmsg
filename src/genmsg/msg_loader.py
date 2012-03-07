@@ -77,11 +77,12 @@ def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
         raise MsgNotFound("Cannot locate message [%s]: unknown package [%s] on search path [%s]" \
                           % (base_type, package, search_path))
     else:
-        path = os.path.join(search_path[package], "%s%s"%(base_type, ext))
-        if os.path.isfile(path):
-            return path
-        else:
-            raise MsgNotFound("Cannot locate message [%s] in package [%s]"%(base_type, package))
+        for path_tmp in search_path[package]:
+            path = os.path.join(path_tmp, "%s%s"%(base_type, ext))
+            if os.path.isfile(path):
+                return path
+        import sys
+        raise MsgNotFound("Cannot locate message [%s] in package [%s] [%s] [%s]"%(base_type, package, search_path[package], path))
 
 def get_srv_file(package, base_type, search_path):
     """
