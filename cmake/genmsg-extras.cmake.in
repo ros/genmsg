@@ -99,6 +99,11 @@ macro(generate_messages)
     endforeach()
   endforeach()
 
+  # mark that generate_messages() was called in order to detect wrong order of calling with catkin_python_setup()
+  set(${PROJECT_NAME}_GENERATE_MESSAGES TRUE)
+  # check if catkin_python_setup() was called in order to disable installation of gen/py stuff
+  set(SKIP_INSTALL_GEN_PY ${${PROJECT_NAME}_CATKIN_PYTHON_SETUP})
+
   em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
     @PKG_CMAKE_SRC_DIR@/pkg-genmsg.cmake.em

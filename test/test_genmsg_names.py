@@ -91,23 +91,6 @@ def test_is_legal_resource_name():
     for t in tests:
         assert is_legal_resource_name(t), t
 
-def test_is_legal_name():
-    from roslib.names import is_legal_name
-    failures = [None,
-                'foo++', 'foo-bar', '#foo',
-                'hello\n', '\t', ' name', 'name ',
-                'f//b',
-                '1name', 'foo\\']
-    for f in failures:
-        assert not is_legal_name(f), f
-    tests = ['',
-             'f', 'f1', 'f_', 'f/', 'foo', 'foo_bar', 'foo/bar', 'foo/bar/baz',
-             '~f', '~a/b/c',
-             '~/f',
-             '/a/b/c/d', '/']
-    for t in tests:
-        assert is_legal_name(t), "[%s]"%t
-
 def test_is_legal_resource_base_name():
     from genmsg import is_legal_resource_base_name
     failures = [None, '', 'hello\n', '\t', 'foo++', 'foo-bar', '#foo',
