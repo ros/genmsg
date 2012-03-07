@@ -18,3 +18,5 @@ install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 install(FILES stack.yaml DESTINATION share/${PROJECT_NAME})
 
 catkin_python_setup()
+
+add_nosetests(${PROJECT_SOURCE_DIR})
