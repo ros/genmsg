@@ -33,5 +33,5 @@
 def test_includepath_to_dict():
     from genmsg.command_line import includepath_to_dict
     assert {} == includepath_to_dict([])
-    assert {'std_msgs': 'foo'} == includepath_to_dict(['std_msgs:foo'])
-    assert {'std_msgs': 'foo', 'bar_msgs': 'baz:colon'} == includepath_to_dict(['std_msgs:foo', 'bar_msgs:baz:colon'])        
+    assert {'std_msgs': [ 'foo' ]} == includepath_to_dict(['std_msgs:foo'])
+    assert {'std_msgs': [ 'foo' ], 'bar_msgs': [ 'baz:colon' ]} == includepath_to_dict(['std_msgs:foo', 'bar_msgs:baz:colon'])
