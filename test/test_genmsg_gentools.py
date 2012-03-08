@@ -46,7 +46,7 @@ def get_search_path():
     test_dir = get_test_msg_dir()
     search_path = {}
     for pkg in ['std_msgs', 'rosgraph_msgs', 'test_ros', 'geometry_msgs']:
-        search_path[pkg] = os.path.join(test_dir, pkg, 'msg')
+        search_path[pkg] = [ os.path.join(test_dir, pkg, 'msg') ]
     return search_path
 
 def _load_md5_tests(dir_name):

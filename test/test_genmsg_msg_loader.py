@@ -243,8 +243,8 @@ def test_load_msg_by_type():
     test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
     test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
     search_path = {
-        'test_ros': test_ros_dir,
-        'geometry_msgs': geometry_d,
+        'test_ros': [ test_ros_dir ],
+        'geometry_msgs': [ geometry_d ],
         }
     msg_context = MsgContext.create_default()
     msgspec = load_msg_by_type(msg_context, 'test_ros/TestString', search_path)
@@ -289,7 +289,7 @@ def test_get_msg_file():
     test_ros_dir = os.path.join(test_d, 'test_ros', 'msg')
     test_string_path = os.path.join(test_ros_dir, 'TestString.msg')
     search_path = {
-        'test_ros': test_ros_dir,
+        'test_ros': [ test_ros_dir ],
         }
     assert test_string_path == get_msg_file('test_ros', 'TestString', search_path)
     try:
@@ -318,8 +318,8 @@ def test_get_srv_file():
     std_srvs_dir = os.path.join(test_d, 'std_srvs', 'srv')
     empty_path = os.path.join(std_srvs_dir, 'Empty.srv')
     search_path = {
-        'test_ros': test_ros_dir,
-        'std_srvs': std_srvs_dir,
+        'test_ros': [ test_ros_dir ],
+        'std_srvs': [ std_srvs_dir ],
         }
     assert empty_path == get_srv_file('std_srvs', 'Empty', search_path)
     try:
@@ -402,11 +402,11 @@ def test_load_msg_depends():
     from genmsg.msg_loader import MsgContext, load_msg_by_type, load_msg_depends, MsgNotFound
     test_d = get_test_dir()
     search_path = {
-        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
-        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
-        'geometry_msgs': os.path.join(test_d, 'geometry_msgs', 'msg'),
-        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
-        'invalid': os.path.join(test_d, 'invalid', 'msg'),
+        'test_ros': [ os.path.join(test_d, 'test_ros', 'msg') ],
+        'std_msgs': [ os.path.join(test_d, 'std_msgs', 'msg') ],
+        'geometry_msgs': [ os.path.join(test_d, 'geometry_msgs', 'msg') ],
+        'sensor_msgs': [ os.path.join(test_d, 'sensor_msgs', 'msg') ],
+        'invalid': [ os.path.join(test_d, 'invalid', 'msg') ],
         }
     
     # Test not found
@@ -466,10 +466,10 @@ def test_load_msg_depends_stamped():
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
     search_path = {
-        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
-        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
-        'geometry_msgs': geometry_d,
-        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
+        'test_ros': [ os.path.join(test_d, 'test_ros', 'msg') ],
+        'std_msgs': [ os.path.join(test_d, 'std_msgs', 'msg') ],
+        'geometry_msgs': [ geometry_d ],
+        'sensor_msgs': [ os.path.join(test_d, 'sensor_msgs', 'msg') ],
         }
 
     # Test with Stamped and deeper hierarchies, Header
@@ -529,11 +529,11 @@ def test_load_depends_msg():
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
     msg_search_path = {
-        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
-        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
-        'geometry_msgs': geometry_d,
-        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
-        'invalid': os.path.join(test_d, 'invalid', 'msg'),
+        'test_ros': [ os.path.join(test_d, 'test_ros', 'msg') ],
+        'std_msgs': [ os.path.join(test_d, 'std_msgs', 'msg') ],
+        'geometry_msgs': [ geometry_d ],
+        'sensor_msgs': [ os.path.join(test_d, 'sensor_msgs', 'msg') ],
+        'invalid': [ os.path.join(test_d, 'invalid', 'msg') ],
         }
 
     # Test not found
@@ -589,17 +589,17 @@ def test_load_depends_srv():
     test_d = get_test_dir()
     geometry_d = os.path.join(test_d, 'geometry_msgs', 'msg')
     msg_search_path = {
-        'test_ros': os.path.join(test_d, 'test_ros', 'msg'),
-        'std_msgs': os.path.join(test_d, 'std_msgs', 'msg'),
-        'geometry_msgs': geometry_d,
-        'sensor_msgs': os.path.join(test_d, 'sensor_msgs', 'msg'),
-        'invalid': os.path.join(test_d, 'invalid', 'msg'),
+        'test_ros': [ os.path.join(test_d, 'test_ros', 'msg') ],
+        'std_msgs': [ os.path.join(test_d, 'std_msgs', 'msg') ],
+        'geometry_msgs': [ geometry_d ],
+        'sensor_msgs': [ os.path.join(test_d, 'sensor_msgs', 'msg') ],
+        'invalid': [ os.path.join(test_d, 'invalid', 'msg') ],
         }
 
     # Test with srvs
     srv_search_path = {
-        'test_ros': os.path.join(test_d, 'test_ros', 'srv'),
-        'std_srvs': os.path.join(test_d, 'std_srvs', 'srv'),
+        'test_ros': [ os.path.join(test_d, 'test_ros', 'srv') ],
+        'std_srvs': [ os.path.join(test_d, 'std_srvs', 'srv') ],
         }
 
     msg_context = MsgContext.create_default()
@@ -639,8 +639,8 @@ def test_load_srv_by_type():
     empty_path = os.path.join(std_srvs_dir, 'Empty.srv')
     a2i_path = os.path.join(std_srvs_dir, 'AddTwoInts.srv')
     search_path = {
-        'test_ros': test_ros_dir,
-        'std_srvs': std_srvs_dir,
+        'test_ros': [ test_ros_dir ],
+        'std_srvs': [ std_srvs_dir ],
         }
     msg_context = MsgContext.create_default()
     spec = load_srv_by_type(msg_context, 'std_srvs/Empty', search_path)
