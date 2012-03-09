@@ -35,5 +35,6 @@ def includepath_to_dict(includepath):
     for path in includepath:
         key = path[:path.find(':')]
         value = path[path.find(':')+1:]
-        search_path.setdefault(key, []).append(value)
+        if value:
+            search_path.setdefault(key, []).append(value)
     return search_path
