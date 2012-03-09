@@ -98,6 +98,8 @@ macro(generate_messages)
       list(APPEND MSG_SEARCH_DIRS "${i}")
     endforeach()
   endforeach()
+  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS}"
+    CACHE FILEPATH "dir containing messages in @PACKAGE_NAME@")
 
   # mark that generate_messages() was called in order to detect wrong order of calling with catkin_python_setup()
   set(${PROJECT_NAME}_GENERATE_MESSAGES TRUE)
