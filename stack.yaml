@@ -2,11 +2,11 @@ Catkin-ProjectName: genmsg
 Description: Willow Garage low level build system macros and infrastructure
 Author: Troy Straszheim <straszheim@willowgarage.com>, Morten Kjaergaard, Ken Conley
 Maintainer: Ken Conley <kwc@willowgarage.com>
-Homepage: http://www.ros.org
+Homepage: http://www.ros.org/wiki/genmsg
 
 Depends: catkin
 
-Version: 0.3.3
+Version: 0.3.4
 
 Catkin-CopyrightType:  willowgarage
 Catkin-DebRulesType: python_distutils
