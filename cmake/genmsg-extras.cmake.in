@@ -59,7 +59,16 @@ macro(add_service_files)
     set(ARG_PACKAGE ${PROJECT_NAME})
   endif()
 
-  _prepend_path(${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY} "${ARG_FILES}" FILES_W_PATH)
+
+  string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
+
+  if(IS_FULL_PATH)
+    set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
+  else()
+    set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  endif()
+
+  _prepend_path(${DIRECTORY_FULL_PATH} "${ARG_FILES}" FILES_W_PATH)
 
   list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
 
