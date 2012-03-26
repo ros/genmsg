@@ -39,12 +39,14 @@ import os
 import em
 import genmsg.command_line
 import genmsg.msgs
+import genmsg.msg_loader
+import genmsg.gentools
 
 # generate msg or srv files from a template file
 # template_map of the form { 'template_file':'output_file'} output_file can contail @NAME@ which will be replaced by the message/service name
 def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path):
 
-    md5sum = genmsg.compute_md5(msg_context, spec)
+    md5sum = genmsg.gentools.compute_md5(msg_context, spec)
 
     # Set dictionary for the generator interpreter
     g = { "file_name_in":input_file,
@@ -52,8 +54,8 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
           "md5sum":md5sum,
           "search_path":search_path,
           "msg_context" : msg_context }
-    if isinstance(spec, genmsg.MsgSpec):
-        g['msg_definition'] = genmsg.compute_full_text(msg_context, spec)
+    if isinstance(spec, genmsg.msgs.MsgSpec):
+        g['msg_definition'] = genmsg.gentools.compute_full_text(msg_context, spec)
 
     # Loop over all files to generate
     for template_file_name, output_file_name in template_map.items():
