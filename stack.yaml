@@ -6,7 +6,7 @@ Homepage: http://www.ros.org/wiki/genmsg
 
 Depends: catkin
 
-Version: 0.3.4
+Version: 0.3.5
 
 Catkin-CopyrightType:  willowgarage
 Catkin-DebRulesType: python_distutils
