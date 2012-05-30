@@ -52,10 +52,10 @@ Code generators depend on ``genmsg`` to parse the .msg file itself.
 They then use the parse tree to generate code in whatever language or
 format they prefer.
 
-A seperate project must exists for each language you wish to generate for.
+A separate project must exists for each language you wish to generate for.
 Such a project contains:
 
-* An entry of Catkin-ROS-Message-Generator in the stack.yaml file
+* A message_generator tag in the stack.xml file
 * Executable scripts for generating the code based on .msg/.srv files
 * Definitions of certain CMake macros to make the generator accessible by the build system.
 
@@ -110,10 +110,10 @@ https://github.com/ros/genpybindings/blob/master/scripts/module.cpp.template
 for example of this.
 
 
-:ref:`stack.yaml <catkin:stack.yaml>`
+:ref:`stack.xml <catkin:stack.xml>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each language is identified by a name which must be specified in the stack.yaml file.
+Each language is identified by a name which must be specified in the stack.xml file.
 The example entry for the generator for C++ is:
 
 ``Catkin-ROS-Message-Generator: cpp``
