@@ -4,9 +4,11 @@
   <description>
     Willow Garage low level build system macros and infrastructure
   </description>
-  <author>Troy Straszheim straszheim@willowgarage.com, Morten Kjaergaard, Ken Conley</author>
-  <maintainer>Ken Conley kwc@willowgarage.com</maintainer>
-  <license>BSD</license>  
+  <author email="straszheim@willowgarage.com">Troy Straszheim</author>
+  <author>Morten Kjaergaard</author>
+  <author>Ken Conley</author>
+  <maintainer email="kwc@willowgarage.com">Ken Conley</maintainer>
+  <license>BSD</license>
   <copyright>Willow Garage</copyright>
   <url>http://www.ros.org/wiki/genmsg</url>
   <build_type>python_distutils</build_type>
