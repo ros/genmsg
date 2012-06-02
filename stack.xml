@@ -1,6 +1,6 @@
 <stack>
   <name>genmsg</name>
-  <version>0.3.8</version>
+  <version>0.3.9</version>
   <description>
     Willow Garage low level build system macros and infrastructure
   </description>
