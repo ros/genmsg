@@ -1,5 +1,4 @@
 <package>
-  <catkin/>
   <description brief="genmsg">
 
      Standalone Python library for generating ROS message and service data structures in
