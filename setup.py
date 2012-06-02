@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+import sys
+from xml.etree.ElementTree import ElementTree
 
-import sys, os
+try:
+    root = ElementTree('stack', 'stack.xml')
+    version = root.findtext('version')
+except Exception, e:
+    print >> sys.stderr, 'Could not extract version from your stack.xml:\n%s' % e
+
 sys.path.insert(0, 'src')
 
-from genmsg import __version__
-
-setup(name='genmsg',
-      version= __version__,
-      packages=['genmsg'],
-      package_dir = {'':'src'},
+setup(name = 'genmsg',
+      version = version,
+      packages = ['genmsg'],
+      package_dir = {'': 'src'},
       scripts = [],
       author = "Ken Conley, Josh Faust, Troy Straszheim",
       author_email = "kwc@willowgarage.com",
