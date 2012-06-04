@@ -36,9 +36,11 @@ message(STATUS "@(pkg_name): @(len(messages)) messages")
 set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths_tuple_list]))")
 
 # Find all generators
+@[if langs]
 @[for l in langs.split(';')]@
 find_package(@l)
 @[end for]@
+@[end if]
 
 #better way to handle this?
 set (ALL_GEN_OUTPUT_FILES_cpp "")
@@ -47,6 +49,7 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 #  langs = @langs
 #
 
+@[if langs]
 @[for l in langs.split(';')]@
 ### Section generating for lang: @l
 ### Generating Messages
@@ -57,7 +60,7 @@ _generate_msg_@(l[3:])(@pkg_name
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
-@[end for]@
+@[end for]@# messages
 
 ### Generating Services
 @[for s in services]
@@ -67,7 +70,7 @@ _generate_srv_@(l[3:])(@pkg_name
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
   ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
 )
-@[end for]@
+@[end for]@# services
 
 ### Generating Module File
 _generate_module_@(l[3:])(@pkg_name
@@ -79,9 +82,12 @@ add_custom_target(@(pkg_name)_@(l) ALL
   DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
 )
 
-@[end for]@
+@[end for]@# langs
+@[end if]
+
 log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
+@[if langs]
 @[for l in langs.split(';')]@
 
 @[if l != 'genpy' or not skip_install_gen_py]@
@@ -96,3 +102,4 @@ endif()
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 @[end for]@# dependencies
 @[end for]@# langs
+@[end if]
