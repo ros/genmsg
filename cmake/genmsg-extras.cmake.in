@@ -2,14 +2,19 @@
 #  Generated from genmsg/cmake/genmsg-extras.cmake.in
 #
 if (NOT genmsg_SOURCE_DIR)
-  file(GLOB CATKIN_GENLANGS
+  file(GLOB CATKIN_INSTALLED_GENLANGS
     RELATIVE @CMAKE_INSTALL_PREFIX@/etc/langs
     @CMAKE_INSTALL_PREFIX@/etc/langs/gen*)
-  message(STATUS "Using these generator languages from the installation: ${CATKIN_GENLANGS}")
-  foreach(lang ${CATKIN_GENLANGS})
+  message(STATUS "Found these generator languages from the installation: ${CATKIN_INSTALLED_GENLANGS}")
+  message(STATUS "Found these generator languages in the workspace: ${CATKIN_GENLANGS}")
+  foreach(lang ${CATKIN_INSTALLED_GENLANGS})
     find_package(${lang})
+    list(FIND CATKIN_GENLANGS ${lang} _index)
+    if(_index EQUAL -1)
+      list(APPEND CATKIN_GENLANGS ${lang})
+    endif()
   endforeach()
-
+  message(STATUS "Using these generator languages: ${CATKIN_GENLANGS}")
 endif()
 
 macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
