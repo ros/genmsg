@@ -38,7 +38,7 @@ set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_p
 # Find all generators
 @[if langs]
 @[for l in langs.split(';')]@
-find_package(@l)
+find_package(@l REQUIRED)
 @[end for]@
 @[end if]
 
