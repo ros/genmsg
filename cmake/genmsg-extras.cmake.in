@@ -33,7 +33,11 @@ macro(add_message_files)
     set(ARG_PACKAGE ${PROJECT_NAME})
   endif()
 
-  string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  if(CMAKE_HOST_UNIX)
+    string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  else() # Windows
+    string(REGEX MATCH "^.:.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  endif()
 
   if(IS_FULL_PATH)
     set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
@@ -64,8 +68,11 @@ macro(add_service_files)
     set(ARG_PACKAGE ${PROJECT_NAME})
   endif()
 
-
-  string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  if(CMAKE_HOST_UNIX)
+    string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  else() # Windows
+    string(REGEX MATCH "^.:.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  endif()
 
   if(IS_FULL_PATH)
     set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
