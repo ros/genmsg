@@ -44,7 +44,7 @@ macro(add_message_files)
     get_filename_component(INSTALL_DIRECTORY ${ARG_DIRECTORY} NAME)
   else()
     set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
-    set(INSTALL_DIRECTOORY ${ARG_DIRECTORY})
+    set(INSTALL_DIRECTORY ${ARG_DIRECTORY})
   endif()
 
   #todo, hack: handle this elsewhere when fixing the install stuff
