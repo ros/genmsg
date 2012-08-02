@@ -31,3 +31,10 @@ User macro reference
    in the workspace, triggers creation of targets ``foo_gencpp`` and
    ``foo_genpy``.
 
+
+Now, if your code does depend on generated messages you need to add a dependency.
+E.g. if you target foo depends on the C++ messages of your current bar project, you need to add:
+
+``add_dependencies(foo bar_gencpp)``
+
+(the ``bar_cpp`` target is automatically created when you generate messages)
