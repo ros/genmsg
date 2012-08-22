@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 project(genmsg)
 find_package(catkin REQUIRED)
 
+catkin_stack()
+catkin_project(genmsg
+  CFG_EXTRAS genmsg-extras.cmake
+)
+
 install(
   FILES
   cmake/pkg-genmsg.cmake.em
@@ -9,12 +14,8 @@ install(
   cmake/import_check.py
   DESTINATION share/${PROJECT_NAME}/cmake)
 
-catkin_stack()
-catkin_project(genmsg
-  CFG_EXTRAS genmsg-extras.cmake
-)
-
-install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
+# XXX remove file
+#install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 install(FILES stack.xml DESTINATION share/${PROJECT_NAME})
 
 catkin_python_setup()

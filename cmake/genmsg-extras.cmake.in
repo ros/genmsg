@@ -1,21 +1,39 @@
-#
-#  Generated from genmsg/cmake/genmsg-extras.cmake.in
-#
-if (NOT genmsg_SOURCE_DIR)
-  file(GLOB CATKIN_INSTALLED_GENLANGS
-    RELATIVE @CMAKE_INSTALL_PREFIX@/etc/langs
-    @CMAKE_INSTALL_PREFIX@/etc/langs/gen*)
-  message(STATUS "Found these generator languages from the installation: ${CATKIN_INSTALLED_GENLANGS}")
-  message(STATUS "Found these generator languages in the workspace: ${CATKIN_GENLANGS}")
-  foreach(lang ${CATKIN_INSTALLED_GENLANGS})
-    find_package(${lang} REQUIRED)
-    list(FIND CATKIN_GENLANGS ${lang} _index)
-    if(_index EQUAL -1)
-      list(APPEND CATKIN_GENLANGS ${lang})
-    endif()
-  endforeach()
-  message(STATUS "Using these generator languages: ${CATKIN_GENLANGS}")
+# generated from genmsg/cmake/genmsg-extras.cmake.in
+
+if(_GENMSG_EXTRAS_INCLUDED_)
+  return()
 endif()
+# XXX reconsider using PARENT_SCOPE here
+set(_GENMSG_EXTRAS_INCLUDED_ TRUE PARENT_SCOPE)
+
+# find message generators in all workspaces
+set(message_generators "")
+foreach(workspace $ENV{CATKIN_WORKSPACES})
+  string(REGEX REPLACE ":.*" "" workspace ${workspace})
+  file(GLOB workspace_message_generators
+    RELATIVE ${workspace}/etc/langs
+    ${workspace}/etc/langs/gen*)
+  list(APPEND message_generators ${workspace_message_generators})
+endforeach()
+if(message_generators)
+  list(SORT message_generators)
+endif()
+message(STATUS "Found these generator languages in this workspace: ${CATKIN_MESSAGE_GENERATORS}")
+message(STATUS "Found these generator languages in other workspaces: ${message_generators}")
+
+foreach(message_generator ${message_generators})
+  find_package(${message_generator} REQUIRED)
+  list(FIND CATKIN_MESSAGE_GENERATORS ${message_generator} _index)
+  if(_index EQUAL -1)
+    list(APPEND CATKIN_MESSAGE_GENERATORS ${message_generator})
+  endif()
+endforeach()
+if(message_generators)
+  list(SORT CATKIN_MESSAGE_GENERATORS)
+endif()
+# XXX store list of message generators in parent scope (as well as _GENMSG_EXTRAS_INCLUDED_)
+set(CATKIN_MESSAGE_GENERATORS ${CATKIN_MESSAGE_GENERATORS} PARENT_SCOPE)
+message(STATUS "Using these generator languages: ${CATKIN_MESSAGE_GENERATORS}")
 
 macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
   # todo, check for proper path, slasheds, etc
@@ -26,34 +44,38 @@ macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
 endmacro()
 
 macro(add_message_files)
-  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL;PRIVATE" ${ARGN})
-  check_unused_arguments("add_message_files" "${ARG_DEFAULT_ARGS}")
-
-  if(NOT ARG_PACKAGE)
-    set(ARG_PACKAGE ${PROJECT_NAME})
+  parse_arguments(ARG "DIRECTORY;FILES;BASE_DIR" "NOINSTALL;PRIVATE" ${ARGN})
+  if(ARG_DEFAULT_ARGS)
+    message(FATAL_ERROR "add_message_files() called with unused arguments: ${ARG_DEFAULT_ARGS}")
   endif()
 
-  if(CMAKE_HOST_UNIX)
-    string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
-  else() # Windows
-    string(REGEX MATCH "^.:.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  if(NOT ARG_DIRECTORY)
+    set(ARG_DIRECTORY "msg")
   endif()
 
-  if(IS_FULL_PATH)
-    set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
-  else()
-    set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  set(MESSAGE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  # override message directory (used by add_action_files())
+  if(ARG_BASE_DIR)
+    set(MESSAGE_DIR ${ARG_BASE_DIR})
+  endif()
+
+  if(NOT IS_DIRECTORY ${MESSAGE_DIR})
+    message(FATAL_ERROR "add_message_files() directory not found: ${MESSAGE_DIR}")
   endif()
 
   #todo, hack: handle this elsewhere when fixing the install stuff
+  # XXX need same logic for services?
   if(NOT ARG_PRIVATE)
-    list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS ${DIRECTORY_FULL_PATH})
+    list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS ${MESSAGE_DIR})
   endif()
 
-  _prepend_path(${DIRECTORY_FULL_PATH} "${ARG_FILES}" FILES_W_PATH)
+  _prepend_path(${MESSAGE_DIR} "${ARG_FILES}" FILES_W_PATH)
 
   list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${FILES_W_PATH})
-  list(APPEND ${PROJECT_NAME}_MESSAGE_FILES_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  foreach(file ${FILES_W_PATH})
+    debug_message(2 "add_message_files() msg file: ${file}")
+    assert_file_exists(${file} "message file not found")
+  endforeach()
 
   if(NOT ARG_NOINSTALL)
     install(FILES ${FILES_W_PATH} DESTINATION share/${PROJECT_NAME}/${ARG_DIRECTORY})
@@ -61,28 +83,26 @@ macro(add_message_files)
 endmacro()
 
 macro(add_service_files)
-  parse_arguments(ARG "PACKAGE;FILES;DIRECTORY" "NOINSTALL" ${ARGN})
-  check_unused_arguments("add_service_files" "${ARG_DEFAULT_ARGS}")
-
-  if(NOT ARG_PACKAGE)
-    set(ARG_PACKAGE ${PROJECT_NAME})
+  parse_arguments(ARG "DIRECTORY;FILES" "NOINSTALL" ${ARGN})
+  if(ARG_DEFAULT_ARGS)
+    message(FATAL_ERROR "add_service_files() called with unused arguments: ${ARG_DEFAULT_ARGS}")
   endif()
 
-  if(CMAKE_HOST_UNIX)
-    string(REGEX MATCH "^/.*" IS_FULL_PATH ${ARG_DIRECTORY})
-  else() # Windows
-    string(REGEX MATCH "^.:.*" IS_FULL_PATH ${ARG_DIRECTORY})
+  if(NOT ARG_DIRECTORY)
+    set(ARG_DIRECTORY "srv")
   endif()
 
-  if(IS_FULL_PATH)
-    set(DIRECTORY_FULL_PATH ${ARG_DIRECTORY})
-  else()
-    set(DIRECTORY_FULL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+    message(FATAL_ERROR "add_service_files() directory not found: ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY}")
   endif()
 
-  _prepend_path(${DIRECTORY_FULL_PATH} "${ARG_FILES}" FILES_W_PATH)
+  _prepend_path(${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY} "${ARG_FILES}" FILES_W_PATH)
 
   list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
+  foreach(file ${FILES_W_PATH})
+    debug_message(2 "add_service_files() srv file: ${file}")
+    assert_file_exists(${file} "service file not found")
+  endforeach()
 
   if(NOT ARG_NOINSTALL)
     install(FILES ${FILES_W_PATH} DESTINATION share/${PROJECT_NAME}/${ARG_DIRECTORY})
@@ -91,7 +111,9 @@ endmacro()
 
 macro(generate_messages)
   parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})
-  check_unused_arguments("generate_messages" "${ARG_DEFAULT_ARGS}")
+  if(ARG_DEFAULT_ARGS)
+    message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_DEFAULT_ARGS}")
+  endif()
 
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
   set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
@@ -100,58 +122,87 @@ macro(generate_messages)
   if(ARG_LANGS)
     set(GEN_LANGS ${ARG_LANGS})
   else()
-    set(GEN_LANGS ${CATKIN_GENLANGS})
+    set(GEN_LANGS ${CATKIN_MESSAGE_GENERATORS})
   endif()
 
-  set(MSG_SEARCH_DIRS "${PROJECT_NAME}")
-  list(APPEND MSG_SEARCH_DIRS "${MESSAGE_FILES_DIR}")
+  if (@PKG_BUILDSPACE@)
+    set(genmsg_CMAKE_DIR @CMAKE_CURRENT_SOURCE_DIR@/cmake)
+  else()
+    set(genmsg_CMAKE_DIR @PKG_CMAKE_DIR@)
+  endif()
+
+  set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS}")
+  # generate buildspace config of message include dirs for project
+  configure_file(
+    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
+    ${catkin_BUILD_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake
+    @ONLY)
+  # generate and install config of message include dirs for project
+  configure_file(
+    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/installspace/${PROJECT_NAME}-msg-paths.cmake
+    @ONLY)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/installspace/${PROJECT_NAME}-msg-paths.cmake
+    DESTINATION share/${PROJECT_NAME}/cmake)
+
   foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
-      message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?)")
+      message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?))")
     endif()
 
-    if(NOT ${dep}_SOURCE_DIR)
-        set(${dep}_MSG_INCLUDE_DIRS ${${dep}_DIR}/../msg)
+    # find configuration containing include dirs for projects in all workspaces
+    set(workspaces "")
+    foreach(workspace $ENV{CATKIN_WORKSPACES})
+      string(REGEX REPLACE ":.*" "" workspace ${workspace})
+      list(APPEND workspaces ${workspace})
+    endforeach()
+    list(INSERT workspaces 0 ${catkin_BUILD_PREFIX})
+    unset(config CACHE)
+    set(filename "share/${dep}/cmake/${dep}-msg-paths.cmake")
+    find_file(config ${filename} PATHS ${workspaces} NO_DEFAULT_PATH)
+    if(config-NOTFOUND)
+      message(FATAL_ERROR "Could not find '${PROJECT_NAME}-msg-paths.cmake'.")
     endif()
+    include(${config})
+    unset(config CACHE)
 
-    foreach(i ${${dep}_MSG_INCLUDE_DIRS})
-      list(APPEND MSG_SEARCH_DIRS "${dep}")
-      list(APPEND MSG_SEARCH_DIRS "${i}")
+    foreach(path ${${dep}_MSG_INCLUDE_DIRS})
+      list(APPEND MSG_INCLUDE_DIRS "${dep}")
+      list(APPEND MSG_INCLUDE_DIRS "${path}")
     endforeach()
   endforeach()
-  set(${PROJECT_NAME}_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS}"
-    CACHE FILEPATH "dir containing messages in @PACKAGE_NAME@")
 
   # mark that generate_messages() was called in order to detect wrong order of calling with catkin_python_setup()
   set(${PROJECT_NAME}_GENERATE_MESSAGES TRUE)
   # check if catkin_python_setup() was called in order to disable installation of gen/py stuff
   set(SKIP_INSTALL_GEN_PY ${${PROJECT_NAME}_CATKIN_PYTHON_SETUP})
 
-  em_expand(@PKG_CMAKE_SRC_DIR@/pkg-genmsg.context.in
+  em_expand(${genmsg_CMAKE_DIR}/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
-    @PKG_CMAKE_SRC_DIR@/pkg-genmsg.cmake.em
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake
-    )
+    ${genmsg_CMAKE_DIR}/pkg-genmsg.cmake.em
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
+  include(${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
 endmacro()
 
 #
 #  GENERATOR_TAG is lowercase alpha, like cpp, py, pybindings, typelibxml
 #  GENERATOR_INSTALL_DIR is relative to CMAKE_INSTALL_PREFIX
 #
-macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR GENERATOR_PRETTY GENERATOR_FILEEXT)
-  set(GENERATOR_PRETTY ${GENERATOR_PRETTY})
-  set(GENERATOR_FILEEXT ${GENERATOR_FILEEXT})
-  if (genmsg_SOURCE_DIR)
-    set(template ${genmsg_SOURCE_DIR}/cmake/generator.cmake.in)
-  else()
-    set(template @CMAKE_INSTALL_PREFIX@/share/genmsg/cmake/generator.cmake.in)
-  endif()
-
-  set(GENERATOR ${GENERATOR_TAG})
-  set(expanded ${CMAKE_CURRENT_BINARY_DIR}/cmake/gen${GENERATOR}.cmake)
-
-  configure_file(${template} ${expanded} @ONLY)
-
-  include(${expanded})
-  install(FILES ${expanded} DESTINATION share/${PROJECT_NAME}/cmake)
-endmacro()
+# XXX remove not used macro
+#macro(generate_generator GENERATOR_TAG GENERATOR_INSTALL_DIR GENERATOR_PRETTY GENERATOR_FILEEXT)
+#  set(GENERATOR_PRETTY ${GENERATOR_PRETTY})
+#  set(GENERATOR_FILEEXT ${GENERATOR_FILEEXT})
+#  if (genmsg_SOURCE_DIR)
+#    set(template ${genmsg_SOURCE_DIR}/cmake/generator.cmake.in)
+#  else()
+#    set(template @CMAKE_INSTALL_PREFIX@/share/genmsg/cmake/generator.cmake.in)
+#  endif()
+#
+#  set(GENERATOR ${GENERATOR_TAG})
+#  set(expanded ${CMAKE_CURRENT_BINARY_DIR}/cmake/gen${GENERATOR}.cmake)
+#
+#  configure_file(${template} ${expanded} @ONLY)
+#
+#  include(${expanded})
+#  install(FILES ${expanded} DESTINATION share/${PROJECT_NAME}/cmake)
+#endmacro()

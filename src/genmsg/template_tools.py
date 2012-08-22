@@ -43,7 +43,7 @@ import genmsg.msg_loader
 import genmsg.gentools
 
 # generate msg or srv files from a template file
-# template_map of the form { 'template_file':'output_file'} output_file can contail @NAME@ which will be replaced by the message/service name
+# template_map of the form { 'template_file':'output_file'} output_file can contain @NAME@ which will be replaced by the message/service name
 def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path):
 
     md5sum = genmsg.gentools.compute_md5(msg_context, spec)
@@ -69,6 +69,8 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
         # todo, reuse interpreter
         interpreter = em.Interpreter(output=ofile, globals=g, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
         if not os.path.isfile(template_file):
+            ofile.close()
+            os.remove(output_file)
             raise RuntimeError, "Template file %s not found in template dir %s" % (template_file_name, template_dir)
         interpreter.file(open(template_file)) #todo try
         interpreter.shutdown()
@@ -167,6 +169,8 @@ def generate_module(package_name, output_dir, template_dir, template_dict):
         interpreter = em.Interpreter(output=ofile, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
         interpreter.updateGlobals(g)
         if not os.path.isfile(template_file):
+            ofile.close()
+            os.remove(output_file)
             raise RuntimeError, "Template file %s not found in template dir %s" % (template_file_name, template_dir)
         interpreter.file(open(template_file)) #todo try
         interpreter.shutdown()

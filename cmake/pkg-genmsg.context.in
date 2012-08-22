@@ -1,14 +1,9 @@
-#
-#  generated from genmsg/cmake/pkg-genmsg.context.in
-#
+# generated from genmsg/cmake/pkg-genmsg.context.in
+
 messages_str = "@ARG_MESSAGES@"
-messages = aslist(messages_str)
 services_str = "@ARG_SERVICES@"
-services = aslist(services_str)
 pkg_name = "@PROJECT_NAME@"
 dependencies_str = "@ARG_DEPENDENCIES@"
-dependencies = aslist(dependencies_str)
 langs = "@GEN_LANGS@"
-genmsg_python_path = "@genmsg_PYTHONPATH@"
-dep_search_paths = aslist("@MSG_SEARCH_DIRS@")
+dep_include_paths_str = "@MSG_INCLUDE_DIRS@"
 skip_install_gen_py = "@SKIP_INSTALL_GEN_PY@"

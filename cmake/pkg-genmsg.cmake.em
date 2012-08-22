@@ -1,12 +1,20 @@
-#
-#  Generated from genmsg/cmake/pkg-genmsg.cmake.em
-#
+# generated from genmsg/cmake/pkg-genmsg.cmake.em
+
 @{
-import sys, genmsg, os, genmsg.base
+import os
+import sys
+
+import genmsg
+import genmsg.base
 genmsg.base.log_verbose('GENMSG_VERBOSE' in os.environ)
-# put this path at the beginning
-sys.path.insert(0, genmsg_python_path)
-import genmsg.deps, genmsg.gentools
+import genmsg.deps
+import genmsg.gentools
+
+# split incoming variables
+messages = messages_str.split(';') if messages_str != '' else []
+services = services_str.split(';') if services_str != '' else []
+dependencies = dependencies_str.split(';') if dependencies_str != '' else []
+dep_search_paths = dep_include_paths_str.split(';') if dep_include_paths_str != '' else []
 
 dep_search_paths_dict = {}
 dep_search_paths_tuple_list = []
@@ -31,7 +39,7 @@ for s in services:
   srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, s, dep_search_paths)
 
 }@
-message(STATUS "@(pkg_name): @(len(messages)) messages")
+message(STATUS "@(pkg_name): @(len(messages)) messages, @(len(services)) services")
 
 set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths_tuple_list]))")
 
@@ -58,7 +66,7 @@ _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
-  ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# messages
 
@@ -68,13 +76,13 @@ _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
-  ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# services
 
 ### Generating Module File
 _generate_module_@(l[3:])(@pkg_name
-  ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
@@ -85,7 +93,7 @@ add_custom_target(@(pkg_name)_@(l) ALL
 @[end for]@# langs
 @[end if]
 
-log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
+debug_message(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
 @[if langs]
 @[for l in langs.split(';')]@
@@ -93,7 +101,7 @@ log(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 @[if l != 'genpy' or not skip_install_gen_py]@
 if(@(l)_INSTALL_DIR)
   install(
-    DIRECTORY ${CMAKE_BINARY_DIR}/gen/@(l[3:])/@pkg_name
+    DIRECTORY ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
   )
 endif()

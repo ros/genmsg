@@ -1,8 +1,6 @@
 #
 #  Generated from genmsg/cmake/generator.cmake.in
 #
-#Make sure we can find buildspace generated messages
-include_directories(${CMAKE_BINARY_DIR}/gen/@GENERATOR@)
 
 if(gen@GENERATOR@_SOURCE_DIR)
   find_program_required(gen@GENERATOR@_BIN gen_@GENERATOR@.py PATHS ${gen@GENERATOR@_SOURCE_DIR}/scripts)
