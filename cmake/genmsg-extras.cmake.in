@@ -8,8 +8,7 @@ set(_GENMSG_EXTRAS_INCLUDED_ TRUE PARENT_SCOPE)
 
 # find message generators in all workspaces
 set(message_generators "")
-foreach(workspace $ENV{CATKIN_WORKSPACES})
-  string(REGEX REPLACE ":.*" "" workspace ${workspace})
+foreach(workspace ${CATKIN_WORKSPACES})
   file(GLOB workspace_message_generators
     RELATIVE ${workspace}/etc/langs
     ${workspace}/etc/langs/gen*)
@@ -152,16 +151,20 @@ macro(generate_messages)
 
     # find configuration containing include dirs for projects in all workspaces
     set(workspaces "")
-    foreach(workspace $ENV{CATKIN_WORKSPACES})
-      string(REGEX REPLACE ":.*" "" workspace ${workspace})
+    foreach(workspace ${CATKIN_WORKSPACES})
       list(APPEND workspaces ${workspace})
     endforeach()
-    list(INSERT workspaces 0 ${catkin_BUILD_PREFIX})
+    list(FIND workspaces ${catkin_BUILD_PREFIX} _index)
+    if(_index EQUAL -1)
+      list(INSERT workspaces 0 ${catkin_BUILD_PREFIX})
+    endif()
+
     unset(config CACHE)
     set(filename "share/${dep}/cmake/${dep}-msg-paths.cmake")
-    find_file(config ${filename} PATHS ${workspaces} NO_DEFAULT_PATH)
-    if(config-NOTFOUND)
-      message(FATAL_ERROR "Could not find '${PROJECT_NAME}-msg-paths.cmake'.")
+    find_file(config ${filename} PATHS ${workspaces}
+      NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    if("${config}" STREQUAL "config-NOTFOUND")
+      message(FATAL_ERROR "Could not find '${filename}' (searched in '${workspaces}').")
     endif()
     include(${config})
     unset(config CACHE)
