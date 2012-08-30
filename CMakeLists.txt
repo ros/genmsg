@@ -15,8 +15,6 @@ install(
   cmake/pkg-msg-paths.cmake.in
   DESTINATION share/${PROJECT_NAME}/cmake)
 
-# XXX remove file
-#install(FILES cmake/generator.cmake.in DESTINATION share/genmsg/cmake)
 install(FILES stack.xml DESTINATION share/${PROJECT_NAME})
 
 catkin_python_setup()
