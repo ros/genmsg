@@ -9,13 +9,10 @@ catkin_project(genmsg
 
 install(
   FILES
-  cmake/import_check.py
   cmake/pkg-genmsg.cmake.em
   cmake/pkg-genmsg.context.in
   cmake/pkg-msg-paths.cmake.in
-  DESTINATION share/${PROJECT_NAME}/cmake)
-
-install(FILES stack.xml DESTINATION share/${PROJECT_NAME})
+  DESTINATION ${PROJECT_SHARE_DESTINATION}/cmake)
 
 catkin_python_setup()
 
