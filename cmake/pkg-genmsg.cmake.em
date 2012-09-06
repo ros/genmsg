@@ -66,7 +66,7 @@ _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
-  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# messages
 
@@ -76,13 +76,13 @@ _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
-  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# services
 
 ### Generating Module File
 _generate_module_@(l[3:])(@pkg_name
-  ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
@@ -93,7 +93,7 @@ add_custom_target(@(pkg_name)_@(l) ALL
 @[end for]@# langs
 @[end if]
 
-debug_message(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
+debug_message(2 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
 @[if langs]
 @[for l in langs.split(';')]@
@@ -101,7 +101,7 @@ debug_message(1 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 @[if l != 'genpy' or not skip_install_gen_py]@
 if(@(l)_INSTALL_DIR)
   install(
-    DIRECTORY ${catkin_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+    DIRECTORY ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
   )
 endif()
