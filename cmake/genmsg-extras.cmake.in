@@ -156,7 +156,6 @@ macro(generate_messages)
     # find configuration containing include dirs for projects in all build- and installspaces
     set(workspaces "")
     foreach(workspace ${CATKIN_WORKSPACES})
-      string(REGEX REPLACE ":.*" "" workspace ${workspace})
       list(APPEND workspaces ${workspace})
     endforeach()
     list(FIND workspaces ${CATKIN_BUILD_PREFIX} _index)
