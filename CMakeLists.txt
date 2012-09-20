@@ -3,7 +3,7 @@ project(genmsg)
 find_package(catkin REQUIRED)
 
 catkin_stack()
-catkin_project(genmsg
+catkin_package(genmsg
   CFG_EXTRAS genmsg-extras.cmake)
 
 install(
