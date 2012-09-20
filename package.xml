@@ -13,7 +13,6 @@
   <author>Morten Kjaergaard</author>
   <author>Ken Conley</author>
   <license>BSD</license>
-  <copyright>Willow Garage</copyright>
 
   <build_depend>catkin</build_depend>
 </package>
