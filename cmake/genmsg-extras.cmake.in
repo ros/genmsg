@@ -76,7 +76,7 @@ macro(add_message_files)
 
   if(NOT ARG_NOINSTALL)
     install(FILES ${FILES_W_PATH}
-      DESTINATION ${CATKIN_PROJECT_SHARE_DESTINATION}/${ARG_DIRECTORY})
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
   endif()
 endmacro()
 
@@ -106,7 +106,7 @@ macro(add_service_files)
 
   if(NOT ARG_NOINSTALL)
     install(FILES ${FILES_W_PATH}
-      DESTINATION ${CATKIN_PROJECT_SHARE_DESTINATION}/${ARG_DIRECTORY})
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
   endif()
 endmacro()
 
@@ -146,7 +146,7 @@ macro(generate_messages)
     ${CMAKE_CURRENT_BINARY_DIR}/installspace/${PROJECT_NAME}-msg-paths.cmake
     @ONLY)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/installspace/${PROJECT_NAME}-msg-paths.cmake
-    DESTINATION ${CATKIN_PROJECT_SHARE_DESTINATION}/cmake)
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
   foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
