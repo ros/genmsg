@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(genmsg)
 find_package(catkin REQUIRED)
 
-catkin_package()
-catkin_package_export(CFG_EXTRAS genmsg-extras.cmake)
+catkin_package(CFG_EXTRAS genmsg-extras.cmake)
 
 install(
   FILES

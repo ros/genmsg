@@ -2,7 +2,9 @@
 <package>
   <name>genmsg</name>
   <version>0.4.8</version>
-  <description>Generator infrastructure for ROS messages.</description>
+  <description>
+    Standalone Python library for generating ROS message and service data structures for various languages.
+  </description>
   <maintainer email="dthomas@willowgarage.com">Dirk Thomas</maintainer>
   <license>BSD</license>
 
@@ -15,4 +17,8 @@
   <author>Ken Conley</author>
 
   <build_depend>catkin</build_depend>
+
+  <export>
+    <rosdoc config="rosdoc.yaml"/>
+  </export>
 </package>
