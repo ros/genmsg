@@ -8,6 +8,8 @@ set(_GENMSG_EXTRAS_INCLUDED_ TRUE)
 # set destination for langs
 set(GENMSG_LANGS_DESTINATION "etc/ros/genmsg")
 
+include(CMakeParseArguments)
+
 # find message generators in all workspaces
 set(message_generators "")
 foreach(workspace ${CATKIN_WORKSPACES})
@@ -43,9 +45,9 @@ macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
 endmacro()
 
 macro(add_message_files)
-  parse_arguments(ARG "DIRECTORY;FILES;BASE_DIR" "NOINSTALL" ${ARGN})
-  if(ARG_DEFAULT_ARGS)
-    message(FATAL_ERROR "add_message_files() called with unused arguments: ${ARG_DEFAULT_ARGS}")
+  cmake_parse_arguments(ARG "NOINSTALL" "DIRECTORY;BASE_DIR" "FILES" ${ARGN})
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "add_message_files() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
   if(NOT ARG_DIRECTORY)
@@ -81,9 +83,9 @@ macro(add_message_files)
 endmacro()
 
 macro(add_service_files)
-  parse_arguments(ARG "DIRECTORY;FILES" "NOINSTALL" ${ARGN})
-  if(ARG_DEFAULT_ARGS)
-    message(FATAL_ERROR "add_service_files() called with unused arguments: ${ARG_DEFAULT_ARGS}")
+  cmake_parse_arguments(ARG "NOINSTALL" "DIRECTORY" "FILES" ${ARGN})
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "add_service_files() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
   if(NOT ARG_DIRECTORY)
@@ -111,9 +113,9 @@ macro(add_service_files)
 endmacro()
 
 macro(generate_messages)
-  parse_arguments(ARG "DEPENDENCIES;LANGS" "" ${ARGN})
-  if(ARG_DEFAULT_ARGS)
-    message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_DEFAULT_ARGS}")
+  cmake_parse_arguments(ARG "" "" "DEPENDENCIES;LANGS" ${ARGN})
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
