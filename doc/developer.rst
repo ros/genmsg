@@ -60,7 +60,7 @@ Such a project contains:
 * Definitions of certain CMake macros to make the generator accessible by the build system.
 
 Generator Scripts
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 The recommended way of implementing the generator is by using empy
 template files. See: http://www.alcyone.com/software/empy A empy
@@ -111,7 +111,7 @@ for example of this.
 
 
 :ref:`stack.xml <catkin:stack.xml>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each language is identified by a name which must be specified in the stack.xml file.
 The example entry for the generator for C++ is:
@@ -126,7 +126,7 @@ Providing cmake code to catkin
 
 Generator packages define several macros (below), and use catkin
 mechanisms to make the definitions of these macros available, see
-``catkin_project``.  catkin will generate calls to them for
+``catkin_package``.  catkin will generate calls to them for
 
 * each message
 * each service
