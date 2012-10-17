@@ -44,11 +44,11 @@ message(STATUS "@(pkg_name): @(len(messages)) messages, @(len(services)) service
 set(MSG_I_FLAGS "@(';'.join(["-I%s:%s" % (dep, dir) for dep, dir in dep_search_paths_tuple_list]))")
 
 # Find all generators
-@[if langs]
+@[if langs]@
 @[for l in langs.split(';')]@
 find_package(@l REQUIRED)
 @[end for]@
-@[end if]
+@[end if]@
 
 #better way to handle this?
 set (ALL_GEN_OUTPUT_FILES_cpp "")
@@ -57,7 +57,7 @@ set (ALL_GEN_OUTPUT_FILES_cpp "")
 #  langs = @langs
 #
 
-@[if langs]
+@[if langs]@
 @[for l in langs.split(';')]@
 ### Section generating for lang: @l
 ### Generating Messages
@@ -71,7 +71,7 @@ _generate_msg_@(l[3:])(@pkg_name
 @[end for]@# messages
 
 ### Generating Services
-@[for s in services]
+@[for s in services]@
 _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
@@ -91,23 +91,37 @@ add_custom_target(@(pkg_name)_@(l) ALL
 )
 
 @[end for]@# langs
-@[end if]
+@[end if]@
 
 debug_message(2 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
-@[if langs]
+@[if langs]@
 @[for l in langs.split(';')]@
 
-@[if l != 'genpy' or not skip_install_gen_py]@
 if(@(l)_INSTALL_DIR)
+@[if l == 'genpy']@
+  install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall \"${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
+@[end if]@
+  # install generated code
   install(
     DIRECTORY ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
+@[if l == 'genpy' and package_has_static_sources]@
+    # skip all init files
+    PATTERN "__init__.py" EXCLUDE
+    PATTERN "__init__.pyc" EXCLUDE
+  )
+  # install init files which are not in the root folder of the generated code
+  install(
+    DIRECTORY ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+    DESTINATION ${@(l)_INSTALL_DIR}
+    FILES_MATCHING
+    REGEX "/@(pkg_name)/.+/__init__.pyc?$"
+@[end if]@
   )
 endif()
-@[end if]@
 @[for d in dependencies]@
 add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
 @[end for]@# dependencies
 @[end for]@# langs
-@[end if]
+@[end if]@

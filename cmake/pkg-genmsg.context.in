@@ -6,4 +6,5 @@ pkg_name = "@PROJECT_NAME@"
 dependencies_str = "@ARG_DEPENDENCIES@"
 langs = "@GEN_LANGS@"
 dep_include_paths_str = "@MSG_INCLUDE_DIRS@"
-skip_install_gen_py = "@SKIP_INSTALL_GEN_PY@"
+PYTHON_EXECUTABLE = "@PYTHON_EXECUTABLE@"
+package_has_static_sources = '@package_has_static_sources@' == 'TRUE'
