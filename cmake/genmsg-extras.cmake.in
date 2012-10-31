@@ -76,6 +76,9 @@ macro(add_message_files)
   list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS_BUILDSPACE ${MESSAGE_DIR})
 
   if(NOT ARG_NOINSTALL)
+    # ensure that destination variables are initialized
+    catkin_destinations()
+
     list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE ${ARG_DIRECTORY})
     install(FILES ${FILES_W_PATH}
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
@@ -107,6 +110,9 @@ macro(add_service_files)
   endforeach()
 
   if(NOT ARG_NOINSTALL)
+    # ensure that destination variables are initialized
+    catkin_destinations()
+
     install(FILES ${FILES_W_PATH}
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
   endif()
@@ -137,6 +143,9 @@ macro(generate_messages)
   else()
     set(genmsg_CMAKE_DIR @PKG_CMAKE_DIR@)
   endif()
+
+  # ensure that destination variables are initialized
+  catkin_destinations()
 
   # generate buildspace config of message include dirs for project
   set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_BUILDSPACE}")
