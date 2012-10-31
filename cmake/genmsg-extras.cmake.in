@@ -118,6 +118,10 @@ macro(generate_messages)
     message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
+  if(${PROJECT_NAME}_CATKIN_PACKAGE)
+    message(FATAL_ERROR "generate_messages() must be called before catkin_package() in project '${PROJECT_NAME}'")
+  endif()
+
   set(ARG_MESSAGES ${${PROJECT_NAME}_MESSAGE_FILES})
   set(ARG_SERVICES ${${PROJECT_NAME}_SERVICE_FILES})
   set(ARG_DEPENDENCIES ${ARG_DEPENDENCIES})
