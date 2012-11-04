@@ -138,11 +138,13 @@ macro(generate_messages)
     set(GEN_LANGS ${CATKIN_MESSAGE_GENERATORS})
   endif()
 
-  if (@BUILDSPACE@)
-    set(genmsg_CMAKE_DIR @CMAKE_CURRENT_SOURCE_DIR@/cmake)
-  else()
-    set(genmsg_CMAKE_DIR @PKG_CMAKE_DIR@)
-  endif()
+@[if BUILDSPACE]@
+  # cmake dir in buildspace
+  set(genmsg_CMAKE_DIR @(CMAKE_CURRENT_SOURCE_DIR)/cmake)
+@[else]@
+  # cmake dir in installspace
+  set(genmsg_CMAKE_DIR @(PKG_CMAKE_DIR))
+@[end if]@
 
   # ensure that destination variables are initialized
   catkin_destinations()
@@ -152,14 +154,14 @@ macro(generate_messages)
   configure_file(
     ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
     ${CATKIN_BUILD_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake
-    @ONLY)
+    @@ONLY)
   # generate and install config of message include dirs for project
   _prepend_path(${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME} "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE}" INCLUDE_DIRS_W_PATH)
   set(PKG_MSG_INCLUDE_DIRS "${INCLUDE_DIRS_W_PATH}")
   configure_file(
     ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
-    @ONLY)
+    @@ONLY)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
