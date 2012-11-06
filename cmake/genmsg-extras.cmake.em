@@ -73,7 +73,7 @@ macro(add_message_files)
   endforeach()
 
   # remember path to messages to resolve them as dependencies
-  list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS_BUILDSPACE ${MESSAGE_DIR})
+  list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS_DEVELSPACE ${MESSAGE_DIR})
 
   if(NOT ARG_NOINSTALL)
     # ensure that destination variables are initialized
@@ -138,8 +138,8 @@ macro(generate_messages)
     set(GEN_LANGS ${CATKIN_MESSAGE_GENERATORS})
   endif()
 
-@[if BUILDSPACE]@
-  # cmake dir in buildspace
+@[if DEVELSPACE]@
+  # cmake dir in develspace
   set(genmsg_CMAKE_DIR @(CMAKE_CURRENT_SOURCE_DIR)/cmake)
 @[else]@
   # cmake dir in installspace
@@ -149,11 +149,11 @@ macro(generate_messages)
   # ensure that destination variables are initialized
   catkin_destinations()
 
-  # generate buildspace config of message include dirs for project
-  set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_BUILDSPACE}")
+  # generate devel space config of message include dirs for project
+  set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_DEVELSPACE}")
   configure_file(
     ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
-    ${CATKIN_BUILD_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake
+    ${CATKIN_DEVEL_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake
     @@ONLY)
   # generate and install config of message include dirs for project
   _prepend_path(${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME} "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE}" INCLUDE_DIRS_W_PATH)
@@ -175,9 +175,9 @@ macro(generate_messages)
     foreach(workspace ${CATKIN_WORKSPACES})
       list(APPEND workspaces ${workspace})
     endforeach()
-    list(FIND workspaces ${CATKIN_BUILD_PREFIX} _index)
+    list(FIND workspaces ${CATKIN_DEVEL_PREFIX} _index)
     if(_index EQUAL -1)
-      list(INSERT workspaces 0 ${CATKIN_BUILD_PREFIX})
+      list(INSERT workspaces 0 ${CATKIN_DEVEL_PREFIX})
     endif()
 
     unset(config CACHE)

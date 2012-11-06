@@ -66,7 +66,7 @@ _generate_msg_@(l[3:])(@pkg_name
   @m
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
-  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# messages
 
@@ -76,13 +76,13 @@ _generate_srv_@(l[3:])(@pkg_name
   @s
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
-  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
 )
 @[end for]@# services
 
 ### Generating Module File
 _generate_module_@(l[3:])(@pkg_name
-  ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
@@ -100,11 +100,11 @@ debug_message(2 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 
 if(@(l)_INSTALL_DIR)
 @[if l == 'genpy']@
-  install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall \"${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
+  install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall \"${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
 @[end if]@
   # install generated code
   install(
-    DIRECTORY ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+    DIRECTORY ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
 @[if l == 'genpy' and package_has_static_sources]@
     # skip all init files
@@ -113,7 +113,7 @@ if(@(l)_INSTALL_DIR)
   )
   # install init files which are not in the root folder of the generated code
   install(
-    DIRECTORY ${CATKIN_BUILD_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+    DIRECTORY ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
     FILES_MATCHING
     REGEX "/@(pkg_name)/.+/__init__.pyc?$"
