@@ -12,8 +12,8 @@
 # serve to show the default.
 
 import sys, os
+import catkin_sphinx
 
-import sys, os
 sys.path.insert(0, '../src')
 from xml.etree.ElementTree import ElementTree
 
@@ -28,7 +28,8 @@ from xml.etree.ElementTree import ElementTree
 #needs_sphinx = '1.0'
 
 html_logo = 'ros.png'
-html_theme_path = [os.path.join(os.path.expanduser('~'), 'sphinx'), 'themes']
+html_theme_path = [os.path.join(os.path.dirname(catkin_sphinx.__file__),
+                                    'theme')]
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
