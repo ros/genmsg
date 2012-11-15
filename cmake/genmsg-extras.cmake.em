@@ -64,6 +64,12 @@ macro(add_message_files)
     message(FATAL_ERROR "add_message_files() directory not found: ${MESSAGE_DIR}")
   endif()
 
+  # if FILES are not passed search message files in the given directory
+  list(FIND ARGV "FILES" _index)
+  if(_index EQUAL -1)
+    file(GLOB ARG_FILES RELATIVE "${MESSAGE_DIR}" "${MESSAGE_DIR}/*.msg")
+    list(SORT ARG_FILES)
+  endif()
   _prepend_path(${MESSAGE_DIR} "${ARG_FILES}" FILES_W_PATH)
 
   list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${FILES_W_PATH})
@@ -101,6 +107,12 @@ macro(add_service_files)
     message(FATAL_ERROR "add_service_files() directory not found: ${SERVICE_DIR}")
   endif()
 
+  # if FILES are not passed search service files in the given directory
+  list(FIND ARGV "FILES" _index)
+  if(_index EQUAL -1)
+    file(GLOB ARG_FILES RELATIVE "${SERVICE_DIR}" "${SERVICE_DIR}/*.srv")
+    list(SORT ARG_FILES)
+  endif()
   _prepend_path(${SERVICE_DIR} "${ARG_FILES}" FILES_W_PATH)
 
   list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
