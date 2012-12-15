@@ -105,21 +105,28 @@ for example template files.
 
 If the language requires a common file to exists for all the generated
 source code files (Such as __init__.py for python) it is possible to
-specify a ``module_tempalte_map``.  See
+specify a ``module_template_map``.  See
 https://github.com/ros/genpybindings/blob/master/scripts/module.cpp.template
 for example of this.
 
 
-:ref:`stack.xml <catkin:stack.xml>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+Catkin (fuerte)
+~~~~~~~~~~~~~~~
 Each language is identified by a name which must be specified in the stack.xml file.
-The example entry for the generator for C++ is:
 
-``Catkin-ROS-Message-Generator: cpp``
+In catkin fuerte, message generators declared their contribution in the stack.xml file.
+
+The example entry for the generator for C++ is::
+
+  <message_generator>cpp</message_generator>
 
 The project name for the generator with identifier ``X`` should be ``genX``.
 
+Catkin (groovy)
+~~~~~~~~~~~~~~~
+In catkin groovy, message generators declared their contribution in the package.xml file::
+
+  <message_generator>cpp</message_generator>
 
 Providing cmake code to catkin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
