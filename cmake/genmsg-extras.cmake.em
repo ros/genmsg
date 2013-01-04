@@ -177,19 +177,22 @@ macro(generate_messages)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
-  foreach(dep ${PROJECT_NAME} ${ARG_DEPENDENCIES})
+  # find configuration containing include dirs for projects in all devel- and installspaces
+  set(workspaces ${CATKIN_WORKSPACES})
+  list(FIND workspaces ${CATKIN_DEVEL_PREFIX} _index)
+  if(_index EQUAL -1)
+    list(INSERT workspaces 0 ${CATKIN_DEVEL_PREFIX})
+  endif()
+
+  set(pending_deps ${PROJECT_NAME} ${ARG_DEPENDENCIES})
+  set(handled_deps "")
+  while(pending_deps)
+    list(GET pending_deps 0 dep)
+    list(REMOVE_AT pending_deps 0)
+    list(APPEND handled_deps ${dep})
+
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?))")
-    endif()
-
-    # find configuration containing include dirs for projects in all build- and installspaces
-    set(workspaces "")
-    foreach(workspace ${CATKIN_WORKSPACES})
-      list(APPEND workspaces ${workspace})
-    endforeach()
-    list(FIND workspaces ${CATKIN_DEVEL_PREFIX} _index)
-    if(_index EQUAL -1)
-      list(INSERT workspaces 0 ${CATKIN_DEVEL_PREFIX})
     endif()
 
     unset(config CACHE)
@@ -206,7 +209,18 @@ macro(generate_messages)
       list(APPEND MSG_INCLUDE_DIRS "${dep}")
       list(APPEND MSG_INCLUDE_DIRS "${path}")
     endforeach()
-  endforeach()
+
+    # add transitive msg dependencies
+    if(NOT ${dep} STREQUAL ${PROJECT_NAME})
+      foreach(recdep ${${dep}_MSG_DEPENDENCIES})
+        set(all_deps ${handled_deps} ${pending_deps})
+        list(FIND all_deps ${recdep} _index)
+        if(_index EQUAL -1)
+          list(APPEND pending_deps ${recdep})
+        endif()
+      endforeach()
+    endif()
+  endwhile()
 
   # mark that generate_messages() was called in order to detect wrong order of calling with catkin_python_setup()
   set(${PROJECT_NAME}_GENERATE_MESSAGES TRUE)
