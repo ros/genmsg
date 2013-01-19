@@ -65,7 +65,9 @@ macro(add_message_files)
   endif()
 
   # if FILES are not passed search message files in the given directory
-  list(FIND ARGV "FILES" _index)
+  # note: ARGV is not variable, so it can not be passed to list(FIND) directly
+  set(_argv ${ARGV})
+  list(FIND _argv "FILES" _index)
   if(_index EQUAL -1)
     file(GLOB ARG_FILES RELATIVE "${MESSAGE_DIR}" "${MESSAGE_DIR}/*.msg")
     list(SORT ARG_FILES)
@@ -108,7 +110,9 @@ macro(add_service_files)
   endif()
 
   # if FILES are not passed search service files in the given directory
-  list(FIND ARGV "FILES" _index)
+  # note: ARGV is not variable, so it can not be passed to list(FIND) directly
+  set(_argv ${ARGV})
+  list(FIND _argv "FILES" _index)
   if(_index EQUAL -1)
     file(GLOB ARG_FILES RELATIVE "${SERVICE_DIR}" "${SERVICE_DIR}/*.srv")
     list(SORT ARG_FILES)
