@@ -64,6 +64,10 @@ macro(add_message_files)
     message(FATAL_ERROR "add_message_files() directory not found: ${MESSAGE_DIR}")
   endif()
 
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must be called after add_message_files()")
+  endif()
+
   # if FILES are not passed search message files in the given directory
   # note: ARGV is not variable, so it can not be passed to list(FIND) directly
   set(_argv ${ARGV})
@@ -107,6 +111,10 @@ macro(add_service_files)
 
   if(NOT IS_DIRECTORY ${SERVICE_DIR})
     message(FATAL_ERROR "add_service_files() directory not found: ${SERVICE_DIR}")
+  endif()
+
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must be called after add_service_files()")
   endif()
 
   # if FILES are not passed search service files in the given directory
