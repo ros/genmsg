@@ -1,12 +1,12 @@
 # generated from genmsg/cmake/genmsg-extras.cmake.in
 
+# set destination for langs
+set(GENMSG_LANGS_DESTINATION "etc/ros/genmsg")
+
 if(_GENMSG_EXTRAS_INCLUDED_)
   return()
 endif()
-set(_GENMSG_EXTRAS_INCLUDED_ TRUE)
-
-# set destination for langs
-set(GENMSG_LANGS_DESTINATION "etc/ros/genmsg")
+set(_GENMSG_EXTRAS_INCLUDED_ TRUE PARENT_SCOPE)
 
 include(CMakeParseArguments)
 
