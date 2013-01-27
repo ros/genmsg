@@ -136,6 +136,11 @@ endmacro()
 
 macro(generate_messages)
   cmake_parse_arguments(ARG "" "" "DEPENDENCIES;LANGS" ${ARGN})
+
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must only be called once per project'")
+  endif()
+
   if(ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
