@@ -53,6 +53,8 @@ find_package(@l REQUIRED)
 #better way to handle this?
 set (ALL_GEN_OUTPUT_FILES_cpp "")
 
+add_custom_target(@(pkg_name)_generate_messages ALL)
+
 #
 #  langs = @langs
 #
@@ -86,9 +88,14 @@ _generate_module_@(l[3:])(@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
-add_custom_target(@(pkg_name)_@(l) ALL
+add_custom_target(@(pkg_name)_generate_messages_@(l[3:])
   DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
 )
+add_dependencies(@(pkg_name)_generate_messages @(pkg_name)_generate_messages_@(l[3:]))
+
+# target for backward compatibility
+add_custom_target(@(pkg_name)_@(l))
+add_dependencies(@(pkg_name)_@(l) @(pkg_name)_generate_messages_@(l[3:]))
 
 @[end for]@# langs
 @[end if]@
@@ -121,7 +128,7 @@ if(@(l)_INSTALL_DIR)
   )
 endif()
 @[for d in dependencies]@
-add_dependencies(@(pkg_name)_@(l) @(d)_@(l))
+add_dependencies(@(pkg_name)_generate_messages_@(l[3:]) @(d)_generate_messages_@(l[3:]))
 @[end for]@# dependencies
 @[end for]@# langs
 @[end if]@
