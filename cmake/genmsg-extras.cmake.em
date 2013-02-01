@@ -64,6 +64,10 @@ macro(add_message_files)
     message(FATAL_ERROR "add_message_files() directory not found: ${MESSAGE_DIR}")
   endif()
 
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must be called after add_message_files()")
+  endif()
+
   # if FILES are not passed search message files in the given directory
   # note: ARGV is not variable, so it can not be passed to list(FIND) directly
   set(_argv ${ARGV})
@@ -109,6 +113,10 @@ macro(add_service_files)
     message(FATAL_ERROR "add_service_files() directory not found: ${SERVICE_DIR}")
   endif()
 
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must be called after add_service_files()")
+  endif()
+
   # if FILES are not passed search service files in the given directory
   # note: ARGV is not variable, so it can not be passed to list(FIND) directly
   set(_argv ${ARGV})
@@ -136,6 +144,11 @@ endmacro()
 
 macro(generate_messages)
   cmake_parse_arguments(ARG "" "" "DEPENDENCIES;LANGS" ${ARGN})
+
+  if(${PROJECT_NAME}_GENERATE_MESSAGES)
+    message(FATAL_ERROR "generate_messages() must only be called once per project'")
+  endif()
+
   if(ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "generate_messages() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
