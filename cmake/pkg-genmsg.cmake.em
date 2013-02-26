@@ -50,9 +50,6 @@ find_package(@l REQUIRED)
 @[end for]@
 @[end if]@
 
-#better way to handle this?
-set (ALL_GEN_OUTPUT_FILES_cpp "")
-
 add_custom_target(@(pkg_name)_generate_messages ALL)
 
 #
@@ -96,6 +93,9 @@ add_dependencies(@(pkg_name)_generate_messages @(pkg_name)_generate_messages_@(l
 # target for backward compatibility
 add_custom_target(@(pkg_name)_@(l))
 add_dependencies(@(pkg_name)_@(l) @(pkg_name)_generate_messages_@(l[3:]))
+
+# register target for catkin_package(CODE_GENERATION_TARGETS)
+list(APPEND ${PROJECT_NAME}_CODE_GENERATION_TARGETS @(pkg_name)_generate_messages_@(l[3:]))
 
 @[end for]@# langs
 @[end if]@
