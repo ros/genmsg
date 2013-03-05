@@ -62,7 +62,7 @@ add_custom_target(@(pkg_name)_generate_messages ALL)
 ### Generating Messages
 @[for m in messages]@
 _generate_msg_@(l[3:])(@pkg_name
-  @m
+  "@m"
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
@@ -72,7 +72,7 @@ _generate_msg_@(l[3:])(@pkg_name
 ### Generating Services
 @[for s in services]@
 _generate_srv_@(l[3:])(@pkg_name
-  @s
+  "@s"
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
