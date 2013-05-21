@@ -13,4 +13,4 @@ install(
 
 catkin_python_setup()
 
-catkin_add_nosetests(${PROJECT_SOURCE_DIR})
+catkin_add_nosetests(test)
