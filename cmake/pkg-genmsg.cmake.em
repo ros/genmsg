@@ -32,11 +32,17 @@ dep_search_paths = dep_search_paths_dict
 
 msg_deps = {}
 for m in messages:
-  msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, m, dep_search_paths)
+  try:
+    msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, m, dep_search_paths)
+  except genmsg.MsgNotFound as e:
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e)))
 
 srv_deps = {}
 for s in services:
-  srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, s, dep_search_paths)
+  try:
+    srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, s, dep_search_paths)
+  except genmsg.MsgNotFound as e:
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e)))
 
 }@
 message(STATUS "@(pkg_name): @(len(messages)) messages, @(len(services)) services")
@@ -60,7 +66,7 @@ add_custom_target(@(pkg_name)_generate_messages ALL)
 @[for l in langs.split(';')]@
 ### Section generating for lang: @l
 ### Generating Messages
-@[for m in messages]@
+@[for m in msg_deps.keys()]@
 _generate_msg_@(l[3:])(@pkg_name
   "@m"
   "${MSG_I_FLAGS}"
@@ -70,7 +76,7 @@ _generate_msg_@(l[3:])(@pkg_name
 @[end for]@# messages
 
 ### Generating Services
-@[for s in services]@
+@[for s in srv_deps.keys()]@
 _generate_srv_@(l[3:])(@pkg_name
   "@s"
   "${MSG_I_FLAGS}"
