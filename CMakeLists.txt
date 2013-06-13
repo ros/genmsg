@@ -10,6 +10,7 @@ install(
   cmake/pkg-genmsg.context.in
   cmake/pkg-msg-extras.cmake.in
   cmake/pkg-msg-paths.cmake.in
+  cmake/pkg-msg-extras.cmake.in
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
 catkin_python_setup()
