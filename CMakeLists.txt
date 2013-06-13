@@ -8,6 +8,7 @@ install(
   FILES
   cmake/pkg-genmsg.cmake.em
   cmake/pkg-genmsg.context.in
+  cmake/pkg-msg-extras.cmake.in
   cmake/pkg-msg-paths.cmake.in
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
