@@ -105,6 +105,9 @@ macro(add_message_files)
     list(APPEND ${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE ${ARG_DIRECTORY})
     install(FILES ${FILES_W_PATH}
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
+
+    _prepend_path("${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY}" "${ARG_FILES}" FILES_W_PATH)
+    list(APPEND ${PROJECT_NAME}_INSTALLED_MESSAGE_FILES ${FILES_W_PATH})
   endif()
 endmacro()
 
@@ -150,6 +153,9 @@ macro(add_service_files)
 
     install(FILES ${FILES_W_PATH}
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
+
+    _prepend_path("${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY}" "${ARG_FILES}" FILES_W_PATH)
+    list(APPEND ${PROJECT_NAME}_INSTALLED_SERVICE_FILES ${FILES_W_PATH})
   endif()
 endmacro()
 
@@ -204,6 +210,23 @@ macro(generate_messages)
     @@ONLY)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
+
+  # generate devel space pkg config extra defining variables with all processed message and service files
+  set(PKG_MSG_FILES "${${PROJECT_NAME}_MESSAGE_FILES}")
+  set(PKG_SRV_FILES "${${PROJECT_NAME}_SERVICE_FILES}")
+  configure_file(
+    ${genmsg_CMAKE_DIR}/pkg-msg-extras.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/${PROJECT_NAME}-msg-extras.cmake.develspace.in
+    @@ONLY)
+  # generate install space pkg config extra defining variables with all processed and installed message and service files
+  set(PKG_MSG_FILES "${${PROJECT_NAME}_INSTALLED_MESSAGE_FILES}")
+  set(PKG_SRV_FILES "${${PROJECT_NAME}_INSTALLED_SERVICE_FILES}")
+  configure_file(
+    ${genmsg_CMAKE_DIR}/pkg-msg-extras.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/${PROJECT_NAME}-msg-extras.cmake.installspace.in
+    @@ONLY)
+  # register pkg config files as cmake extra file for the project
+  list(APPEND ${PROJECT_NAME}_CFG_EXTRAS ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/${PROJECT_NAME}-msg-extras.cmake)
 
   # find configuration containing include dirs for projects in all devel- and installspaces
   set(workspaces ${CATKIN_WORKSPACES})
