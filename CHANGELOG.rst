@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.20 (2013-06-18)
+-------------------
+* generate pkg config extra files containing variables which list all message and service files (`#28 <https://github.com/ros/genmsg/issues/28>`_)
+
 0.4.19 (2013-06-06)
 -------------------
 * improve error message for missing message dependencies (`#1 <https://github.com/ros/genmsg/issues/1>`_)
