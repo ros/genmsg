@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.21 (2013-07-03)
+-------------------
+* check for CATKIN_ENABLE_TESTING to enable configure without tests
+
 0.4.20 (2013-06-18)
 -------------------
 * generate pkg config extra files containing variables which list all message and service files (`#28 <https://github.com/ros/genmsg/issues/28>`_)
