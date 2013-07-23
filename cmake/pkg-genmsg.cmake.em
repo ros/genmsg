@@ -30,6 +30,9 @@ for val in dep_search_paths:
         is_even = True
 dep_search_paths = dep_search_paths_dict
 
+if not messages and not services:
+    print('message(WARNING "Invoking generate_messages() without having added any message or service file before.\nYou should either add add_message_files() and/or add_service_files() calls or remove the invocation of generate_messages().")')
+
 msg_deps = {}
 for m in messages:
   try:
