@@ -111,7 +111,7 @@ debug_message(2 "@pkg_name: Iflags=${MSG_I_FLAGS}")
 @[if langs]@
 @[for l in langs.split(';')]@
 
-if(@(l)_INSTALL_DIR)
+if(@(l)_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name)
 @[if l == 'genpy']@
   install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall \"${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
 @[end if]@
