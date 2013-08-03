@@ -106,7 +106,7 @@ macro(add_message_files)
     install(FILES ${FILES_W_PATH}
       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY})
 
-    _prepend_path("${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/${ARG_DIRECTORY}" "${ARG_FILES}" FILES_W_PATH)
+    _prepend_path("${ARG_DIRECTORY}" "${ARG_FILES}" FILES_W_PATH)
     list(APPEND ${PROJECT_NAME}_INSTALLED_MESSAGE_FILES ${FILES_W_PATH})
   endif()
 endmacro()
@@ -196,18 +196,21 @@ macro(generate_messages)
   catkin_destinations()
 
   # generate devel space config of message include dirs for project
+  set(DEVELSPACE TRUE)
+  set(INSTALLSPACE FALSE)
   set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_DEVELSPACE}")
-  configure_file(
-    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
-    ${CATKIN_DEVEL_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake
-    @@ONLY)
+  em_expand(${genmsg_CMAKE_DIR}/pkg-msg-paths.context.in
+    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/${PROJECT_NAME}-msg-paths-context.py
+    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.em
+    ${CATKIN_DEVEL_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake)
   # generate and install config of message include dirs for project
-  _prepend_path(${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME} "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE}" INCLUDE_DIRS_W_PATH UNIQUE)
-  set(PKG_MSG_INCLUDE_DIRS "${INCLUDE_DIRS_W_PATH}")
-  configure_file(
-    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
-    @@ONLY)
+  set(DEVELSPACE FALSE)
+  set(INSTALLSPACE TRUE)
+  set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE}")
+  em_expand(${genmsg_CMAKE_DIR}/pkg-msg-paths.context.in
+    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths-context.py
+    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.em
+    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
@@ -256,6 +259,10 @@ macro(generate_messages)
     include(${config})
     unset(config CACHE)
 
+    # explicitly set message include dirs for current project since information from pkg-msg-paths.cmake is not yet available
+    if(${dep} STREQUAL ${PROJECT_NAME})
+      set(${dep}_MSG_INCLUDE_DIRS ${${PROJECT_NAME}_MSG_INCLUDE_DIRS_DEVELSPACE})
+    endif()
     foreach(path ${${dep}_MSG_INCLUDE_DIRS})
       list(APPEND MSG_INCLUDE_DIRS "${dep}")
       list(APPEND MSG_INCLUDE_DIRS "${path}")
