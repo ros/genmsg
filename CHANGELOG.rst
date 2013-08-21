@@ -2,6 +2,12 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.22 (2013-08-21)
+-------------------
+* make genmsg relocatable (`ros/catkin#490 <https://github.com/ros/catkin/issues/490>`_)
+* add warning in case generate_messages() is invoked without any messages and services (`#31 <https://github.com/ros/genmsg/issues/31>`_)
+* check if files have been generated before trying to install them (`#31 <https://github.com/ros/genmsg/issues/31>`_)
+
 0.4.21 (2013-07-03)
 -------------------
 * check for CATKIN_ENABLE_TESTING to enable configure without tests
