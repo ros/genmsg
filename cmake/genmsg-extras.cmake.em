@@ -249,15 +249,15 @@ macro(generate_messages)
       message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?))")
     endif()
 
-    unset(config CACHE)
+    unset(_dep_msg_paths_file CACHE)
     set(filename "share/${dep}/cmake/${dep}-msg-paths.cmake")
-    find_file(config ${filename} PATHS ${workspaces}
+    find_file(_dep_msg_paths_file ${filename} PATHS ${workspaces}
       NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
-    if("${config}" STREQUAL "config-NOTFOUND")
+    if("${_dep_msg_paths_file}" STREQUAL "_dep_msg_paths_file-NOTFOUND")
       message(FATAL_ERROR "Could not find '${filename}' (searched in '${workspaces}').")
     endif()
-    include(${config})
-    unset(config CACHE)
+    include(${_dep_msg_paths_file})
+    unset(_dep_msg_paths_file CACHE)
 
     # explicitly set message include dirs for current project since information from pkg-msg-paths.cmake is not yet available
     if(${dep} STREQUAL ${PROJECT_NAME})
