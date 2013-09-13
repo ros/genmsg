@@ -282,8 +282,9 @@ macro(generate_messages)
 
   # mark that generate_messages() was called in order to detect wrong order of calling with catkin_python_setup()
   set(${PROJECT_NAME}_GENERATE_MESSAGES TRUE)
-  # check if catkin_python_setup() was called in order to skip installation of generated __init__.py file
-  set(package_has_static_sources ${${PROJECT_NAME}_CATKIN_PYTHON_SETUP})
+  # check if catkin_python_setup() installs an __init__.py file for a package with the current project name
+  # in order to skip the installation of a generated __init__.py file
+  set(package_has_static_sources ${${PROJECT_NAME}_CATKIN_PYTHON_SETUP_HAS_PACKAGE_INIT})
 
   em_expand(${genmsg_CMAKE_DIR}/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
