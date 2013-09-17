@@ -2,6 +2,12 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix installation of __init__.py file for packages where name differs from project name (`#34 <https://github.com/ros/genmsg/issues/34>`_)
+* rename variable 'config' to not collide with global variable (`#33 <https://github.com/ros/genmsg/issues/33>`_)
+* fix service files variable to only contain package relative paths (`#32 <https://github.com/ros/genmsg/issues/32>`_)
+
 0.4.22 (2013-08-21)
 -------------------
 * make genmsg relocatable (`ros/catkin#490 <https://github.com/ros/catkin/issues/490>`_)
