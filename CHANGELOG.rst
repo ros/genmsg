@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.23 (2013-09-17)
+-------------------
 * fix installation of __init__.py file for packages where name differs from project name (`#34 <https://github.com/ros/genmsg/issues/34>`_)
 * rename variable 'config' to not collide with global variable (`#33 <https://github.com/ros/genmsg/issues/33>`_)
 * fix service files variable to only contain package relative paths (`#32 <https://github.com/ros/genmsg/issues/32>`_)
