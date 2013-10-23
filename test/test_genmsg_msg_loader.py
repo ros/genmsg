@@ -158,7 +158,7 @@ def test_load_msg_from_string():
     from genmsg.msg_loader import load_msg_from_string, MsgContext
     context = MsgContext.create_default()
     msgspec = load_msg_from_string(context, "Header header", 'test_pkg/HeaderTest')
-    print msgspec
+    print(msgspec)
     assert msgspec.has_header()
     assert msgspec.types == ['std_msgs/Header']
     assert msgspec.names == ['header']
