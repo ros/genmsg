@@ -34,6 +34,21 @@ endforeach()
 if(CATKIN_MESSAGE_GENERATORS)
   list(SORT CATKIN_MESSAGE_GENERATORS)
 endif()
+
+# disable specific message generators
+string(REPLACE ":" ";" _disabled_message_generators "$ENV{ROS_LANG_DISABLE}")
+# remove unknown generators from disabled list
+foreach(message_generator ${_disabled_message_generators})
+  list(FIND CATKIN_MESSAGE_GENERATORS ${message_generator} _index)
+  if(_index EQUAL -1)
+    list(REMOVE_ITEM _disabled_message_generators ${message_generator})
+    message(WARNING "Unknown message generator specified in ROS_LANG_DISABLE: ${message_generator}")
+  endif()
+endforeach()
+if(_disabled_message_generators)
+  message(STATUS "Disabling the following message generators: ${_disabled_message_generators}")
+  list(REMOVE_ITEM CATKIN_MESSAGE_GENERATORS ${_disabled_message_generators})
+endif()
 debug_message(1 "Using these message generators: ${CATKIN_MESSAGE_GENERATORS}")
 
 macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
