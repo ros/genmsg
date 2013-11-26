@@ -105,7 +105,7 @@ def test_compute_md5_text():
 
     tests = _load_md5_tests('md5text')
     # text file #1 is the reference
-    for k, files in tests.iteritems():
+    for k, files in tests.items():
         print("running tests", k)
         ref_file = [f for f in files if f.endswith('%s1.txt'%k)]
         if not ref_file:
@@ -124,7 +124,7 @@ def test_md5_equals():
 
     search_path = get_search_path()
     tests = _load_md5_tests('same')
-    for k, files in tests.iteritems():
+    for k, files in tests.items():
         print("running tests", k)
         md5sum = _compute_md5(msg_context, files[0])
         for f in files[1:]:
@@ -135,7 +135,7 @@ def test_md5_not_equals():
     msg_context = MsgContext.create_default()
 
     tests = _load_md5_tests('different')
-    for k, files in tests.iteritems():
+    for k, files in tests.items():
         print("running tests", k)
         md5s = set()
         md6md5sum = _compute_md5(msg_context, files[0])
