@@ -87,8 +87,7 @@ def compute_md5_text(msg_context, spec):
             sub_md5 = compute_md5(msg_context, sub_spec)
             buff.write("%s %s\n"%(sub_md5, name))
     
-    value = buff.getvalue().strip() # remove trailing new line
-    return value.encode()
+    return buff.getvalue().strip() # remove trailing new line
 
 def _compute_hash(msg_context, spec, hash):
     """
@@ -101,10 +100,10 @@ def _compute_hash(msg_context, spec, hash):
     # accumulate the hash
     # - root file
     if isinstance(spec, MsgSpec):
-        hash.update(compute_md5_text(msg_context, spec))
+        hash.update(compute_md5_text(msg_context, spec).encode())
     elif isinstance(spec, SrvSpec):
-        hash.update(compute_md5_text(msg_context, spec.request))
-        hash.update(compute_md5_text(msg_context, spec.response))        
+        hash.update(compute_md5_text(msg_context, spec.request).encode())
+        hash.update(compute_md5_text(msg_context, spec.response).encode())
     else:
         raise Exception("[%s] is not a message or service"%spec)   
     return hash.hexdigest()
