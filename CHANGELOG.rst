@@ -2,6 +2,12 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* python 3 compatibility (`#36 <https://github.com/ros/genmsg/issues/36>`_, `#37 <https://github.com/ros/genmsg/issues/37>`_)
+* add support for ROS_LANG_DISABLE env variable (`ros/ros#39 <https://github.com/ros/ros/issues/39>`_)
+* fix installation of __init__.py from devel space (`#38 <https://github.com/ros/genmsg/issues/38>`_)
+
 0.4.23 (2013-09-17)
 -------------------
 * fix installation of __init__.py file for packages where name differs from project name (`#34 <https://github.com/ros/genmsg/issues/34>`_)
