@@ -94,6 +94,10 @@ _generate_module_@(l[3:])(@pkg_name
   "${ALL_GEN_OUTPUT_FILES_@(l[3:])}"
 )
 
+if(TARGET @(pkg_name)_generate_messages_@(l[3:]))
+  message( FATAL_ERROR "You are trying to overlay '@(pkg_name)' which was already (transitively) included by another module in the workspace. To successfully overlay a module you have to overlay all required dependent modules as well.")
+endif()
+
 add_custom_target(@(pkg_name)_generate_messages_@(l[3:])
   DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
 )
