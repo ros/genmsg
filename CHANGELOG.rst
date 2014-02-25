@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.25 (2014-02-25)
+-------------------
 * remove usage of debug_message() (`#40 <https://github.com/ros/genmsg/issues/40>`_)
 * revert "python 3 compatibility" (introduced in 0.4.24)
 
