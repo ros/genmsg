@@ -137,7 +137,7 @@ def test_MsgSpec():
         assert m.text == text
         assert has_header == m.has_header()
         assert m.constants == constants
-        assert list(zip(types, names)) == m.fields()
+        assert zip(types, names) == m.fields()
         assert m == MsgSpec(types, names, constants, text, full_name)
         return m
     
