@@ -109,8 +109,6 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS @(pkg_name)_generate_messages_@(l[3
 @[end for]@# langs
 @[end if]@
 
-debug_message(2 "@pkg_name: Iflags=${MSG_I_FLAGS}")
-
 @[if langs]@
 @[for l in langs.split(';')]@
 

@@ -21,8 +21,6 @@ endforeach()
 if(message_generators)
   list(SORT message_generators)
 endif()
-debug_message(2 "Found these message generators in this workspace: ${CATKIN_MESSAGE_GENERATORS}")
-debug_message(2 "Found these message generators in other workspaces: ${message_generators}")
 
 foreach(message_generator ${message_generators})
   find_package(${message_generator} REQUIRED)
@@ -49,7 +47,7 @@ if(_disabled_message_generators)
   message(STATUS "Disabling the following message generators: ${_disabled_message_generators}")
   list(REMOVE_ITEM CATKIN_MESSAGE_GENERATORS ${_disabled_message_generators})
 endif()
-debug_message(1 "Using these message generators: ${CATKIN_MESSAGE_GENERATORS}")
+message(STATUS "Using these message generators: ${CATKIN_MESSAGE_GENERATORS}")
 
 macro(_prepend_path ARG_PATH ARG_FILES ARG_OUTPUT_VAR)
   cmake_parse_arguments(ARG "UNIQUE" "" "" ${ARGN})
@@ -103,7 +101,6 @@ macro(add_message_files)
 
   list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${FILES_W_PATH})
   foreach(file ${FILES_W_PATH})
-    debug_message(2 "add_message_files() msg file: ${file}")
     assert_file_exists(${file} "message file not found")
   endforeach()
 
@@ -158,7 +155,6 @@ macro(add_service_files)
 
   list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
   foreach(file ${FILES_W_PATH})
-    debug_message(2 "add_service_files() srv file: ${file}")
     assert_file_exists(${file} "service file not found")
   endforeach()
 
