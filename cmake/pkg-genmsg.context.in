@@ -8,3 +8,4 @@ langs = "@GEN_LANGS@"
 dep_include_paths_str = "@MSG_INCLUDE_DIRS@"
 PYTHON_EXECUTABLE = "@PYTHON_EXECUTABLE@"
 package_has_static_sources = '@package_has_static_sources@' == 'TRUE'
+genmsg_check_deps_script = "@GENMSG_CHECK_DEPS_SCRIPT@"

@@ -34,16 +34,22 @@ if not messages and not services:
     print('message(WARNING "Invoking generate_messages() without having added any message or service file before.\nYou should either add add_message_files() and/or add_service_files() calls or remove the invocation of generate_messages().")')
 
 msg_deps = {}
+msg_dep_types = {}
 for m in messages:
   try:
-    msg_deps[m] = genmsg.deps.find_msg_dependencies(pkg_name, m, dep_search_paths)
+    _deps = genmsg.deps.find_msg_dependencies_with_type(pkg_name, m, dep_search_paths)
+    msg_deps[m] = [d[1] for d in _deps]
+    msg_dep_types[m] = [d[0] for d in _deps]
   except genmsg.MsgNotFound as e:
     print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e)))
 
 srv_deps = {}
+srv_dep_types = {}
 for s in services:
   try:
-    srv_deps[s] = genmsg.deps.find_srv_dependencies(pkg_name, s, dep_search_paths)
+    _deps = genmsg.deps.find_srv_dependencies_with_type(pkg_name, s, dep_search_paths)
+    srv_deps[s] = [d[1] for d in _deps]
+    srv_dep_types[s] = [d[0] for d in _deps]
   except genmsg.MsgNotFound as e:
     print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e)))
 
@@ -60,6 +66,18 @@ find_package(@l REQUIRED)
 @[end if]@
 
 add_custom_target(@(pkg_name)_generate_messages ALL)
+
+# verify that message/service dependencies have not changed since configure
+@{all_deps = dict(msg_deps.items() + srv_deps.items())}
+@{all_dep_types = dict(msg_dep_types.items() + srv_dep_types.items())}
+@[for f in all_deps.keys()]@
+@{dep_types = ':'.join(all_dep_types[f]).replace('\\','/')}
+message("F @(f) deps @(dep_types)")
+get_filename_component(_filename "@(f)" NAME_WE)
+add_custom_target(_@(pkg_name)_generate_messages_check_deps_${_filename}
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "@(pkg_name)" "@(f)" "@(dep_types)"
+)
+@[end for]@# messages and services
 
 #
 #  langs = @langs
@@ -98,6 +116,12 @@ add_custom_target(@(pkg_name)_generate_messages_@(l[3:])
   DEPENDS ${ALL_GEN_OUTPUT_FILES_@(l[3:])}
 )
 add_dependencies(@(pkg_name)_generate_messages @(pkg_name)_generate_messages_@(l[3:]))
+
+# add dependencies to all check dependencies targets
+@[for f in all_deps.keys()]@
+get_filename_component(_filename "@(f)" NAME_WE)
+add_dependencies(@(pkg_name)_generate_messages_@(l[3:]) _@(pkg_name)_generate_messages_check_deps_${_filename})
+@[end for]@# messages and services
 
 # target for backward compatibility
 add_custom_target(@(pkg_name)_@(l))

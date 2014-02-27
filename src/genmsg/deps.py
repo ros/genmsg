@@ -37,10 +37,10 @@ import genmsg
 # pkg_name - string
 # msg_file - string full path
 # search_paths -  dict of {'pkg':'msg_dir'}
-def find_msg_dependencies(pkg_name, msg_file, search_paths):
+def find_msg_dependencies_with_type(pkg_name, msg_file, search_paths):
 
-    # Read and parse the source msg file                                                                                                     
-    msg_context = genmsg.msg_loader.MsgContext.create_default() # not used?                                                                  
+    # Read and parse the source msg file
+    msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(pkg_name, os.path.basename(msg_file))
     spec = genmsg.msg_loader.load_msg_from_file(msg_context, msg_file, full_type_name)
 
@@ -51,15 +51,20 @@ def find_msg_dependencies(pkg_name, msg_file, search_paths):
 
     deps = set()
     for dep_type_name in msg_context.get_all_depends(full_type_name):
-        deps.add( msg_context.get_file(dep_type_name) )
+        deps.add((dep_type_name, msg_context.get_file(dep_type_name)))
 
     return list(deps)
 
 
-def find_srv_dependencies(pkg_name, msg_file, search_paths):
+def find_msg_dependencies(pkg_name, msg_file, search_paths):
+    deps = find_msg_dependencies_with_type(pkg_name, msg_file, search_paths)
+    return [d[1] for d in deps]
 
-    # Read and parse the source msg file                                                                                        
-    msg_context = genmsg.msg_loader.MsgContext.create_default() # not used?                                                      
+
+def find_srv_dependencies_with_type(pkg_name, msg_file, search_paths):
+
+    # Read and parse the source msg file
+    msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(pkg_name, os.path.basename(msg_file))
 
     spec = genmsg.msg_loader.load_srv_from_file(msg_context, msg_file, full_type_name)
@@ -72,12 +77,17 @@ def find_srv_dependencies(pkg_name, msg_file, search_paths):
     deps = set()
 
     for dep_type_name in msg_context.get_all_depends(spec.request.full_name):
-        deps.add( msg_context.get_file(dep_type_name) )
+        deps.add((dep_type_name, msg_context.get_file(dep_type_name)))
 
     for dep_type_name in msg_context.get_all_depends(spec.response.full_name):
-        deps.add( msg_context.get_file(dep_type_name) )
+        deps.add((dep_type_name, msg_context.get_file(dep_type_name)))
 
     return list(deps)
+
+
+def find_srv_dependencies(pkg_name, msg_file, search_paths):
+    deps = find_srv_dependencies_with_type(pkg_name, msg_file, search_paths)
+    return [d[1] for d in deps]
 
 #paths = {'std_msgs':'/u/mkjargaard/repositories/mkjargaard/dist-sandbox/std_msgs/msg'}
 #file = '/u/mkjargaard/repositories/mkjargaard/dist-sandbox/quux_msgs/msg/QuuxString.msg'
