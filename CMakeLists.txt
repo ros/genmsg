@@ -15,6 +15,10 @@ install(
 
 catkin_python_setup()
 
+install(
+  PROGRAMS scripts/genmsg_check_deps.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 if(CATKIN_ENABLE_TESTING)
   catkin_add_nosetests(test)
 endif()
