@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.1 (2014-03-04)
+------------------
 * add check for changed message dependencies (`#41 <https://github.com/ros/genmsg/issues/41>`_)
 
 0.5.0 (2014-02-25)
