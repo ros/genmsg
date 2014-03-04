@@ -2,9 +2,13 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add check for changed message dependencies (`#41 <https://github.com/ros/genmsg/issues/41>`_)
+
 0.5.0 (2014-02-25)
 ------------------
-* remove usage of debug_message() (fix `#40 <https://github.com/ros/genmsg/issues/40>`_)
+* remove usage of debug_message() (`#40 <https://github.com/ros/genmsg/issues/40>`_)
 
 0.4.24 (2014-01-07)
 -------------------
