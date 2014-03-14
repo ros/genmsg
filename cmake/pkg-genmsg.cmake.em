@@ -72,7 +72,6 @@ add_custom_target(@(pkg_name)_generate_messages ALL)
 @{all_dep_types = dict(msg_dep_types.items() + srv_dep_types.items())}
 @[for f in all_deps.keys()]@
 @{dep_types = ':'.join(all_dep_types[f]).replace('\\','/')}
-message("F @(f) deps @(dep_types)")
 get_filename_component(_filename "@(f)" NAME_WE)
 add_custom_target(_@(pkg_name)_generate_messages_check_deps_${_filename}
   COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "@(pkg_name)" "@(f)" "@(dep_types)"
