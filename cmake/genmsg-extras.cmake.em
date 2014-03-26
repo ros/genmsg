@@ -8,14 +8,6 @@ set(_GENMSG_EXTRAS_INCLUDED_ TRUE)
 # set destination for langs
 set(GENMSG_LANGS_DESTINATION "etc/ros/genmsg")
 
-@[if DEVELSPACE]@
-# bin dir variables in develspace
-set(GENMSG_CHECK_DEPS_SCRIPT "@(CMAKE_CURRENT_SOURCE_DIR)/scripts/genmsg_check_deps.py")
-@[else]@
-# bin dir variables in installspace
-set(GENMSG_CHECK_DEPS_SCRIPT "${genmsg_DIR}/../../../@(CATKIN_PACKAGE_BIN_DESTINATION)/genmsg_check_deps.py")
-@[end if]@
-
 include(CMakeParseArguments)
 
 # find message generators in all workspaces
@@ -178,6 +170,330 @@ macro(add_service_files)
   endif()
 endmacro()
 
+
+function(get_all_msg_file_deps ros_pkg msg_file)
+  # function to parse the message file and determine the
+  # list of message files that it depends on (recursively)
+  #
+  # ros_pkg - the ROS package name containing the message
+  # msg_file - the full path to the message file (.msg, .srv, etc)
+  #
+  # The function will set the variable:
+  #   ${msg_file}_MSG_FILE_DEPS - a list of message files that
+  #                               ${msg_file} depends on
+  #
+
+  # list of built in ROS message types
+  set(BUILT_IN_MSG_TYPES
+    bool
+    int8
+    uint8
+    int16
+    uint16
+    int32
+    uint32
+    int64
+    uint64
+    float32
+    float64
+    string
+    time
+    duration
+  )
+
+  # initialize the return variables
+  set(${msg_file}_MSG_FILE_DEPS PARENT_SCOPE)
+
+  # read message contents and split by line
+  file(READ ${msg_file} contents)
+  string(REGEX REPLACE ";" "\\\\;" contents "${contents}")
+  string(REGEX REPLACE "\n" ";" contents "${contents}")
+
+  foreach(line ${contents})
+
+    # if the line is a comment or blank skip it
+    string(STRIP "${line}" line_strip)
+    if(NOT line_strip STREQUAL ""
+       AND NOT line_strip STREQUAL "---"
+       AND NOT line_strip MATCHES "^#")
+
+      # convert the line to a cmake array (split by white space)
+      string(REGEX REPLACE " +" ";" line_strip "${line_strip}")
+
+      # the first element of the array is the message type
+      list(GET line_strip 0 msg_field_type)
+      # remove and array notation, it is irrelevant
+      string(REPLACE "[]" "" msg_field_type "${msg_field_type}")
+
+      # if the type is a built in type skip it
+      list(FIND BUILT_IN_MSG_TYPES ${msg_field_type} is_built_in)
+      if(is_built_in STREQUAL "-1")
+        # the message is not built in
+
+        # Header is a special case and can be listed without the package
+        if(${msg_field_type} STREQUAL "Header"
+            OR ${msg_field_type} STREQUAL "std_msgs/Header")
+          set(msg_field_pkg_name "std_msgs")
+          set(msg_field_short_name "Header")
+        else()
+          # extract the ROS package and message type from the full type name
+          string(FIND ${msg_field_type} "/" slash_index)
+          if(slash_index STREQUAL "-1")
+            # no slash, it is a message in this package
+            set(msg_field_pkg_name ${ros_pkg})
+            set(msg_field_short_name ${msg_type})
+          else()
+            math(EXPR index_after_slash "${slash_index} + 1")
+            string(SUBSTRING ${msg_field_type} 0 ${slash_index} msg_field_pkg_name)
+            string(SUBSTRING ${msg_field_type} ${index_after_slash} -1 msg_field_short_name)
+          endif()
+
+        endif()
+
+        # check to verify the message file exists and get the list of its dependencies
+        set(${msg_field_short_name}_MSG_FILE_FOUND FALSE)
+        foreach(inc_dir ${${msg_field_pkg_name}_MSG_INCLUDE_DIRS})
+          set(msg_field_file "${inc_dir}/${msg_field_short_name}.msg")
+
+          if(EXISTS ${msg_field_file})
+
+            set(${msg_field_short_name}_MSG_FILE_FOUND TRUE)
+
+            list(APPEND ${msg_file}_MSG_FILE_DEPS "${msg_field_file}")
+
+            get_all_msg_file_deps(${msg_field_pkg_name} ${msg_field_file})
+
+            if(NOT "${${msg_field_file}_MSG_FILE_DEPS}" STREQUAL "")
+              list(APPEND ${msg_file}_MSG_FILE_DEPS "${${msg_field_file}_MSG_FILE_DEPS}")
+            endif()
+            set(${msg_file}_MSG_FILE_DEPS "${${msg_file}_MSG_FILE_DEPS}" PARENT_SCOPE)
+
+          endif()
+        endforeach()
+
+        if(${msg_field_short_name}_MSG_FILE_FOUND EQUAL FALSE)
+          message(FATAL_ERROR "Unable to find dependant message file ${msg_type}:"
+                              "searched in ${${msg_field_pkg_name}_MSG_INCLUDE_DIRS}")
+        endif()
+
+      endif()
+    endif()
+  endforeach()
+endfunction()
+
+
+macro(configure_pkg_genmsg context_in file_out)
+  set(messages_str ${ARG_MESSAGES})
+  set(services_str ${ARG_SERVICES})
+  set(pkg_name ${PROJECT_NAME})
+  set(dependencies_str ${ARG_DEPENDENCIES})
+  set(langs ${GEN_LANGS})
+  set(dep_include_paths_str ${MSG_INCLUDE_DIRS})
+  set(package_has_static_sources ${package_has_static_sources})
+
+  # total number of message and service files
+  list(LENGTH messages_str n_messages)
+  list(LENGTH services_str n_services)
+
+  # create msg include flags variable
+  set(MSG_I_FLAGS)
+  foreach(dep ${${pkg_name}_ALL_MSG_DEPENDENCIES})
+    foreach(msgdir ${${dep}_MSG_INCLUDE_DIRS})
+      list(APPEND MSG_I_FLAGS "-I${dep}:${msgdir}")
+    endforeach()
+  endforeach()
+
+  # determine message dependencies
+  foreach(m ${messages_str})
+    get_all_msg_file_deps(${pkg_name} ${m})
+  endforeach()
+  foreach(m ${services_str})
+    get_all_msg_file_deps(${pkg_name} ${m})
+  endforeach()
+
+  # start generating pkg-genmsg cmake file
+  file(WRITE ${file_out}
+    "# generated from genmsg/cmake/genmsg-extras.cmake\n"
+    "\n"
+    "message(STATUS \"${pkg_name}: ${n_messages} messages, ${n_services} services\")\n"
+    "\n"
+    "set(MSG_I_FLAGS \"${MSG_I_FLAGS}\")\n"
+    "\n"
+    "# Find all generators\n"
+  )
+  foreach(l ${langs})
+    file(APPEND ${file_out}
+      "find_package(${l} REQUIRED)\n"
+    )
+  endforeach()
+
+  # add target for whole package generate messages
+  file(APPEND ${file_out}
+    "\n"
+    "add_custom_target(${pkg_name}_generate_messages ALL)\n"
+    "\n"
+    "#\n"
+    "#  langs = ${langs}\n"
+    "#\n"
+    "\n"
+  )
+
+  # write language specific generate message commands
+  foreach(l ${langs})
+    # get the short version of the lang (- gen)
+    string(SUBSTRING ${l} 3 -1 l_short)
+
+    file(APPEND ${file_out}
+      "### Section generating for lang: ${l}\n"
+      "### Generating Messages\n"
+    )
+
+    # message generation macro
+    foreach(m ${messages_str})
+      file(APPEND ${file_out}
+        "_generate_msg_${l_short}(${pkg_name}\n"
+        "  \"${m}\"\n"
+        "  \"\${MSG_I_FLAGS}\"\n"
+        "  \"${${m}_MSG_FILE_DEPS}\"\n"
+        "  \${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name}\n"
+        ")\n"
+        "\n"
+      )
+
+      # add configure file for each message to re-trigger cmake configuration
+      #   after any message file changes (see bug #41)
+      get_filename_component(m_filename ${m} NAME)
+      file(APPEND ${file_out}
+        "configure_file(${m} \${CMAKE_CURRENT_BINARY_DIR}/${m_filename}.reconf)\n\n"
+      )
+    endforeach()
+
+    file(APPEND ${file_out}
+      "### Generating Services\n"
+    )
+
+    # service generation macro
+    foreach(m ${services_str})
+      file(APPEND ${file_out}
+        "_generate_srv_${l_short}(${pkg_name}\n"
+        "  \"${m}\"\n"
+        "  \"\${MSG_I_FLAGS}\"\n"
+        "  \"${${m}_MSG_FILE_DEPS}\"\n"
+        "  ${CATKIN_DEVEL_PREFIX}/${${l}_INSTALL_DIR}/${pkg_name}\n"
+        ")\n"
+        "\n"
+      )
+
+      # add configure file for each message to re-trigger cmake configuration
+      #   after any message file changes (see bug #41)
+      get_filename_component(m_filename ${m} NAME)
+      file(APPEND ${file_out}
+        "configure_file(${m} \${CMAKE_CURRENT_BINARY_DIR}/${m_filename}.reconf)\n\n"
+      )
+    endforeach()
+
+    # genrate module file
+    file(APPEND ${file_out}
+      "### Generating Module File\n"
+      "_generate_module_${l_short}(${pkg_name}\n"
+      "  \${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name}\n"
+      "  \"\${ALL_GEN_OUTPUT_FILES_${l_short}}\"\n"
+      ")\n"
+      "\n"
+      "add_custom_target(${pkg_name}_generate_messages_${l_short}\n"
+      "  DEPENDS \${ALL_GEN_OUTPUT_FILES_${l_short}}\n"
+      ")\n"
+      "add_dependencies(${pkg_name}_generate_messages ${pkg_name}_generate_messages_${l_short})\n"
+      "\n"
+      "# target for backward compatibility\n"
+      "add_custom_target(${pkg_name}_${l})\n"
+      "add_dependencies(${pkg_name}_${l} ${pkg_name}_generate_messages_${l_short})\n"
+      "\n"
+      "# register target for catkin_package(EXPORTED_TARGETS)\n"
+      "list(APPEND \${PROJECT_NAME}_EXPORTED_TARGETS ${pkg_name}_generate_messages_${l_short})\n"
+      "\n"
+    )
+
+  endforeach()
+
+  file(APPEND ${file_out}
+    "\n"
+    "debug_message(2 \"${pkg_name}: Iflags=\${MSG_I_FLAGS}\")\n"
+    "\n"
+    "\n"
+  )
+
+  # write language specific install rules
+  foreach(l ${langs})
+    # get the short version of the lang (- gen)
+    string(SUBSTRING ${l} 3 -1 l_short)
+
+    file(APPEND ${file_out}
+      "if(${l}_INSTALL_DIR AND EXISTS \${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name})\n"
+    )
+
+    if("${l}" STREQUAL "genpy")
+      file(APPEND ${file_out}
+        "  install(CODE \"execute_process(COMMAND \\\"${PYTHON_EXECUTABLE}\\\" -m compileall \\\"\${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name}\\\")\")\n"
+      )
+    endif()
+
+    file(APPEND ${file_out}
+      "  # install generated code\n"
+      "  install(\n"
+      "    DIRECTORY \${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name}\n"
+      "    DESTINATION \${${l}_INSTALL_DIR}\n"
+    )
+    if("${l}" STREQUAL "genpy" AND "${package_has_static_sources}" STREQUAL "TRUE")
+      file(APPEND ${file_out}
+        "    PATTERN \"__init__.py\" EXCLUDE\n"
+        "    PATTERN \"__init__.pyc\" EXCLUDE\n"
+        "  )\n"
+        "  install(\n"
+        "    DIRECTORY \${CATKIN_DEVEL_PREFIX}/\${${l}_INSTALL_DIR}/${pkg_name}\n"
+        "    DESTINATION \${${l}_INSTALL_DIR}\n"
+        "    FILES_MATCHING\n"
+        "    REGEX \"/${pkg_name}/.+/__init__.pyc?\$\"\n"
+      )
+    endif()
+    file(APPEND ${file_out}
+      "  )\n"
+    )
+
+    file(APPEND ${file_out}
+      "endif()\n"
+    )
+
+    foreach(d ${dependencies_str})
+      file(APPEND ${file_out}
+        "add_dependencies(${pkg_name}_generate_messages_${l_short} ${d}_generate_messages_${l_short})\n"
+      )
+    endforeach()
+
+    file(APPEND ${file_out}
+      "\n"
+    )
+
+  endforeach()
+
+endmacro()
+
+macro(configure_msg_include_dirs file_out)
+  get_filename_component(file_out_dir ${file_out} PATH)
+  make_directory(${file_out_dir})
+  if(DEVELSPACE)
+    file(WRITE ${file_out}
+      "set(${PROJECT_NAME}_MSG_INCLUDE_DIRS ${PKG_MSG_INCLUDE_DIRS})\n"
+      "set(${PROJECT_NAME}_MSG_DEPENDENCIES ${ARG_DEPENDENCIES})\n"
+    )
+  else()
+    file(WRITE ${file_out}
+      "_prepend_path(\"\${${PROJECT_NAME}_DIR}/..\" \"${PKG_MSG_INCLUDE_DIRS}\" ${PROJECT_NAME}_MSG_INCLUDE_DIRS UNIQUE)\n"
+      "set(${PROJECT_NAME}_MSG_DEPENDENCIES ${ARG_DEPENDENCIES})\n"
+    )
+  endif()
+endmacro()
+
 macro(generate_messages)
   cmake_parse_arguments(ARG "" "" "DEPENDENCIES;LANGS" ${ARGN})
 
@@ -218,18 +534,12 @@ macro(generate_messages)
   set(DEVELSPACE TRUE)
   set(INSTALLSPACE FALSE)
   set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_DEVELSPACE}")
-  em_expand(${genmsg_CMAKE_DIR}/pkg-msg-paths.context.in
-    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/${PROJECT_NAME}-msg-paths-context.py
-    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.em
-    ${CATKIN_DEVEL_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake)
+  configure_msg_include_dirs(${CATKIN_DEVEL_PREFIX}/share/${PROJECT_NAME}/cmake/${PROJECT_NAME}-msg-paths.cmake)
   # generate and install config of message include dirs for project
   set(DEVELSPACE FALSE)
   set(INSTALLSPACE TRUE)
   set(PKG_MSG_INCLUDE_DIRS "${${PROJECT_NAME}_MSG_INCLUDE_DIRS_INSTALLSPACE}")
-  em_expand(${genmsg_CMAKE_DIR}/pkg-msg-paths.context.in
-    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths-context.py
-    ${genmsg_CMAKE_DIR}/pkg-msg-paths.cmake.em
-    ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake)
+  configure_msg_include_dirs(${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/installspace/${PROJECT_NAME}-msg-paths.cmake
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake)
 
@@ -259,6 +569,7 @@ macro(generate_messages)
 
   set(pending_deps ${PROJECT_NAME} ${ARG_DEPENDENCIES})
   set(handled_deps "")
+  set(${PROJECT_NAME}_ALL_MSG_DEPENDENCIES ${pending_deps})
   while(pending_deps)
     list(GET pending_deps 0 dep)
     list(REMOVE_AT pending_deps 0)
@@ -294,6 +605,7 @@ macro(generate_messages)
         list(FIND all_deps ${recdep} _index)
         if(_index EQUAL -1)
           list(APPEND pending_deps ${recdep})
+          list(APPEND ${PROJECT_NAME}_ALL_MSG_DEPENDENCIES ${recdep})
         endif()
       endforeach()
     endif()
@@ -305,9 +617,7 @@ macro(generate_messages)
   # in order to skip the installation of a generated __init__.py file
   set(package_has_static_sources ${${PROJECT_NAME}_CATKIN_PYTHON_SETUP_HAS_PACKAGE_INIT})
 
-  em_expand(${genmsg_CMAKE_DIR}/pkg-genmsg.context.in
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg-context.py
-    ${genmsg_CMAKE_DIR}/pkg-genmsg.cmake.em
+  configure_pkg_genmsg(${genmsg_CMAKE_DIR}/pkg-genmsg.context.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
   include(${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-genmsg.cmake)
 endmacro()
