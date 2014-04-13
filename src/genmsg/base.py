@@ -52,20 +52,20 @@ verbose = False
 import inspect, pprint
 
 def log_verbose(value):
-    global verbose
     verbose = value
 
 def log(*args):
-    global verbose
-    if verbose:
-        print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
-        print(' '.join([str(x) for x in args]), file=sys.stderr)
+    if not verbose:
+	    return
+    print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
+    print(' '.join([str(x) for x in args]), file=sys.stderr)
 
 def plog(msg, obj):
-    if verbose:
-        print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
-        print(msg, " ", file=sys.stderr)
-        pprint.pprint(obj, file=sys.stderr)
+    if not verbose:
+	    return
+    print("%s:%d" % inspect.stack()[1][1:3], file=sys.stderr)
+    print(msg, " ", file=sys.stderr)
+    pprint.pprint(obj, file=sys.stderr)
 
 class InvalidMsgSpec(Exception):
     pass
