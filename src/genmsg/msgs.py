@@ -124,22 +124,26 @@ def is_valid_msg_type(x):
         return False
     #parse array indicies
     x = x[len(base):]
-    state = 0
-    i = 0
+
+    class msgState: #local enum to reduce magic values
+	    BALENCED = 0
+	    OPEN = 1
+	
+    state = msgState.BALENCED
     for c in x:
-        if state == 0:
+        if state == msgState.BALENCED:
             if c != '[':
                 return False
-            state = 1 #open
-        elif state == 1:
+            state = msgState.OPEN 
+        elif state == msgState.OPEN:
             if c == ']':
-                state = 0 #closed
+                state = msgState.BALENCED #closed
             else:
                 try:
                     int(c)
                 except:
                     return False
-    return state == 0
+    return state == msgState.BALENCED
 
 def is_valid_constant_type(x):
     """
