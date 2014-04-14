@@ -68,8 +68,8 @@ find_package(@l REQUIRED)
 add_custom_target(@(pkg_name)_generate_messages ALL)
 
 # verify that message/service dependencies have not changed since configure
-@{all_deps = dict(msg_deps.items() + srv_deps.items())}
-@{all_dep_types = dict(msg_dep_types.items() + srv_dep_types.items())}
+@{all_deps = dict(list(msg_deps.items()) + list(srv_deps.items()))}
+@{all_dep_types = dict(list(msg_dep_types.items()) + list(srv_dep_types.items()))}
 @[for f in all_deps.keys()]@
 @{dep_types = ':'.join(all_dep_types[f]).replace('\\','/')}
 get_filename_component(_filename "@(f)" NAME_WE)
