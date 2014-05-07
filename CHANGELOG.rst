@@ -2,6 +2,12 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* refactor to generate pkg-msg-paths.cmake via configure_file() instead of empy (`#43 <https://github.com/ros/genmsg/issues/43>`_)
+* fix python 3 compatibility (`#45 <https://github.com/ros/genmsg/issues/45>`_)
+* remove debug message introduced in 0.5.1 (`#42 <https://github.com/ros/genmsg/issues/42>`_)
+
 0.5.1 (2014-03-04)
 ------------------
 * add check for changed message dependencies (`#41 <https://github.com/ros/genmsg/issues/41>`_)
