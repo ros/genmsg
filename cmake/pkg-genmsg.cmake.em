@@ -41,7 +41,7 @@ for m in messages:
     msg_deps[m] = [d[1] for d in _deps]
     msg_dep_types[m] = [d[0] for d in _deps]
   except genmsg.MsgNotFound as e:
-    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e)))
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e).replace('"', '\\"')))
 
 srv_deps = {}
 srv_dep_types = {}
@@ -51,7 +51,7 @@ for s in services:
     srv_deps[s] = [d[1] for d in _deps]
     srv_dep_types[s] = [d[0] for d in _deps]
   except genmsg.MsgNotFound as e:
-    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e)))
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e).replace('"', '\\"')))
 
 }@
 message(STATUS "@(pkg_name): @(len(messages)) messages, @(len(services)) services")
