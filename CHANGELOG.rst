@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* escape messages to avoid CMake warning (`#49 <https://github.com/ros/genmsg/issues/49>`_)
+
 0.5.2 (2014-05-07)
 ------------------
 * refactor to generate pkg-msg-paths.cmake via configure_file() instead of empy (`#43 <https://github.com/ros/genmsg/issues/43>`_)
