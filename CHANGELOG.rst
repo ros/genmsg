@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.3 (2014-07-10)
+------------------
 * escape messages to avoid CMake warning (`#49 <https://github.com/ros/genmsg/issues/49>`_)
 
 0.5.2 (2014-05-07)
