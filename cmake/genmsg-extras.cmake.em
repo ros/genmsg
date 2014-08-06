@@ -83,7 +83,12 @@ macro(add_message_files)
     set(ARG_DIRECTORY "msg")
   endif()
 
-  set(MESSAGE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  if(IS_ABSOLUTE ${ARG_DIRECTORY})
+    set(MESSAGE_DIR ${ARG_DIRECTORY})
+  else()
+    # Prepend CMAKE_CURRENT_SOURCE_DIR if path is not absolute
+    set(MESSAGE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  endif()
   # override message directory (used by add_action_files())
   if(ARG_BASE_DIR)
     set(MESSAGE_DIR ${ARG_BASE_DIR})
@@ -132,7 +137,7 @@ macro(add_message_files)
 endmacro()
 
 macro(add_service_files)
-  cmake_parse_arguments(ARG "NOINSTALL" "DIRECTORY;BASE_DIR" "FILES" ${ARGN})
+  cmake_parse_arguments(ARG "NOINSTALL" "DIRECTORY" "FILES" ${ARGN})
   if(ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "add_service_files() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
@@ -141,11 +146,11 @@ macro(add_service_files)
     set(ARG_DIRECTORY "srv")
   endif()
 
-  set(SERVICE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
-
-  # override service directory
-  if(ARG_BASE_DIR)
-    set(SERVICE_DIR ${ARG_BASE_DIR})
+  if(IS_ABSOLUTE ${ARG_DIRECTORY})
+    set(SERVICE_DIR ${ARG_DIRECTORY})
+  else()
+    # Prepend CMAKE_CURRENT_SOURCE_DIR if path is not absolute
+    set(SERVICE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
   endif()
 
   if(NOT IS_DIRECTORY ${SERVICE_DIR})
