@@ -86,7 +86,7 @@ macro(add_message_files)
   set(MESSAGE_DIR "${ARG_DIRECTORY}")
   if(NOT IS_ABSOLUTE "${MESSAGE_DIR}")
     set(MESSAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${MESSAGE_DIR}")
-  endif
+  endif()
   # override message directory (used by add_action_files())
   if(ARG_BASE_DIR)
     set(MESSAGE_DIR ${ARG_BASE_DIR})

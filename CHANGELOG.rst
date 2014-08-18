@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix CMake syntax (`#52 <https://github.com/ros/genmsg/issues/52>`_) (regression of 0.5.4)
+
 0.5.4 (2014-08-18)
 ------------------
 * allow DIRECTORY argument to be an absolute path (`#51 <https://github.com/ros/genmsg/issues/51>`_)
