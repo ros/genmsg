@@ -83,7 +83,10 @@ macro(add_message_files)
     set(ARG_DIRECTORY "msg")
   endif()
 
-  set(MESSAGE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  set(MESSAGE_DIR "${ARG_DIRECTORY}")
+  if(NOT IS_ABSOLUTE "${MESSAGE_DIR}")
+    set(MESSAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${MESSAGE_DIR}")
+  endif
   # override message directory (used by add_action_files())
   if(ARG_BASE_DIR)
     set(MESSAGE_DIR ${ARG_BASE_DIR})
@@ -141,7 +144,10 @@ macro(add_service_files)
     set(ARG_DIRECTORY "srv")
   endif()
 
-  set(SERVICE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_DIRECTORY})
+  set(SERVICE_DIR "${ARG_DIRECTORY}")
+  if(NOT IS_ABSOLUTE "${SERVICE_DIR}")
+    set(SERVICE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${SERVICE_DIR}")
+  endif()
 
   if(NOT IS_DIRECTORY ${SERVICE_DIR})
     message(FATAL_ERROR "add_service_files() directory not found: ${SERVICE_DIR}")
