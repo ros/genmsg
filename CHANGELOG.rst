@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* allow DIRECTORY argument to be an absolute path (`#51 <https://github.com/ros/genmsg/issues/51>`_)
+
 0.5.3 (2014-07-10)
 ------------------
 * escape messages to avoid CMake warning (`#49 <https://github.com/ros/genmsg/issues/49>`_)
