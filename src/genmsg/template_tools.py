@@ -48,14 +48,9 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
 
     md5sum = genmsg.gentools.compute_md5(msg_context, spec)
 
-    # Set dictionary for the generator interpreter
-    g = { "file_name_in":input_file,
-          "spec":spec,
-          "md5sum":md5sum,
-          "search_path":search_path,
-          "msg_context" : msg_context }
+    # precompute msg definition once
     if isinstance(spec, genmsg.msgs.MsgSpec):
-        g['msg_definition'] = genmsg.gentools.compute_full_text(msg_context, spec)
+        msg_definition = genmsg.gentools.compute_full_text(msg_context, spec)
 
     # Loop over all files to generate
     for template_file_name, output_file_name in template_map.items():
@@ -65,6 +60,17 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
         #print "generate_from_template %s %s %s" % (input_file, template_file, output_file)
 
         ofile = open(output_file, 'w') #todo try
+
+        # Set dictionary for the generator interpreter
+        g = {
+            "file_name_in": input_file,
+            "spec": spec,
+            "md5sum": md5sum,
+            "search_path": search_path,
+            "msg_context": msg_context
+        }
+        if isinstance(spec, genmsg.msgs.MsgSpec):
+            g['msg_definition'] = msg_definition
 
         # todo, reuse interpreter
         interpreter = em.Interpreter(output=ofile, globals=g, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
@@ -154,16 +160,16 @@ def generate_module(package_name, output_dir, template_dir, template_dict):
     # Locate generate msg files
     files = os.listdir(output_dir)
 
-    # Set dictionary for the generator intepreter
-    g = dict(files=files,
-             package=package_name)
-
     # Loop over all files to generate
     for template_file_name, output_file_name in template_dict.items():
         template_file = os.path.join(template_dir, template_file_name)
         output_file = os.path.join(output_dir, output_file_name)
 
         ofile = open(output_file, 'w') #todo try
+
+        # Set dictionary for the generator intepreter
+        g = dict(files=files,
+                 package=package_name)
 
         # todo, reuse interpreter
         interpreter = em.Interpreter(output=ofile, options={em.RAW_OPT:True,em.BUFFERED_OPT:True})
