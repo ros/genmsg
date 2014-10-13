@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix interpreter globals collision with multiple message templates or modules (`#53 <https://github.com/ros/genmsg/issues/53>`_)
+
 0.5.5 (2014-08-18)
 ------------------
 * fix CMake syntax (`#52 <https://github.com/ros/genmsg/issues/52>`_) (regression of 0.5.4)
