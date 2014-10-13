@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix interpreter globals collision with multiple message templates or modules (`#53 <https://github.com/ros/genmsg/issues/53>`_)
+
 0.4.25 (2014-02-25)
 -------------------
 * remove usage of debug_message() (`#40 <https://github.com/ros/genmsg/issues/40>`_)
