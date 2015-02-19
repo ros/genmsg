@@ -160,7 +160,7 @@ def compute_full_type_name(package_name, file_name):
     Compute the full type name of message/service 'pkg/type'.
 
     :param package_name: name of package file is in, ``str``
-    :file_name: name of the msg og srv file, ``str``
+    :file_name: name of the msg or srv file, ``str``
     :returns: typename in format 'pkg/type'
     :raises: :exc:`MsgGenerationException` if file_name ends with an unknown file extension
     """
