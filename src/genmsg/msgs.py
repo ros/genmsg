@@ -234,10 +234,10 @@ class MsgSpec(object):
 
     def __init__(self, types, names, constants, text, full_name, package = '', short_name = ''):
         """
-        :param types: list of field types, in order of declaration, ``[str]]``
-        :param names: list of field names, in order of declaration, ``[str]]``
+        :param types: list of field types, in order of declaration, ``[str]``
+        :param names: list of field names, in order of declaration, ``[str]``
         :param constants: List of :class:`Constant` declarations, ``[Constant]``
-        :param text: text of declaration, ``str`
+        :param text: text of declaration, ``str``
         :raises: :exc:`InvalidMsgSpec` If spec is invalid (e.g. fields with the same name)
         """
         alt_package, alt_short_name = package_resource_name(full_name)
