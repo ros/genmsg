@@ -1,13 +1,14 @@
 User macro reference
 ====================
 
-.. cmake:macro:: add_message_files(DIRECTORY dir FILES file1 [file2...] [PACKAGE pkgname] [NOINSTALL])
+.. cmake:macro:: add_message_files(DIRECTORY dir FILES file1 [file2...] [BASE_DIR base_dir] [NOINSTALL])
 
    :param DIRECTORY: Directory containing messages.  May be absolute or
-     relative to ``CMAKE_CURRENT_SOURCE_DIR``.
+     relative to ``CMAKE_CURRENT_SOURCE_DIR``.  The name will also be used as the install folder as
+     `share/<pkgname>/<DIRECTORY>`. Default is `msg`.
    :param FILES:  Files containing messages, relative to `msgdir`
-   :param PACKAGE:  Optional alternate packagename (if the current project doesn't match the
-     desired namespace for the messages)
+   :param BASE_DIR:  Absolute path used and only used as an alternate source message folder.  Has
+     precedence over DIRECTORY.  Only used by `add_action_files()`.
    :param NOINSTALL: Do not automatically install the messages to the package's share/ directory.
 
    Register the listed files as requiring message generation and installation.
