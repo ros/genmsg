@@ -267,7 +267,7 @@ macro(generate_messages)
     list(APPEND handled_deps ${dep})
 
     if(NOT ${dep}_FOUND AND NOT ${dep}_SOURCE_DIR)
-      message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing find_package(${dep}?))")
+      message(FATAL_ERROR "Messages depends on unknown pkg: ${dep} (Missing 'find_package(${dep})'?)")
     endif()
 
     unset(_dep_msg_paths_file CACHE)
