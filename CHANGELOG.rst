@@ -2,6 +2,13 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* find_package(catkin) and add run dependency on catkin (`#61 <https://github.com/ros/genmsg/issues/61>`_)
+* improve readability of error message
+* fix doc for BASE_DIR in add\_*_files (`#59 <https://github.com/ros/genmsg/issues/59>`_)
+* fix some more minor typos (`#56 <https://github.com/ros/genmsg/issues/56>`_, `#57 <https://github.com/ros/genmsg/issues/57>`_)
+
 0.5.6 (2014-10-13)
 ------------------
 * fix interpreter globals collision with multiple message templates or modules (`#53 <https://github.com/ros/genmsg/issues/53>`_)
