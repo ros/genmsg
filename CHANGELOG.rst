@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.7 (2016-03-04)
+------------------
 * find_package(catkin) and add run dependency on catkin (`#61 <https://github.com/ros/genmsg/issues/61>`_)
 * improve readability of error message
 * fix doc for BASE_DIR in add\_*_files (`#59 <https://github.com/ros/genmsg/issues/59>`_)
