@@ -37,6 +37,7 @@
 import sys
 import os
 import em
+import errno
 import genmsg.command_line
 import genmsg.msgs
 import genmsg.msg_loader
@@ -139,7 +140,7 @@ def generate_from_file(input_file, package_name, output_dir, template_dir, inclu
     try:
         os.makedirs(output_dir)
     except OSError as e:
-        if e.errno != 17: # ignore file exists error
+        if e.errno != errno.EEXIST: # ignore file exists error
             raise
 
     # Parse include path dictionary
