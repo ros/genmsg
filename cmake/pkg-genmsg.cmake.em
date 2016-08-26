@@ -158,7 +158,9 @@ if(@(l)_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_n
   )
 endif()
 @[for d in dependencies]@
-add_dependencies(@(pkg_name)_generate_messages_@(l[3:]) @(d)_generate_messages_@(l[3:]))
+if(TARGET @(d)_generate_messages_@(l[3:]))
+  add_dependencies(@(pkg_name)_generate_messages_@(l[3:]) @(d)_generate_messages_@(l[3:]))
+endif()
 @[end for]@# dependencies
 @[end for]@# langs
 @[end if]@
