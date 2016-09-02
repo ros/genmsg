@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.8 (2016-09-02)
+------------------
 * check target across package for existance (`#65 <https://github.com/ros/genmsg/issues/65>`_)
 * do not hardcode errno values (`#64 <https://github.com/ros/genmsg/issues/64>`_)
 
