@@ -2,6 +2,11 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* check target across package for existance (`#65 <https://github.com/ros/genmsg/issues/65>`_)
+* do not hardcode errno values (`#64 <https://github.com/ros/genmsg/issues/64>`_)
+
 0.5.7 (2016-03-04)
 ------------------
 * find_package(catkin) and add run dependency on catkin (`#61 <https://github.com/ros/genmsg/issues/61>`_)
