@@ -115,7 +115,9 @@ macro(add_message_files)
 
   list(APPEND ${PROJECT_NAME}_MESSAGE_FILES ${FILES_W_PATH})
   foreach(file ${FILES_W_PATH})
-    assert_file_exists(${file} "message file not found")
+    if(NOT EXISTS ${file})
+      message(FATAL_ERROR "Assertion failed:  message file '${file}' not found")
+    endif()
   endforeach()
 
   # remember path to messages to resolve them as dependencies
@@ -172,7 +174,9 @@ macro(add_service_files)
 
   list(APPEND ${PROJECT_NAME}_SERVICE_FILES ${FILES_W_PATH})
   foreach(file ${FILES_W_PATH})
-    assert_file_exists(${file} "service file not found")
+    if(NOT EXISTS ${file})
+      message(FATAL_ERROR "Assertion failed:  service file '${file}' not found")
+    endif()
   endforeach()
 
   if(NOT ARG_NOINSTALL)
