@@ -124,22 +124,22 @@ def is_valid_msg_type(x):
         return False
     #parse array indicies
     x = x[len(base):]
-    state = 0
-    i = 0
+
+    balanced = True
     for c in x:
-        if state == 0:
+        if balanced
             if c != '[':
                 return False
-            state = 1 #open
-        elif state == 1:
+            balanced = False 
+        elif not balanced:
             if c == ']':
-                state = 0 #closed
+                balenced = True #closed
             else:
                 try:
                     int(c)
                 except:
                     return False
-    return state == 0
+    return balanced
 
 def is_valid_constant_type(x):
     """
