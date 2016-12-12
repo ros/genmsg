@@ -153,7 +153,7 @@ if(@(l)_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_n
     DIRECTORY ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
     DESTINATION ${@(l)_INSTALL_DIR}
     FILES_MATCHING
-    REGEX "${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@(pkg_name)/.+/__init__.pyc?$"
+    REGEX "${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@(pkg_name)/[^.]+/__init__.pyc?$"
 @[end if]@
   )
 endif()
