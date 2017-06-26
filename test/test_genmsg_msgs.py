@@ -191,7 +191,7 @@ def test_MsgSpec():
 
     # types and names mismatch
     try:
-        MsgSpec(['int32', 'int32'], ['intval'], [], 'int32 intval\int32 y')
+        MsgSpec(['int32', 'int32'], ['intval'], [], 'int32 intval\int32 y', 'x/Mismatch')
         assert False, "types and names must align"
     except: pass
 
