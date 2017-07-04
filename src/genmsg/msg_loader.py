@@ -56,11 +56,11 @@ from . srvs import SrvSpec
 
 class MsgNotFound(Exception):
 
-    def __init__(self, message, base_type, package, search_path):
+    def __init__(self, message, base_type=None, package=None, search_path=None):
+        super(MsgNotFound, self).__init__(message)
         self.base_type = base_type
         self.package = package
         self.search_path = search_path
-        super(MsgNotFound, self).__init__(message)
 
 def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
     """
