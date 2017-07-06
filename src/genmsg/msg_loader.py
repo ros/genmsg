@@ -55,7 +55,12 @@ from . names import normalize_package_context, package_resource_name
 from . srvs import SrvSpec
 
 class MsgNotFound(Exception):
-    pass
+
+    def __init__(self, message, base_type=None, package=None, search_path=None):
+        super(MsgNotFound, self).__init__(message)
+        self.base_type = base_type
+        self.package = package
+        self.search_path = search_path
 
 def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
     """
@@ -75,14 +80,14 @@ def get_msg_file(package, base_type, search_path, ext=EXT_MSG):
         raise ValueError("search_path must be a dictionary of {namespace: dirpath}")
     if not package in search_path:
         raise MsgNotFound("Cannot locate message [%s]: unknown package [%s] on search path [%s]" \
-                          % (base_type, package, search_path))
+                          % (base_type, package, search_path), base_type, package, search_path)
     else:
         for path_tmp in search_path[package]:
             path = os.path.join(path_tmp, "%s%s"%(base_type, ext))
             if os.path.isfile(path):
                 return path
         raise MsgNotFound("Cannot locate message [%s] in package [%s] with paths [%s]"%
-                                                (base_type, package, str(search_path[package])))
+                                                (base_type, package, str(search_path[package])), base_type, package, search_path)
 
 def get_srv_file(package, base_type, search_path):
     """
