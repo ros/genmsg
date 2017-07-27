@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.9 (2017-07-27)
+------------------
 * API improvements for use by client code (`#70 <https://github.com/ros/genmsg/issues/70>`_)
 * fix test: full_name is not optional (`#69 <https://github.com/ros/genmsg/issues/69>`_)
 
