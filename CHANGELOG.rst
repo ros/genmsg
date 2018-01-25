@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add architecture_independent flag (`#71 <https://github.com/ros/genmsg/issues/71>`_)
+
 0.5.9 (2017-07-27)
 ------------------
 * API improvements for use by client code (`#70 <https://github.com/ros/genmsg/issues/70>`_)
