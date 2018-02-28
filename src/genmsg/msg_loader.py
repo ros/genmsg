@@ -39,6 +39,7 @@ values are the paths).  Compatible with ROS package system and other
 possible layouts.
 """
 
+import ast
 import os
 import sys
 
@@ -181,12 +182,7 @@ def convert_constant_value(field_type, val):
             raise InvalidMsgSpec("cannot coerce [%s] to %s (out of bounds)"%(val, field_type))
         return val
     elif field_type == 'bool':
-        if val in ('true', '1'):
-            return True
-        elif val in ('false', '0'):
-            return False
-        else:
-            raise InvalidMsgSpec("invalid value for bool type constant: [%s]"%val)
+        return ast.literal_eval(val)
     raise InvalidMsgSpec("invalid constant type: [%s]"%field_type)
 
 def _load_constant_line(orig_line):
