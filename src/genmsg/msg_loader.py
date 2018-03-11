@@ -182,7 +182,7 @@ def convert_constant_value(field_type, val):
             raise InvalidMsgSpec("cannot coerce [%s] to %s (out of bounds)"%(val, field_type))
         return val
     elif field_type == 'bool':
-        return ast.literal_eval(val)
+        return True if ast.literal_eval(val) else False
     raise InvalidMsgSpec("invalid constant type: [%s]"%field_type)
 
 def _load_constant_line(orig_line):
