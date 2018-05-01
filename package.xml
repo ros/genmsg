@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>genmsg</name>
-  <version>0.5.10</version>
+  <version>0.5.11</version>
   <description>
     Standalone Python library for generating ROS message and service data structures for various languages.
   </description>

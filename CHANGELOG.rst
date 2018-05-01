@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.11 (2018-05-01)
+-------------------
 * use ast.literal_eval instead of eval (`#73 <https://github.com/ros/genmsg/issues/73>`_)
 * fix undefined name in case of exception (`#75 <https://github.com/ros/genmsg/issues/75>`_)
 
