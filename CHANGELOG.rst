@@ -2,6 +2,11 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* use ast.literal_eval instead of eval (`#73 <https://github.com/ros/genmsg/issues/73>`_)
+* fix undefined name in case of exception (`#75 <https://github.com/ros/genmsg/issues/75>`_)
+
 0.5.10 (2018-01-25)
 -------------------
 * add architecture_independent flag (`#71 <https://github.com/ros/genmsg/issues/71>`_)
