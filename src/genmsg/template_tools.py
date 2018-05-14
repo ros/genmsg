@@ -45,7 +45,7 @@ import genmsg.gentools
 
 # generate msg or srv files from a template file
 # template_map of the form { 'template_file':'output_file'} output_file can contain @NAME@ which will be replaced by the message/service name
-def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path):
+def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec, template_map, search_path, is_deprecated):
 
     md5sum = genmsg.gentools.compute_md5(msg_context, spec)
 
@@ -68,7 +68,8 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
             "spec": spec,
             "md5sum": md5sum,
             "search_path": search_path,
-            "msg_context": msg_context
+            "msg_context": msg_context,
+            "is_deprecated": is_deprecated,
         }
         if isinstance(spec, genmsg.msgs.MsgSpec):
             g['msg_definition'] = msg_definition
@@ -82,7 +83,7 @@ def _generate_from_spec(input_file, output_dir, template_dir, msg_context, spec,
         interpreter.file(open(template_file)) #todo try
         interpreter.shutdown()
 
-def _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict):
+def _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict, is_deprecated):
     # Read MsgSpec from .msg file
     msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(package_name, os.path.basename(input_file))
@@ -96,9 +97,10 @@ def _generate_msg_from_file(input_file, output_dir, template_dir, search_path, p
                             msg_context,
                             spec,
                             msg_template_dict,
-                            search_path)
+                            search_path,
+                            is_deprecated)
 
-def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict):
+def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict, is_deprecated):
     # Read MsgSpec from .srv.file
     msg_context = genmsg.msg_loader.MsgContext.create_default()
     full_type_name = genmsg.gentools.compute_full_type_name(package_name, os.path.basename(input_file))
@@ -112,7 +114,8 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, p
                         msg_context,
                         spec,
                         srv_template_dict,
-                        search_path)
+                        search_path,
+                        is_deprecated)
     # Generate the language dependent msg file for the srv request
     _generate_from_spec(input_file,
                         output_dir,
@@ -120,7 +123,8 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, p
                         msg_context,
                         spec.request,
                         msg_template_dict,
-                        search_path)
+                        search_path,
+                        is_deprecated)
     # Generate the language dependent msg file for the srv response
     _generate_from_spec(input_file,
                         output_dir,
@@ -128,10 +132,11 @@ def _generate_srv_from_file(input_file, output_dir, template_dir, search_path, p
                         msg_context,
                         spec.response,
                         msg_template_dict,
-                        search_path)
+                        search_path,
+                        is_deprecated)
 
 # uniform interface for genering either srv or msg files
-def generate_from_file(input_file, package_name, output_dir, template_dir, include_path, msg_template_dict, srv_template_dict):
+def generate_from_file(input_file, package_name, output_dir, template_dir, include_path, msg_template_dict, srv_template_dict, is_deprecated=False):
     # Normalize paths
     input_file = os.path.abspath(input_file)
     output_dir = os.path.abspath(output_dir)
@@ -151,9 +156,9 @@ def generate_from_file(input_file, package_name, output_dir, template_dir, inclu
 
     # Generate the file(s)
     if input_file.endswith(".msg"):
-        _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict)
+        _generate_msg_from_file(input_file, output_dir, template_dir, search_path, package_name, msg_template_dict, is_deprecated)
     elif input_file.endswith(".srv"):
-        _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict)
+        _generate_srv_from_file(input_file, output_dir, template_dir, search_path, package_name, srv_template_dict, msg_template_dict, is_deprecated)
     else:
         assert False, "Uknown file extension for %s"%input_file
 
@@ -199,6 +204,9 @@ def generate_from_command_line_options(argv, msg_template_dict, srv_template_dic
     parser.add_option("-e", dest='emdir',
                       help="directory containing template files",
                       default=sys.path[0])
+    parser.add_option("-d", dest='deprecated',
+                      help="flag of deprecated msg",
+                      action='store_true', default=False)
 
     (options, argv) = parser.parse_args(argv)
 
@@ -210,7 +218,7 @@ def generate_from_command_line_options(argv, msg_template_dict, srv_template_dic
         generate_module(options.package, options.outdir, options.emdir, module_template_dict)
     else:
         if len(argv) > 1:
-            generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict)
+            generate_from_file(argv[1], options.package, options.outdir, options.emdir, options.includepath, msg_template_dict, srv_template_dict, options.deprecated)
         else:
             parser.print_help()
             exit(-1)
