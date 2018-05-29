@@ -12,9 +12,9 @@ import genmsg.gentools
 
 # split incoming variables
 messages = messages_str.split(';') if messages_str != '' else []
-deprecated_messages = deprecated_messages_str.split(';') if deprecated_messages_str != '' else []
+message_deprecated_flags = {m: d == 'TRUE' for m, d in zip(messages, message_deprecated_flags_bool.split(';'))}
 services = services_str.split(';') if services_str != '' else []
-deprecated_services = deprecated_services_str.split(';') if deprecated_services_str != '' else []
+service_deprecated_flags = {s: d == 'TRUE' for s, d in zip(services, service_deprecated_flags_bool.split(';'))}
 dependencies = dependencies_str.split(';') if dependencies_str != '' else []
 dep_search_paths = dep_include_paths_str.split(';') if dep_include_paths_str != '' else []
 
@@ -32,34 +32,28 @@ for val in dep_search_paths:
         is_even = True
 dep_search_paths = dep_search_paths_dict
 
-if not messages and not deprecated_messages and not services and not deprecated_services:
+if not messages and not services:
     print('message(WARNING "Invoking generate_messages() without having added any message or service file before.\nYou should either add add_message_files() and/or add_service_files() calls or remove the invocation of generate_messages().")')
 
 msg_deps = {}
 msg_dep_types = {}
-msg_is_deprecated = {}
-for is_deprecated, msgs in zip([0, 1], [messages, deprecated_messages]):
-  for m in msgs:
-    try:
-      _deps = genmsg.deps.find_msg_dependencies_with_type(pkg_name, m, dep_search_paths)
-      msg_deps[m] = [d[1] for d in _deps]
-      msg_dep_types[m] = [d[0] for d in _deps]
-      msg_is_deprecated[m] = is_deprecated
-    except genmsg.MsgNotFound as e:
-      print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e).replace('"', '\\"')))
+for m in messages:
+  try:
+    _deps = genmsg.deps.find_msg_dependencies_with_type(pkg_name, m, dep_search_paths)
+    msg_deps[m] = [d[1] for d in _deps]
+    msg_dep_types[m] = [d[0] for d in _deps]
+  except genmsg.MsgNotFound as e:
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (m, str(e).replace('"', '\\"')))
 
 srv_deps = {}
 srv_dep_types = {}
-srv_is_deprecated = {}
-for is_deprecated, srvs in zip([0, 1], [services, deprecated_services]):
-  for s in srvs:
-    try:
-      _deps = genmsg.deps.find_srv_dependencies_with_type(pkg_name, s, dep_search_paths)
-      srv_deps[s] = [d[1] for d in _deps]
-      srv_dep_types[s] = [d[0] for d in _deps]
-      srv_is_deprecated[s] = is_deprecated
-    except genmsg.MsgNotFound as e:
-      print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e).replace('"', '\\"')))
+for s in services:
+  try:
+    _deps = genmsg.deps.find_srv_dependencies_with_type(pkg_name, s, dep_search_paths)
+    srv_deps[s] = [d[1] for d in _deps]
+    srv_dep_types[s] = [d[0] for d in _deps]
+  except genmsg.MsgNotFound as e:
+    print('message(FATAL_ERROR "Could not find messages which \'%s\' depends on. Did you forget to specify generate_messages(DEPENDENCIES ...)?\n%s")' % (s, str(e).replace('"', '\\"')))
 
 }@
 message(STATUS "@(pkg_name): @(len(messages)) messages, @(len(services)) services")
@@ -100,7 +94,7 @@ _generate_msg_@(l[3:])(@pkg_name
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
-  "@msg_is_deprecated[m]"
+  "@message_deprecated_flags[m]"
 )
 @[end for]@# messages
 
@@ -111,7 +105,7 @@ _generate_srv_@(l[3:])(@pkg_name
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
-  "@srv_is_deprecated[s]"
+  "@service_deprecated_flags[s]"
 )
 @[end for]@# services
 
