@@ -18,6 +18,7 @@
 
   <buildtool_depend version_gte="0.5.74">catkin</buildtool_depend>
   <run_depend>catkin</run_depend>
+  <run_depend>python-empy</run_depend>
 
   <export>
     <rosdoc config="rosdoc.yaml"/>
