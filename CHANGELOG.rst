@@ -2,6 +2,11 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add missing run_depend on empy (`#81 <https://github.com/ros/genmsg/issues/81>`_)
+* use CATKIN_GLOBAL_ETC_DESTINATION for etc (`#79 <https://github.com/ros/genmsg/issues/79>`_)
+
 0.5.11 (2018-05-01)
 -------------------
 * use ast.literal_eval instead of eval (`#73 <https://github.com/ros/genmsg/issues/73>`_)
