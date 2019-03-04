@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.12 (2019-03-04)
+-------------------
 * add missing run_depend on empy (`#81 <https://github.com/ros/genmsg/issues/81>`_)
 * use CATKIN_GLOBAL_ETC_DESTINATION for etc (`#79 <https://github.com/ros/genmsg/issues/79>`_)
 
