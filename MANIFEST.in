@@ -1,0 +1,2 @@
+include package.xml
+include rosdoc.yaml

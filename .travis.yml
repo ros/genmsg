@@ -1,0 +1,24 @@
+dist: xenial
+language: python
+
+branches:
+  except:
+    - gh-pages
+
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  #- pypy
+  #- pypy3
+
+install:
+  - pip install tox tox-travis
+
+script:
+  - tox
+
+notifications:
+  email: false
