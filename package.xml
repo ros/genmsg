@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
-<package>
+<?xml-model
+  href="http://download.ros.org/schema/package_format3.xsd"
+  schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>genmsg</name>
   <version>0.5.12</version>
   <description>
@@ -8,17 +11,19 @@
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>BSD</license>
 
-  <url type="website">http://www.ros.org/wiki/genmsg</url>
+  <url type="website">http://wiki.ros.org/genmsg</url>
   <url type="bugtracker">https://github.com/ros/genmsg/issues</url>
   <url type="repository">https://github.com/ros/genmsg</url>
 
   <author>Troy Straszheim</author>
   <author>Morten Kjaergaard</author>
   <author>Ken Conley</author>
+  <author>Dirk Thomas</author>
 
   <buildtool_depend version_gte="0.5.74">catkin</buildtool_depend>
-  <run_depend>catkin</run_depend>
-  <run_depend>python-empy</run_depend>
+  <exec_depend>catkin</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-empy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-empy</exec_depend>
 
   <export>
     <rosdoc config="rosdoc.yaml"/>
