@@ -15,7 +15,7 @@ install(
 
 catkin_python_setup()
 
-install(
+catkin_install_python(
   PROGRAMS scripts/genmsg_check_deps.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
