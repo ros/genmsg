@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.13 (2020-01-16)
+-------------------
 * fix escape sequences (`#89 <https://github.com/ros/genmsg/issues/89>`_)
 * Python 3 compatibility (`#86 <https://github.com/ros/genmsg/issues/86>`_)
 * improve MsgNotFound exception information
