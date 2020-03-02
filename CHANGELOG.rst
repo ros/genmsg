@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.15 (2020-03-02)
+-------------------
 * bump CMake minimum version to use new behavior of CMP0048 (`#91 <https://github.com/ros/genmsg/issues/91>`_)
 
 0.5.14 (2020-01-17)
