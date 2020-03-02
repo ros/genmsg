@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* bump CMake minimum version to use new behavior of CMP0048 (`#91 <https://github.com/ros/genmsg/issues/91>`_)
+
 0.5.14 (2020-01-17)
 -------------------
 * switch to setuptools, add add buildtool depend on setuptools (`#90 <https://github.com/ros/genmsg/issues/90>`_)
