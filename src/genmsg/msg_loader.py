@@ -460,7 +460,6 @@ def load_srv_from_string(msg_context, text, full_name):
     text_out = StringIO()
     accum = text_in
     for l in text.split('\n'):
-        l = l.split(COMMENTCHAR)[0].strip() #strip comments        
         if l.startswith(IODELIM): #lenient, by request
             accum = text_out
         else:

@@ -397,6 +397,41 @@ def test_load_srv_from_file():
     assert text == spec.text
     assert full_name == spec.full_name
 
+def test_load_srv_with_string_constant_from_file():
+    from genmsg.msg_loader import MsgContext, load_srv_from_file
+
+    msg_context = MsgContext.create_default()
+
+    d = get_test_dir()
+    filename = os.path.join(d, 'test_ros', 'srv', 'ServiceWithStringConstant.srv')
+    with open(filename, 'r') as f:
+        text = f.read()
+
+    full_name = 'test_ros/ServiceWithStringConstant'
+    spec = load_srv_from_file(msg_context, filename, full_name)
+    assert spec == load_srv_from_file(msg_context, filename, full_name)
+    assert ['string'] == spec.request.types, spec.request.types
+    assert ['value'] == spec.request.names
+    assert ['return_value'] == spec.response.names
+    assert len(spec.request.constants) == 2
+    index_string = 0 if spec.request.constants[0].name == 'EXAMPLE' else 1
+    index_int = 1 - index_string
+    constant = spec.request.constants[index_string]
+    assert constant.type == 'string'
+    assert constant.name == 'EXAMPLE'
+    assert constant.val == 'here "#comments" are ignored, and leading and trailing whitespace removed', '<{}>'.format(constant.val)
+    constant = spec.request.constants[index_int]
+    assert constant.type == 'int32'
+    assert constant.name == 'INTCONST'
+    assert constant.val == 42, '<{}>'.format(constant.val)
+    assert len(spec.response.constants) == 1
+    constant = spec.response.constants[0]
+    assert constant.type == 'string'
+    assert constant.name == 'RESULTEXAMPLE'
+    assert constant.val == 'here "#comments" are ignored too, and leading and trailing whitespace removed', '<{}>'.format(constant.val)
+    assert text == spec.text
+    assert full_name == spec.full_name
+
 def test_load_msg_depends():
     #TODO: should there just be a 'load_msg, implicit=True?'
     from genmsg.msg_loader import MsgContext, load_msg_by_type, load_msg_depends, MsgNotFound

@@ -1,0 +1,6 @@
+string EXAMPLE= here "#comments" are ignored, and leading and trailing whitespace removed
+int32 INTCONST=42  # Here comments should not be ignored
+string value
+---
+string RESULTEXAMPLE= here "#comments" are ignored too, and leading and trailing whitespace removed
+string return_value
