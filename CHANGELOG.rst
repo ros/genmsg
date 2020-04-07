@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.16 (2020-04-06)
+-------------------
 * fix comment handling in service spec string constants (`#92 <https://github.com/ros/genmsg/issues/92>`_)
 
 0.5.15 (2020-03-02)
