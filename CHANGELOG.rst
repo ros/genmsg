@@ -2,6 +2,10 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix comment handling in service spec string constants (`#92 <https://github.com/ros/genmsg/issues/92>`_)
+
 0.5.15 (2020-03-02)
 -------------------
 * bump CMake minimum version to use new behavior of CMP0048 (`#91 <https://github.com/ros/genmsg/issues/91>`_)
