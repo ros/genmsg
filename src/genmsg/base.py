@@ -45,6 +45,7 @@ EXT_SRV = '.srv'
 CONSTCHAR   = '='
 COMMENTCHAR = '#'
 IODELIM   = '---'
+NAMESPACE   = '#NAMESPACE'
 
 
 verbose = False
