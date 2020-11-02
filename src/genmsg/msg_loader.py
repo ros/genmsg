@@ -48,7 +48,7 @@ try:
 except ImportError:
     from io import StringIO # Python 3.x
 
-from . base import InvalidMsgSpec, log, SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_MSG, EXT_SRV
+from . base import InvalidMsgSpec, log, SEP, COMMENTCHAR, CONSTCHAR, IODELIM, EXT_MSG, EXT_SRV, NAMESPACE
 from . msgs import MsgSpec, TIME, TIME_MSG, DURATION, DURATION_MSG, HEADER, HEADER_FULL_NAME, \
      is_builtin, is_valid_msg_field_name, is_valid_msg_type, bare_msg_type, is_valid_constant_type, \
      Field, Constant, resolve_type
@@ -237,6 +237,19 @@ def _load_field_line(orig_line, package_context):
         field_type = HEADER_FULL_NAME
     return field_type, name
 
+def _load_namespace_line(orig_line, name_space):
+    if not orig_line.startswith(NAMESPACE):
+      return name_space
+    split_line = line_splits = [s for s in [x.strip() for x in orig_line.split(" ")] if s]
+    len_split_line = len(split_line)
+    if len_split_line == 2:
+      if name_space == '':
+        return split_line[1]
+      else:
+        raise InvalidMsgSpec("Invalid constant declaration, there should be only one #NAMESPACE per msg file: %s"%orig_line)
+    else:
+        raise InvalidMsgSpec("Invalid constant declaration: %s"%orig_line)
+
 def _strip_comments(line):
     return line.split(COMMENTCHAR)[0].strip() #strip comments
     
@@ -256,7 +269,9 @@ def load_msg_from_string(msg_context, text, full_name):
     types = []
     names = []
     constants = []
+    name_space = ''
     for orig_line in text.split('\n'):
+        name_space = _load_namespace_line(orig_line, name_space)
         clean_line = _strip_comments(orig_line)
         if not clean_line:
             continue #ignore empty lines
@@ -266,7 +281,9 @@ def load_msg_from_string(msg_context, text, full_name):
             field_type, name = _load_field_line(orig_line, package_name)
             types.append(field_type)
             names.append(name)
-    spec = MsgSpec(types, names, constants, text, full_name, package_name)
+    if name_space == '':
+      name_space = package_name # No Name space has been specified. Use package name.
+    spec = MsgSpec(types, names, constants, text, full_name, package_name, name_space)
     msg_context.register(full_name, spec)
     return spec
 
@@ -464,6 +481,7 @@ def load_srv_from_string(msg_context, text, full_name):
             accum = text_out
         else:
             accum.write(l+'\n')
+    
 
     # create separate MsgSpec objects for each half of file
     msg_in = load_msg_from_string(msg_context, text_in.getvalue(), '%sRequest'%(full_name))

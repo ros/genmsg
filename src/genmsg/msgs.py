@@ -232,7 +232,7 @@ class MsgSpec(object):
     correspondence. MsgSpec can also return an md5 of the source text.
     """
 
-    def __init__(self, types, names, constants, text, full_name, package = '', short_name = ''):
+    def __init__(self, types, names, constants, text, full_name, package = '', name_space = '', short_name = ''):
         """
         :param types: list of field types, in order of declaration, ``[str]``
         :param names: list of field names, in order of declaration, ``[str]``
@@ -261,6 +261,7 @@ class MsgSpec(object):
         self.full_name = full_name
         self.short_name = short_name
         self.package = package
+        self.name_space = name_space
         try:
             self._parsed_fields = [Field(name, type) for (name, type) in zip(self.names, self.types)]
         except ValueError as e:
@@ -291,7 +292,7 @@ class MsgSpec(object):
         return self.types == other.types and self.names == other.names and \
                self.constants == other.constants and self.text == other.text and \
                self.full_name == other.full_name and self.short_name == other.short_name and \
-               self.package == other.package
+               self.package == other.package and self.name_space == other.name_space
 
     def __ne__(self, other):
         if not other or not isinstance(other, MsgSpec):
