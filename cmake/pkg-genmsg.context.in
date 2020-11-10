@@ -1,7 +1,9 @@
 # generated from genmsg/cmake/pkg-genmsg.context.in
 
 messages_str = "@ARG_MESSAGES@"
+message_deprecated_flags_bool = "@ARG_MESSAGE_DEPRECATED_FLAGS@"
 services_str = "@ARG_SERVICES@"
+service_deprecated_flags_bool = "@ARG_SERVICE_DEPRECATED_FLAGS@"
 pkg_name = "@PROJECT_NAME@"
 dependencies_str = "@ARG_DEPENDENCIES@"
 langs = "@GEN_LANGS@"

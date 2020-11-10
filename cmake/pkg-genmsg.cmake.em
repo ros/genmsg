@@ -12,7 +12,9 @@ import genmsg.gentools
 
 # split incoming variables
 messages = messages_str.split(';') if messages_str != '' else []
+message_deprecated_flags = {m: d == 'TRUE' for m, d in zip(messages, message_deprecated_flags_bool.split(';'))}
 services = services_str.split(';') if services_str != '' else []
+service_deprecated_flags = {s: d == 'TRUE' for s, d in zip(services, service_deprecated_flags_bool.split(';'))}
 dependencies = dependencies_str.split(';') if dependencies_str != '' else []
 dep_search_paths = dep_include_paths_str.split(';') if dep_include_paths_str != '' else []
 
@@ -92,6 +94,7 @@ _generate_msg_@(l[3:])(@pkg_name
   "${MSG_I_FLAGS}"
   "@(';'.join(msg_deps[m]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  "@message_deprecated_flags[m]"
 )
 @[end for]@# messages
 
@@ -102,6 +105,7 @@ _generate_srv_@(l[3:])(@pkg_name
   "${MSG_I_FLAGS}"
   "@(';'.join(srv_deps[s]).replace("\\","/"))"
   ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name
+  "@service_deprecated_flags[s]"
 )
 @[end for]@# services
 
