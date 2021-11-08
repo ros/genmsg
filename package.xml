@@ -8,7 +8,7 @@
   <description>
     Standalone Python library for generating ROS message and service data structures for various languages.
   </description>
-  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
   <license>BSD</license>
 
   <url type="website">http://wiki.ros.org/genmsg</url>
