@@ -2,8 +2,8 @@
 Changelog for package genmsg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.17 (2022-09-25)
+-------------------
 * Properly escape path before using in regex (`#95 <https://github.com/ros/genmsg/issues/95>`_)
 * Contributors: Kyle Fazzari
 
