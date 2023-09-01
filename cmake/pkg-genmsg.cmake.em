@@ -137,7 +137,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS @(pkg_name)_generate_messages_@(l[3
 
 if(@(l)_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name)
 @[if l == 'genpy']@
-  install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall \"${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
+  install(CODE "execute_process(COMMAND \"@(PYTHON_EXECUTABLE)\" -m compileall-d \"${CMAKE_INSTALL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\" \"${CATKIN_DEVEL_PREFIX}/${@(l)_INSTALL_DIR}/@pkg_name\")")
 @[end if]@
   # install generated code
   install(
